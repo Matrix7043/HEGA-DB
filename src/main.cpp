@@ -1,32 +1,49 @@
-#include "antlr4-runtime.h"
+#include "SQLParser.h"
 
-#include "HEGADBLexer.h"
-#include "HEGADBParser.h"
+#include <readline/history.h>
+#include <readline/readline.h>
 
 #include <iostream>
 #include <string>
 
 int main() {
+  std::cout << "HEGADB Client v0.1\n";
+  std::cout << "Type SQL queries. Type \\q to exit.\n\n";
 
-  const std::string sql = "SELECT name, salary "
-                          "FROM employees "
-                          "WHERE salary >= 50000 AND active = TRUE;";
+  using_history();
 
-  std::cout << "SQL:\n";
-  std::cout << sql << "\n\n";
+  while (true) {
+    char *raw_input{readline("hegadb> ")};
 
-  antlr4::ANTLRInputStream input(sql);
+    if (raw_input == nullptr) {
+      std::cout << '\n';
+      break;
+    }
 
-  HEGADBLexer lexer(&input);
+    std::string input(raw_input);
 
-  antlr4::CommonTokenStream tokens(&lexer);
+    free(raw_input);
 
-  HEGADBParser parser(&tokens);
+    if (input.empty()) {
+      continue;
+    }
 
-  antlr4::tree::ParseTree *tree = parser.query();
+    if (input == "\\q") {
+      break;
+    }
 
-  std::cout << "Parse tree:\n";
-  std::cout << tree->toStringTree(&parser) << "\n";
+    add_history(input.c_str());
+
+    SQLParser sqlParser;
+
+    SQLParser::ParseResult result{sqlParser.parse(input)};
+
+    if (result.success) {
+      std::cout << "Query accepted.\n";
+    } else {
+      std::cout << "Query rejected.\n";
+    }
+  }
 
   return 0;
 }

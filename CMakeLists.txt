@@ -40,42 +40,98 @@ set(ANTLR_GENERATED_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/generated/HEGADBParserListener.cpp
 )
 
+set(ANTLR4_RUNTIME_INCLUDE_DIR
+  "/usr/include/antlr4-runtime"
+)
 
-# ============================================================
-# HEGADB Client
-# ============================================================
+add_library(hegadb_core
 
-add_executable(hegadb
+    src/SQLParser.cpp
 
-    src/main.cpp
+    src/SyntaxErrorListener.cpp
 
     ${ANTLR_GENERATED_SOURCES}
 )
 
+target_include_directories(hegadb_core
 
-# ============================================================
-# Include directories
-# ============================================================
+    PUBLIC
 
-target_include_directories(hegadb
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
 
     PRIVATE
 
         ${CMAKE_CURRENT_SOURCE_DIR}/generated
-
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-
-        /usr/include/antlr4-runtime
+        ${ANTLR4_RUNTIME_INCLUDE_DIR}
 )
 
+target_link_libraries(hegadb_core
 
-# ============================================================
-# ANTLR runtime
-# ============================================================
+    PUBLIC
 
-target_link_libraries(hegadb
+          antlr4-runtime
+)
+
+find_path(READLINE_INCLUDE_DIR
+
+    readline/readline.h
+
+)
+
+find_library(READLINE_LIBRARY
+
+    readline
+)
+
+if(NOT READLINE_INCLUDE_DIR OR NOT READLINE_LIBRARY)
+  message(FATAL_ERROR "GNU Readline not found")
+endif()
+
+add_executable(hegadb_client
+
+    src/main.cpp
+)
+
+target_include_directories(hegadb_client
 
     PRIVATE
 
-        antlr4-runtime
+        ${READLINE_INCLUDE_DIR}
 )
+
+target_link_libraries(hegadb_client
+
+    PRIVATE
+
+        hegadb_core
+        ${READLINE_LIBRARY}
+
+)
+
+# ============================================================
+# Parser tests
+# ============================================================
+
+add_executable(parser_tests
+
+    tests/parser_tests.cpp
+)
+
+
+target_link_libraries(parser_tests
+
+    PRIVATE
+
+        hegadb_core
+)
+
+include(CTest)
+
+if(BUILD_TESTING)
+
+  add_test(
+  NAME parser_tests
+  COMMAND parser_tests
+  )
+
+endif()
