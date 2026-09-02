@@ -21,9 +21,14 @@ public:
   }
   const TableRef *from() const { return from_.get(); }
 
+  void setWhere(std::unique_ptr<Expr> expr) { where_ = std::move(expr); }
+
+  const Expr *where() const { return where_.get(); }
+
 private:
   std::vector<std::unique_ptr<ColumnRef>> projections_;
   std::unique_ptr<TableRef> from_;
+  std::unique_ptr<Expr> where_;
 };
 } // namespace hegadb
 

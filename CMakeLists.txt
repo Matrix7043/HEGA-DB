@@ -122,7 +122,20 @@ target_link_libraries(parser_tests
 
     PRIVATE
 
-        hegadb_core
+      hegadb_core
+)
+
+add_executable(ast_tests
+
+  tests/ast_tests.cpp
+)
+
+target_link_libraries(ast_tests
+
+  PRIVATE
+
+    hegadb_core
+
 )
 
 include(CTest)
@@ -132,6 +145,11 @@ if(BUILD_TESTING)
   add_test(
   NAME parser_tests
   COMMAND parser_tests
+  )
+
+  add_test(
+  NAME ast_test
+  COMMAND ast_tests
   )
 
 endif()
