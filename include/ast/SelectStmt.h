@@ -1,7 +1,7 @@
 #ifndef SELECT_STMT_H
 #define SELECT_STMT_H
 
-#include "ColumnRef.h"
+#include "Expr.h"
 #include "Statement.h"
 #include "TableRef.h"
 
@@ -12,11 +12,11 @@ namespace hegadb {
 
 class SelectStmt : public Statement {
 public:
-  void addProjection(std::unique_ptr<ColumnRef> column) {
+  void addProjection(std::unique_ptr<Expr> column) {
     projections_.push_back(std::move(column));
   }
   void setFrom(std::unique_ptr<TableRef> table) { from_ = std::move(table); }
-  const std::vector<std::unique_ptr<ColumnRef>> &projections() const {
+  const std::vector<std::unique_ptr<Expr>> &projections() const {
     return projections_;
   }
   const TableRef *from() const { return from_.get(); }
@@ -25,8 +25,10 @@ public:
 
   const Expr *where() const { return where_.get(); }
 
+  ASTNodeKind kind() const override { return ASTNodeKind::SelectStmt; }
+
 private:
-  std::vector<std::unique_ptr<ColumnRef>> projections_;
+  std::vector<std::unique_ptr<Expr>> projections_;
   std::unique_ptr<TableRef> from_;
   std::unique_ptr<Expr> where_;
 };

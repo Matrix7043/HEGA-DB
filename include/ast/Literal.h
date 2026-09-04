@@ -1,6 +1,7 @@
 #ifndef LITERAL_H
 #define LITERAL_H
 
+#include "ASTNode.h"
 #include "Expr.h"
 
 #include <string>
@@ -13,6 +14,7 @@ public:
   using Value = std::variant<long long, std::string, bool>;
   explicit Literal(Value value) : value_(std::move(value)) {}
   const Value &value() const { return value_; }
+  ASTNodeKind kind() const override { return ASTNodeKind::Literal; }
 
 private:
   Value value_;

@@ -23,6 +23,8 @@ public:
 
   const Expr *right() const { return right_.get(); }
 
+  ASTNodeKind kind() const override { return ASTNodeKind::LogicalExpr; }
+
 private:
   std::unique_ptr<Expr> left_;
   LogicalOp op_;

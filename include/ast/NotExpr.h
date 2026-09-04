@@ -15,6 +15,8 @@ public:
 
   const Expr *child() const { return child_.get(); }
 
+  ASTNodeKind kind() const override { return ASTNodeKind::NotExpr; }
+
 private:
   std::unique_ptr<Expr> child_;
 };

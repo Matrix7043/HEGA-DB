@@ -1,6 +1,7 @@
 #ifndef COLUMN_REF_H
 #define COLUMN_REF_H
 
+#include "ASTNode.h"
 #include "Expr.h"
 
 #include <string>
@@ -12,6 +13,7 @@ class ColumnRef : public Expr {
 public:
   explicit ColumnRef(std::string name) : name_(std::move(name)) {}
   const std::string &name() const { return name_; }
+  ASTNodeKind kind() const override { return ASTNodeKind::ColumnRef; }
 
 private:
   std::string name_;

@@ -24,6 +24,7 @@ public:
   const Expr *left() const { return left_.get(); }
   ComparisonOp op() const { return op_; }
   const Expr *right() const { return right_.get(); }
+  ASTNodeKind kind() const override { return ASTNodeKind::ComparisonExpr; }
 
 private:
   std::unique_ptr<Expr> left_;

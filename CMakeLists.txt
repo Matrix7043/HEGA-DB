@@ -138,6 +138,26 @@ target_link_libraries(ast_tests
 
 )
 
+add_executable(ast_builder_tests
+
+  tests/ast_builder_tests.cpp
+  src/ast/ASTBuilder.cpp
+)
+
+target_include_directories(ast_builder_tests
+
+  PRIVATE
+    ${CMAKE_SOURCE_DIR}/generated
+    ${ANTLR4_RUNTIME_INCLUDE_DIR}
+)
+
+target_link_libraries(ast_builder_tests
+
+  PRIVATE
+
+    hegadb_core
+)
+
 include(CTest)
 
 if(BUILD_TESTING)
@@ -150,6 +170,11 @@ if(BUILD_TESTING)
   add_test(
   NAME ast_test
   COMMAND ast_tests
+  )
+
+  add_test(
+  NAME ast_builder_tests
+  COMMAND ast_builder_tests
   )
 
 endif()
