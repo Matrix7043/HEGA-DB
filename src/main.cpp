@@ -1,4 +1,5 @@
 #include "SQLParser.h"
+#include "ast/ASTPrinter.h"
 
 #include <readline/history.h>
 #include <readline/readline.h>
@@ -36,10 +37,14 @@ int main() {
 
     SQLParser sqlParser;
 
-    SQLParser::ParseResult result{sqlParser.parse(input)};
+    auto ast{sqlParser.parseToAST(input)};
 
-    if (result.success) {
+    if (ast) {
       std::cout << "Query accepted.\n";
+      std::cout << "AST:\n";
+
+      hegadb::ASTPrinter printer;
+      printer.print(ast.get());
     } else {
       std::cout << "Query rejected.\n";
     }

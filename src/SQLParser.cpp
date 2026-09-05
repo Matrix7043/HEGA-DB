@@ -3,6 +3,9 @@
 #include "HEGADBLexer.h"
 #include "HEGADBParser.h"
 #include "SyntaxErrorListener.h"
+#include "ast/ASTBuilder.h"
+#include "ast/SelectStmt.h"
+#include <memory>
 
 SQLParser::ParseResult SQLParser::parse(const std::string &sql) {
   antlr4::ANTLRInputStream input(sql);
@@ -38,4 +41,40 @@ SQLParser::ParseResult SQLParser::parse(const std::string &sql) {
   }
 
   return result;
+}
+
+std::unique_ptr<hegadb::SelectStmt>
+SQLParser::parseToAST(const std::string &sql) {
+
+  antlr4::ANTLRInputStream input(sql);
+
+  HEGADBLexer lexer(&input);
+
+  SyntaxErrorListener lexerErrors;
+
+  lexer.removeErrorListeners();
+  lexer.addErrorListener(&lexerErrors);
+
+  antlr4::CommonTokenStream tokens(&lexer);
+
+  HEGADBParser parser(&tokens);
+
+  SyntaxErrorListener parserErrors;
+
+  parser.removeErrorListeners();
+  parser.addErrorListener(&parserErrors);
+
+  auto *tree = parser.query();
+
+  if (lexerErrors.hasErrors() || parserErrors.hasErrors()) {
+    return nullptr;
+  }
+
+  hegadb::ASTBuilder builder;
+
+  auto result = builder.visitQuery(tree);
+
+  auto *stmt = std::any_cast<hegadb::SelectStmt *>(result);
+
+  return std::unique_ptr<hegadb::SelectStmt>(stmt);
 }

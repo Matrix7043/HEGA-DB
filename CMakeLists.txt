@@ -47,7 +47,8 @@ set(ANTLR4_RUNTIME_INCLUDE_DIR
 add_library(hegadb_core
 
     src/SQLParser.cpp
-
+    src/ast/ASTPrinter.cpp
+    src/ast/ASTBuilder.cpp
     src/SyntaxErrorListener.cpp
 
     ${ANTLR_GENERATED_SOURCES}
@@ -141,7 +142,6 @@ target_link_libraries(ast_tests
 add_executable(ast_builder_tests
 
   tests/ast_builder_tests.cpp
-  src/ast/ASTBuilder.cpp
 )
 
 target_include_directories(ast_builder_tests

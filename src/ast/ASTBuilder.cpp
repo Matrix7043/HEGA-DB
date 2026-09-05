@@ -58,21 +58,25 @@ std::any ASTBuilder::visitTableName(HEGADBParser::TableNameContext *ctx) {
 std::any ASTBuilder::visitLiteral(HEGADBParser::LiteralContext *ctx) {
   if (ctx->INTEGER_LITERAL() != nullptr) {
     auto value = std::stoll(ctx->INTEGER_LITERAL()->getText());
-    return new Literal(value);
+    Expr *expr = new Literal(value);
+    return expr;
   }
 
   if (ctx->STRING_LITERAL() != nullptr) {
     auto text = ctx->STRING_LITERAL()->getText();
     text = text.substr(1, text.size() - 2);
-    return new Literal(text);
+    Expr *expr = new Literal(text);
+    return expr;
   }
 
   if (ctx->TRUE() != nullptr) {
-    return new Literal(true);
+    Expr *expr = new Literal(true);
+    return expr;
   }
 
   if (ctx->FALSE() != nullptr) {
-    return new Literal(false);
+    Expr *expr = new Literal(false);
+    return expr;
   }
 
   return nullptr;
@@ -81,7 +85,8 @@ std::any ASTBuilder::visitLiteral(HEGADBParser::LiteralContext *ctx) {
 std::any ASTBuilder::visitOperand(HEGADBParser::OperandContext *ctx) {
   if (ctx->columnName() != nullptr) {
     auto name = ctx->columnName()->IDENTIFIER()->getText();
-    return new ColumnRef(name);
+    Expr *expr = new ColumnRef(name);
+    return expr;
   }
 
   return visit(ctx->literal());
@@ -128,8 +133,9 @@ std::any ASTBuilder::visitComparisonExpression(
 
   auto op = std::any_cast<ComparisonOp>(opResult);
 
-  return new ComparisonExpr(std::unique_ptr<Expr>(left), op,
-                            std::unique_ptr<Expr>(right));
+  Expr *expr = new ComparisonExpr(std::unique_ptr<Expr>(left), op,
+                                  std::unique_ptr<Expr>(right));
+  return expr;
 }
 
 std::any
@@ -139,7 +145,8 @@ ASTBuilder::visitNotExpression(HEGADBParser::NotExpressionContext *ctx) {
 
     auto *child = std::any_cast<Expr *>(result);
 
-    return new NotExpr(std::unique_ptr<Expr>(child));
+    Expr *expr = new NotExpr(std::unique_ptr<Expr>(child));
+    return expr;
   }
 
   if (ctx->booleanExpression() != nullptr) {
@@ -153,7 +160,7 @@ std::any
 ASTBuilder::visitAndExpression(HEGADBParser::AndExpressionContext *ctx) {
   auto result = visit(ctx->notExpression(0));
 
-  auto *left = std::any_cast<Expr *>(result);
+  Expr *left = std::any_cast<Expr *>(result);
 
   for (size_t i = 1; i < ctx->notExpression().size(); ++i) {
     auto rightResult = visit(ctx->notExpression(i));
@@ -170,7 +177,7 @@ ASTBuilder::visitAndExpression(HEGADBParser::AndExpressionContext *ctx) {
 std::any ASTBuilder::visitOrExpression(HEGADBParser::OrExpressionContext *ctx) {
   auto result = visit(ctx->andExpression(0));
 
-  auto *left = std::any_cast<Expr *>(result);
+  Expr *left = std::any_cast<Expr *>(result);
 
   for (size_t i = 1; i < ctx->andExpression().size(); ++i) {
     auto rightResult = visit(ctx->andExpression(i));
