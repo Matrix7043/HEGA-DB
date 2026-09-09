@@ -68,6 +68,8 @@ add_library(hegadb_core
     src/catalog/CatalogSnapshot.cpp
     src/catalog/InMemoryCatalog.cpp
 
+    src/semantic/SemanticValidator.cpp
+
     ${ANTLR_GENERATED_SOURCES}
 )
 
@@ -208,5 +210,19 @@ if(BUILD_TESTING)
         NAME catalog_tests
         COMMAND catalog_tests
     )
+
+  add_executable(semantic_validator_tests
+    tests/semantic_validator_tests.cpp
+  )
+
+  target_link_libraries(semantic_validator_tests
+    PRIVATE
+      hegadb_core
+  )
+
+  add_test(
+    NAME semantic_validator_tests
+    COMMAND semantic_validator_tests
+  )
 
 endif()
