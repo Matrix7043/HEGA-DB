@@ -1,4 +1,6 @@
 #include "semantic/SemanticValidator.h"
+#include "catalog/DataType.h"
+#include "catalog/TableSchema.h"
 #include "semantic/SemanticError.h"
 
 #include "ast/ColumnRef.h"
@@ -79,27 +81,21 @@ void SemanticValidator::validateExpression(const Expr *expr,
   switch (expr->kind()) {
 
   case ASTNodeKind::ColumnRef: {
-    const auto *column = static_cast<const ColumnRef *>(expr);
-
-    if (table.findColumn(column->name()) == nullptr) {
-      throw SemanticError(SemanticErrorKind::ColumnNotFound,
-                          "column '" + column->name() +
-                              "' does not exist in table '" + table.name() +
-                              "'");
-    }
-
+    // inferType() also performs column resolution.
+    inferType(expr, table);
     break;
   }
 
-  case ASTNodeKind::Literal:
+  case ASTNodeKind::Literal: {
+    // Verify that the literal has a supported type.
+    inferType(expr, table);
     break;
+  }
 
   case ASTNodeKind::ComparisonExpr: {
     const auto *comparison = static_cast<const ComparisonExpr *>(expr);
 
-    validateExpression(comparison->left(), table);
-    validateExpression(comparison->right(), table);
-
+    validateComparison(comparison, table);
     break;
   }
 
@@ -109,6 +105,16 @@ void SemanticValidator::validateExpression(const Expr *expr,
     validateExpression(logical->left(), table);
     validateExpression(logical->right(), table);
 
+    const DataType leftType = inferType(logical->left(), table);
+
+    const DataType rightType = inferType(logical->right(), table);
+
+    if (leftType != DataType::Boolean || rightType != DataType::Boolean) {
+
+      throw SemanticError(SemanticErrorKind::TypeMismatch,
+                          "logical operators require boolean expressions");
+    }
+
     break;
   }
 
@@ -117,11 +123,19 @@ void SemanticValidator::validateExpression(const Expr *expr,
 
     validateExpression(notExpr->child(), table);
 
+    const DataType childType = inferType(notExpr->child(), table);
+
+    if (childType != DataType::Boolean) {
+      throw SemanticError(SemanticErrorKind::TypeMismatch,
+                          "NOT requires a boolean expression");
+    }
+
     break;
   }
 
   default:
-    break;
+    throw SemanticError(SemanticErrorKind::TypeMismatch,
+                        "invalid expression in WHERE clause");
   }
 }
 
@@ -167,8 +181,46 @@ DataType SemanticValidator::inferType(const Expr *expr,
     }
   }
 
+  if (expr->kind() == ASTNodeKind::ComparisonExpr) {
+    return DataType::Boolean;
+  }
+
+  if (expr->kind() == ASTNodeKind::LogicalExpr) {
+    return DataType::Boolean;
+  }
+
+  if (expr->kind() == ASTNodeKind::NotExpr) {
+    return DataType::Boolean;
+  }
+
   throw std::runtime_error(
       "Type inference not implemented for this expression");
+}
+
+bool SemanticValidator::areComparable(DataType left, DataType right) {
+
+  if (left == right) {
+    return true;
+  }
+
+  if (((left == DataType::Integer) && (right == DataType::Float)) ||
+      ((left == DataType::Float) && (right == DataType::Integer))) {
+    return true;
+  }
+
+  return false;
+}
+
+void SemanticValidator::validateComparison(const ComparisonExpr *expr,
+                                           const TableSchema &table) const {
+
+  const DataType leftType = inferType(expr->left(), table);
+  const DataType rightType = inferType(expr->right(), table);
+
+  if (!areComparable(leftType, rightType)) {
+    throw SemanticError(SemanticErrorKind::TypeMismatch,
+                        "incompatible types in comparison");
+  }
 }
 
 } // namespace hegadb

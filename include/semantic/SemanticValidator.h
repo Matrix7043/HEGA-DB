@@ -1,6 +1,7 @@
 #ifndef SEMANTIC_VALIDATOR_H
 #define SEMANTIC_VALIDATOR_H
 
+#include "ast/ComparisonExpr.h"
 #include "ast/Expr.h"
 #include "ast/SelectStmt.h"
 #include "catalog/Catalog.h"
@@ -22,6 +23,11 @@ private:
   void validateExpression(const Expr *expr,
                           const TableSchema &tableSchema) const;
   DataType inferType(const Expr *expr, const TableSchema &tableSchema) const;
+
+  void validateComparison(const ComparisonExpr *expr,
+                          const TableSchema &table) const;
+
+  static bool areComparable(DataType left, DataType right);
 };
 
 } // namespace hegadb
