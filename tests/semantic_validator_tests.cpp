@@ -396,7 +396,54 @@ int main() {
 
     assert(failed);
   }
+  // --------------------------------------------------------
+  // Invalid WHERE expression
+  //
+  // WHERE GRADE;
+  //
+  // Integer is not Boolean.
+  // --------------------------------------------------------
 
+  {
+    SelectStmt stmt;
+
+    stmt.addProjection(std::make_unique<Wildcard>());
+
+    stmt.setFrom(std::make_unique<TableRef>("STUDENTS"));
+
+    stmt.setWhere(std::make_unique<ColumnRef>("GRADE"));
+
+    bool failed = false;
+
+    try {
+      validator.validate(stmt);
+    } catch (const SemanticError &error) {
+
+      failed = true;
+
+      assert(error.kind() == SemanticErrorKind::TypeMismatch);
+    }
+
+    assert(failed);
+  }
+
+  // --------------------------------------------------------
+  // Valid Boolean WHERE
+  //
+  // WHERE true;
+  // --------------------------------------------------------
+
+  {
+    SelectStmt stmt;
+
+    stmt.addProjection(std::make_unique<Wildcard>());
+
+    stmt.setFrom(std::make_unique<TableRef>("STUDENTS"));
+
+    stmt.setWhere(std::make_unique<Literal>(true));
+
+    validator.validate(stmt);
+  }
   std::cout << "All semantic validator tests passed.\n";
 
   return 0;

@@ -38,7 +38,15 @@ void SemanticValidator::validate(const SelectStmt &stmt) const {
   }
 
   if (stmt.where() != nullptr) {
+
     validateExpression(stmt.where(), *table);
+
+    const DataType whereType = inferType(stmt.where(), *table);
+
+    if (whereType != DataType::Boolean) {
+      throw SemanticError(SemanticErrorKind::TypeMismatch,
+                          "WHERE expression must evaluate to Boolean");
+    }
   }
 }
 
@@ -81,13 +89,11 @@ void SemanticValidator::validateExpression(const Expr *expr,
   switch (expr->kind()) {
 
   case ASTNodeKind::ColumnRef: {
-    // inferType() also performs column resolution.
     inferType(expr, table);
     break;
   }
 
   case ASTNodeKind::Literal: {
-    // Verify that the literal has a supported type.
     inferType(expr, table);
     break;
   }
@@ -182,14 +188,36 @@ DataType SemanticValidator::inferType(const Expr *expr,
   }
 
   if (expr->kind() == ASTNodeKind::ComparisonExpr) {
+
+    const auto *comparison = static_cast<const ComparisonExpr *>(expr);
+    const DataType leftType = inferType(comparison->left(), table);
+    const DataType rightType = inferType(comparison->right(), table);
+    if (leftType != rightType) {
+      throw SemanticError(SemanticErrorKind::TypeMismatch,
+                          "comparison operands must have compatible types");
+    }
     return DataType::Boolean;
   }
 
   if (expr->kind() == ASTNodeKind::LogicalExpr) {
+
+    const auto *logical = static_cast<const LogicalExpr *>(expr);
+    const DataType leftType = inferType(logical->left(), table);
+    const DataType rightType = inferType(logical->right(), table);
+    if (leftType != DataType::Boolean || rightType != DataType::Boolean) {
+      throw SemanticError(SemanticErrorKind::TypeMismatch,
+                          "logical operands must have compatible types");
+    }
     return DataType::Boolean;
   }
 
   if (expr->kind() == ASTNodeKind::NotExpr) {
+    const auto *notExpr = static_cast<const NotExpr *>(expr);
+    const DataType childType = inferType(notExpr->child(), table);
+    if (childType != DataType::Boolean) {
+      throw SemanticError(SemanticErrorKind::TypeMismatch,
+                          "NOT operand must be Boolean");
+    }
     return DataType::Boolean;
   }
 
