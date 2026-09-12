@@ -8,11 +8,11 @@ namespace hegadb {
 
 class ASTPrinter {
 public:
-  void print(const SelectStmt *stmt) const;
+    void print(SelectStmt const* stmt) const;
 
 private:
-  void printExpr(const Expr *expr, const std::string &prefix,
-                 bool isLast) const;
+    void printExpr(Expr const* expr, std::string const& prefix,
+        bool isLast) const;
 };
 
 } // namespace hegadb

@@ -12,22 +12,22 @@ namespace hegadb {
 class SemanticValidator {
 
 public:
-  SemanticValidator(const Catalog &catalog);
-  void validate(const SelectStmt &stmt) const;
+    SemanticValidator(Catalog const& catalog);
+    void validate(SelectStmt const& stmt) const;
 
 private:
-  const Catalog &catalog_;
+    Catalog const& catalog_;
 
-  void validateProjection(const Expr *expr,
-                          const TableSchema &tableSchema) const;
-  void validateExpression(const Expr *expr,
-                          const TableSchema &tableSchema) const;
-  DataType inferType(const Expr *expr, const TableSchema &tableSchema) const;
+    void validateProjection(Expr const* expr,
+        TableSchema const& tableSchema) const;
+    void validateExpression(Expr const* expr,
+        TableSchema const& tableSchema) const;
+    DataType inferType(Expr const* expr, TableSchema const& tableSchema) const;
 
-  void validateComparison(const ComparisonExpr *expr,
-                          const TableSchema &table) const;
+    void validateComparison(ComparisonExpr const* expr,
+        TableSchema const& table) const;
 
-  static bool areComparable(DataType left, DataType right);
+    static bool areComparable(DataType left, DataType right);
 };
 
 } // namespace hegadb

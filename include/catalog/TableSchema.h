@@ -10,15 +10,16 @@ namespace hegadb {
 
 class TableSchema {
 public:
-  TableSchema(std::string name, std::vector<ColumnSchema> columns);
-  const std::string &name() const;
-  const std::vector<ColumnSchema> &columns() const;
-  const ColumnSchema *findColumn(const std::string &name) const;
+    TableSchema(std::string name, std::vector<ColumnSchema> columns);
+    std::string const& name() const;
+    std::vector<ColumnSchema> const& columns() const;
+    ColumnSchema const* findColumn(std::string const& name) const;
 
 private:
-  std::string name_;
-  std::vector<ColumnSchema> columns_;
+    std::string name_;
+    std::vector<ColumnSchema> columns_;
 };
+
 } // namespace hegadb
 
 #endif // !TABLE_SCHEMA_H

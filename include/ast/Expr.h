@@ -4,10 +4,12 @@
 #include "ASTNode.h"
 
 namespace hegadb {
+
 class Expr : public ASTNode {
 public:
-  ~Expr() override = default;
+    ~Expr() override = default;
 };
+
 } // namespace hegadb
 
 #endif

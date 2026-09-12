@@ -14,16 +14,16 @@ using SchemaVersion = std::uint64_t;
 class CatalogSnapshot {
 
 public:
-  CatalogSnapshot(SchemaVersion version,
-                  std::unordered_map<std::string, TableSchema> tables);
+    CatalogSnapshot(SchemaVersion version,
+        std::unordered_map<std::string, TableSchema> tables);
 
-  SchemaVersion version() const;
+    SchemaVersion version() const;
 
-  const TableSchema *findTable(const std::string &name) const;
+    TableSchema const* findTable(std::string const& name) const;
 
 private:
-  SchemaVersion version_;
-  std::unordered_map<std::string, TableSchema> tables_;
+    SchemaVersion version_;
+    std::unordered_map<std::string, TableSchema> tables_;
 };
 
 } // namespace hegadb

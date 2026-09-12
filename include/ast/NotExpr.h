@@ -11,14 +11,17 @@ namespace hegadb {
 class NotExpr : public Expr {
 
 public:
-  explicit NotExpr(std::unique_ptr<Expr> child) : child_(std::move(child)) {}
+    explicit NotExpr(std::unique_ptr<Expr> child)
+        : child_(std::move(child))
+    {
+    }
 
-  const Expr *child() const { return child_.get(); }
+    Expr const* child() const { return child_.get(); }
 
-  ASTNodeKind kind() const override { return ASTNodeKind::NotExpr; }
+    ASTNodeKind kind() const override { return ASTNodeKind::NotExpr; }
 
 private:
-  std::unique_ptr<Expr> child_;
+    std::unique_ptr<Expr> child_;
 };
 
 } // namespace hegadb

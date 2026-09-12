@@ -9,16 +9,21 @@
 #include <variant>
 
 namespace hegadb {
+
 class Literal : public Expr {
 public:
-  using Value = std::variant<long long, std::string, bool>;
-  explicit Literal(Value value) : value_(std::move(value)) {}
-  const Value &value() const { return value_; }
-  ASTNodeKind kind() const override { return ASTNodeKind::Literal; }
+    using Value = std::variant<long long, std::string, bool>;
+    explicit Literal(Value value)
+        : value_(std::move(value))
+    {
+    }
+    Value const& value() const { return value_; }
+    ASTNodeKind kind() const override { return ASTNodeKind::Literal; }
 
 private:
-  Value value_;
+    Value value_;
 };
+
 } // namespace hegadb
 
 #endif

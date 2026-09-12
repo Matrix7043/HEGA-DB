@@ -3,7 +3,10 @@
 
 namespace hegadb {
 
-enum class DataType { Integer, Float, String, Boolean };
+enum class DataType { Integer,
+    Float,
+    String,
+    Boolean };
 
 }
 

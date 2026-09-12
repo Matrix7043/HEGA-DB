@@ -11,13 +11,17 @@ namespace hegadb {
 
 class ColumnRef : public Expr {
 public:
-  explicit ColumnRef(std::string name) : name_(std::move(name)) {}
-  const std::string &name() const { return name_; }
-  ASTNodeKind kind() const override { return ASTNodeKind::ColumnRef; }
+    explicit ColumnRef(std::string name)
+        : name_(std::move(name))
+    {
+    }
+    std::string const& name() const { return name_; }
+    ASTNodeKind kind() const override { return ASTNodeKind::ColumnRef; }
 
 private:
-  std::string name_;
+    std::string name_;
 };
+
 } // namespace hegadb
 
 #endif

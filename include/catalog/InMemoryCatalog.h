@@ -9,14 +9,14 @@ namespace hegadb {
 
 class InMemoryCatalog final : public Catalog {
 public:
-  explicit InMemoryCatalog(std::shared_ptr<const CatalogSnapshot> snapshot);
+    explicit InMemoryCatalog(std::shared_ptr<CatalogSnapshot const> snapshot);
 
-  SchemaVersion version() const override;
+    SchemaVersion version() const override;
 
-  const TableSchema *findTable(const std::string &name) const override;
+    TableSchema const* findTable(std::string const& name) const override;
 
 private:
-  std::shared_ptr<const CatalogSnapshot> snapshot_;
+    std::shared_ptr<CatalogSnapshot const> snapshot_;
 };
 
 } // namespace hegadb

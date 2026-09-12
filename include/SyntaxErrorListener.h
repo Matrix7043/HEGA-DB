@@ -9,19 +9,19 @@
 
 class SyntaxErrorListener final : public antlr4::BaseErrorListener {
 public:
-  void syntaxError(antlr4::Recognizer *recognizer,
-                   antlr4::Token *offendingSymbol, size_t line,
-                   size_t charPositionInLLine, const std::string &msg,
-                   std::exception_ptr e) override;
+    void syntaxError(antlr4::Recognizer* recognizer,
+        antlr4::Token* offendingSymbol, size_t line,
+        size_t charPositionInLLine, std::string const& msg,
+        std::exception_ptr e) override;
 
-  [[nodiscard]]
-  bool hasErrors() const;
+    [[nodiscard]]
+    bool hasErrors() const;
 
-  [[nodiscard]]
-  const std::vector<std::string> &errors() const;
+    [[nodiscard]]
+    std::vector<std::string> const& errors() const;
 
 private:
-  std::vector<std::string> errors_;
+    std::vector<std::string> errors_;
 };
 
 #endif

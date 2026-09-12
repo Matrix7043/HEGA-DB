@@ -7,16 +7,16 @@
 
 class SQLParser {
 public:
-  struct ParseResult {
-    bool success;
-    std::vector<std::string> errors;
-  };
+    struct ParseResult {
+        bool success;
+        std::vector<std::string> errors;
+    };
 
-  [[nodiscard]]
-  ParseResult parse(const std::string &sql);
+    [[nodiscard]]
+    ParseResult parse(std::string const& sql);
 
-  [[nodiscard]]
-  std::unique_ptr<hegadb::SelectStmt> parseToAST(const std::string &sql);
+    [[nodiscard]]
+    std::unique_ptr<hegadb::SelectStmt> parseToAST(std::string const& sql);
 };
 
 #endif

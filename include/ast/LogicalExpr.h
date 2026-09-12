@@ -8,28 +8,34 @@
 
 namespace hegadb {
 
-enum class LogicalOp { AND, OR };
+enum class LogicalOp { AND,
+    OR };
 
 class LogicalExpr : public Expr {
 
 public:
-  LogicalExpr(std::unique_ptr<Expr> left, LogicalOp op,
-              std::unique_ptr<Expr> right)
-      : left_(std::move(left)), op_(op), right_(std::move(right)) {}
+    LogicalExpr(std::unique_ptr<Expr> left, LogicalOp op,
+        std::unique_ptr<Expr> right)
+        : left_(std::move(left))
+        , op_(op)
+        , right_(std::move(right))
+    {
+    }
 
-  const Expr *left() const { return left_.get(); }
+    Expr const* left() const { return left_.get(); }
 
-  LogicalOp op() const { return op_; }
+    LogicalOp op() const { return op_; }
 
-  const Expr *right() const { return right_.get(); }
+    Expr const* right() const { return right_.get(); }
 
-  ASTNodeKind kind() const override { return ASTNodeKind::LogicalExpr; }
+    ASTNodeKind kind() const override { return ASTNodeKind::LogicalExpr; }
 
 private:
-  std::unique_ptr<Expr> left_;
-  LogicalOp op_;
-  std::unique_ptr<Expr> right_;
+    std::unique_ptr<Expr> left_;
+    LogicalOp op_;
+    std::unique_ptr<Expr> right_;
 };
+
 } // namespace hegadb
 
 #endif

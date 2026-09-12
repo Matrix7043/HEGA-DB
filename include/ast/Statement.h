@@ -7,7 +7,7 @@ namespace hegadb {
 
 class Statement : public ASTNode {
 public:
-  ~Statement() override = default;
+    ~Statement() override = default;
 };
 
 } // namespace hegadb

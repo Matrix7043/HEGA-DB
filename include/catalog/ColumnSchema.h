@@ -9,10 +9,10 @@
 namespace hegadb {
 
 struct ColumnSchema {
-  std::string name;
-  DataType type;
-  bool nullable;
-  std::size_t ordinal;
+    std::string name;
+    DataType type;
+    bool nullable;
+    std::size_t ordinal;
 };
 
 } // namespace hegadb

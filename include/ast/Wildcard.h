@@ -8,8 +8,8 @@ namespace hegadb {
 
 class Wildcard : public Expr {
 public:
-  Wildcard() = default;
-  ASTNodeKind kind() const override { return ASTNodeKind::Wildcard; }
+    Wildcard() = default;
+    ASTNodeKind kind() const override { return ASTNodeKind::Wildcard; }
 };
 
 } // namespace hegadb

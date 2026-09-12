@@ -8,23 +8,26 @@
 namespace hegadb {
 
 enum class SemanticErrorKind {
-  TableNotFound,
-  ColumnNotFound,
-  TypeMismatch,
-  AmbigousColumn,
-  DuplicateColumn
+    TableNotFound,
+    ColumnNotFound,
+    TypeMismatch,
+    AmbigousColumn,
+    DuplicateColumn
 };
 
 class SemanticError : public std::runtime_error {
 
 public:
-  SemanticError(SemanticErrorKind kind, std::string message)
-      : kind_(kind), std::runtime_error(message) {}
+    SemanticError(SemanticErrorKind kind, std::string message)
+        : kind_(kind)
+        , std::runtime_error(message)
+    {
+    }
 
-  SemanticErrorKind kind() const noexcept { return kind_; }
+    SemanticErrorKind kind() const noexcept { return kind_; }
 
 private:
-  SemanticErrorKind kind_;
+    SemanticErrorKind kind_;
 };
 
 } // namespace hegadb
