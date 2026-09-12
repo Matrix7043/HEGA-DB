@@ -70,6 +70,8 @@ add_library(hegadb_core
 
     src/semantic/SemanticValidator.cpp
 
+    src/preparation/LiteralExtrator.cpp
+
     ${ANTLR_GENERATED_SOURCES}
 )
 
@@ -223,6 +225,20 @@ if(BUILD_TESTING)
   add_test(
     NAME semantic_validator_tests
     COMMAND semantic_validator_tests
+  )
+
+  add_executable(literal_extractor_tests
+    tests/literal_extractor_tests.cpp
+  )
+
+  target_link_libraries(literal_extractor_tests
+      PRIVATE
+          hegadb_core
+  )
+
+  add_test(
+      NAME literal_extractor_tests
+      COMMAND literal_extractor_tests
   )
 
 endif()

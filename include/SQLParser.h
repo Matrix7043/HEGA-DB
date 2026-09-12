@@ -2,6 +2,7 @@
 #define HEGADB_SQL_PARSER_H
 
 #include "ast/SelectStmt.h"
+#include <memory>
 #include <string>
 #include <vector>
 
