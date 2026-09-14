@@ -70,7 +70,14 @@ add_library(hegadb_core
 
     src/semantic/SemanticValidator.cpp
 
+    src/crypto/MockCiphertext.cpp
+    src/crypto/MockEncryption.cpp
+    src/crypto/Plaintext.cpp
+
     src/preparation/LiteralExtrator.cpp
+    src/preparation/EncryptedParameter.cpp
+    src/preparation/PreparedQuery.cpp
+    src/preparation/QueryPreparer.cpp
 
     ${ANTLR_GENERATED_SOURCES}
 )
@@ -240,5 +247,20 @@ if(BUILD_TESTING)
       NAME literal_extractor_tests
       COMMAND literal_extractor_tests
   )
+
+  add_executable(query_preparer_tests
+    tests/query_preparer_tests.cpp
+  )
+
+  target_link_libraries(query_preparer_tests
+    PRIVATE
+      hegadb_core
+  )
+
+  add_test(
+    NAME query_preparer_tests
+    COMMAND query_preparer_tests
+  )
+
 
 endif()

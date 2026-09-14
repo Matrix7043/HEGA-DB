@@ -4,13 +4,15 @@
 #include "crypto/Ciphertext.h"
 #include "crypto/Plaintext.h"
 
+#include <memory>
+
 namespace hegadb {
 
 class EncryptionWrapper {
 public:
     virtual ~EncryptionWrapper() = default;
 
-    virtual Ciphertext encrypt(Plaintext const& value) = 0;
+    virtual std::unique_ptr<Ciphertext> encrypt(Plaintext const& value) = 0;
 
     virtual Plaintext decrypt(Ciphertext const& value) = 0;
 };

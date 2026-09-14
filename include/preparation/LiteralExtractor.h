@@ -10,7 +10,7 @@ namespace hegadb {
 struct ExtractedLiteral {
 
     std::size_t parameter_index;
-    Literal::Value const* literal;
+    Literal::Value value;
 };
 
 class LiteralExtractor {

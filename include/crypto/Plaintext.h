@@ -3,17 +3,16 @@
 
 #include <catalog/DataType.h>
 
-#include <cstdint>
 #include <string>
 #include <variant>
 
 namespace hegadb {
 
-using PlaintextValue = std::variant<std::uint64_t, bool, std::string, double>;
+using PlaintextValue = std::variant<long long, bool, std::string>;
 
 class Plaintext {
 public:
-    Plaintext(DataType type, PlaintextValue value);
+    Plaintext(PlaintextValue value);
     DataType type() const;
     PlaintextValue const& value() const;
 

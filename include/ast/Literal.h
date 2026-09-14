@@ -4,6 +4,7 @@
 #include "ASTNode.h"
 #include "Expr.h"
 
+#include <crypto/Plaintext.h>
 #include <string>
 #include <utility>
 #include <variant>
@@ -12,7 +13,7 @@ namespace hegadb {
 
 class Literal : public Expr {
 public:
-    using Value = std::variant<long long, std::string, bool>;
+    using Value = PlaintextValue;
     explicit Literal(Value value)
         : value_(std::move(value))
     {

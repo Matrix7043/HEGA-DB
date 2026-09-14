@@ -21,7 +21,7 @@ void LiteralExtractor::visit(
 
     if (auto const* literal = dynamic_cast<Literal const*>(&node)) {
 
-        literals.push_back({ literals.size(), &literal->value() });
+        literals.push_back({ literals.size(), literal->value() });
         return;
     }
 

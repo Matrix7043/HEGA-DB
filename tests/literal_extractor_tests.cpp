@@ -21,7 +21,7 @@ int main()
 
         assert(literals.size() == 1);
         assert(literals[0].parameter_index == 0);
-        assert(literals[0].literal != nullptr);
+        assert(std::get<long long>(literals[0].value) == 90);
     }
 
     // Multiple literals
@@ -37,10 +37,10 @@ int main()
         assert(literals.size() == 2);
 
         assert(literals[0].parameter_index == 0);
-        assert(literals[0].literal != nullptr);
+        assert(std::get<long long>(literals[0].value) == 90);
 
         assert(literals[1].parameter_index == 1);
-        assert(literals[1].literal != nullptr);
+        assert(std::get<long long>(literals[1].value) == 10);
     }
 
     // NOT expression
@@ -55,7 +55,7 @@ int main()
 
         assert(literals.size() == 1);
         assert(literals[0].parameter_index == 0);
-        assert(literals[0].literal != nullptr);
+        assert(std::get<long long>(literals[0].value) == 90);
     }
 
     // No literals
