@@ -1,5 +1,6 @@
 #include "preparation/QueryPreparer.h"
 #include "crypto/Plaintext.h"
+#include "preparation/ASTParameterizer.h"
 #include "preparation/LiteralExtractor.h"
 
 #include <memory>
@@ -22,6 +23,9 @@ QueryPreparer::prepare(
 
     auto literals = extractor.extract(*root);
 
+    ASTParameterizer parameterizer;
+    auto parameterizedQuery = parameterizer.parameterize(*root);
+
     std::vector<EncryptedParameter> parameters;
     parameters.reserve(literals.size());
 
@@ -32,7 +36,7 @@ QueryPreparer::prepare(
     }
 
     return PreparedQuery(
-        std::move(root),
+        std::move(parameterizedQuery),
         std::move(parameters));
 }
 

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(HEGADB
-    VERSION 0.3.0
+    VERSION 0.4.0
     LANGUAGES CXX
 )
 
@@ -63,6 +63,7 @@ add_library(hegadb_core
 
     src/ast/ASTPrinter.cpp
     src/ast/ASTBuilder.cpp
+    src/ast/ASTParameterizer.cpp
 
     src/catalog/TableSchema.cpp
     src/catalog/CatalogSnapshot.cpp
@@ -262,5 +263,18 @@ if(BUILD_TESTING)
     COMMAND query_preparer_tests
   )
 
+  add_executable(ast_parameterizer_tests
+    tests/ast_parameterizer_tests.cpp
+  )
+
+  target_link_libraries(ast_parameterizer_tests
+    PRIVATE
+      hegadb_core
+  )
+
+  add_test(
+    NAME ast_parameterizer_tests
+    COMMAND ast_parameterizer_tests
+  )
 
 endif()

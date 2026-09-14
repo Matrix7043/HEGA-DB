@@ -11,7 +11,8 @@ enum class ASTNodeKind {
     Literal,
     ComparisonExpr,
     LogicalExpr,
-    NotExpr
+    NotExpr,
+    ParameterRef
 };
 
 class ASTNode {
