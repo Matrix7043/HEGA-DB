@@ -5,15 +5,13 @@
 #include "Expr.h"
 #include "hegadb/crypto/Plaintext.h"
 
-#include <string>
 #include <utility>
-#include <variant>
 
-namespace hegadb {
+namespace hegadb::client::ast {
 
 class Literal : public Expr {
 public:
-    using Value = PlaintextValue;
+    using Value = crypto::PlaintextValue;
     explicit Literal(Value value)
         : value_(std::move(value))
     {

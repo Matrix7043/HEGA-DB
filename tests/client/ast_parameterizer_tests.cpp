@@ -1,22 +1,25 @@
-#include "SQLParser.h"
+#include <hegadb/client/SQLParser.h>
 
-#include "ast/ColumnRef.h"
-#include "ast/ComparisonExpr.h"
-#include "ast/Literal.h"
-#include "ast/LogicalExpr.h"
-#include "ast/NotExpr.h"
-#include "ast/ParameterRef.h"
-#include "ast/SelectStmt.h"
+#include <hegadb/client/ast/ColumnRef.h>
+#include <hegadb/client/ast/ComparisonExpr.h>
+#include <hegadb/client/ast/Literal.h>
+#include <hegadb/client/ast/LogicalExpr.h>
+#include <hegadb/client/ast/NotExpr.h>
+#include <hegadb/client/ast/ParameterRef.h>
+#include <hegadb/client/ast/SelectStmt.h>
 
-#include "preparation/ASTParameterizer.h"
+#include <hegadb/client/ast/ASTParameterizer.h>
+
+#include <hegadb/operations/ComparisonOp.h>
+#include <hegadb/operations/LogicalOp.h>
 
 #include <cassert>
 #include <iostream>
 
 int main()
 {
-    SQLParser parser;
-    hegadb::ASTParameterizer parameterizer;
+    hegadb::client::SQLParser parser;
+    hegadb::client::ast::ASTParameterizer parameterizer;
 
     // Single literal
     {
@@ -27,25 +30,27 @@ int main()
 
         auto parameterized = parameterizer.parameterize(*ast);
 
-        auto const* select = dynamic_cast<hegadb::SelectStmt const*>(
+        auto const* select = dynamic_cast<hegadb::client::ast::SelectStmt const*>(
             parameterized.get());
 
         assert(select != nullptr);
         assert(select->where() != nullptr);
 
-        auto const* comparison = dynamic_cast<hegadb::ComparisonExpr const*>(
+        auto const* comparison = dynamic_cast<hegadb::client::ast::ComparisonExpr const*>(
             select->where());
 
         assert(comparison != nullptr);
-        assert(comparison->op() == hegadb::ComparisonOp::GT);
 
-        auto const* left = dynamic_cast<hegadb::ColumnRef const*>(
+        assert(
+            comparison->op() == hegadb::operations::ComparisonOp::GT);
+
+        auto const* left = dynamic_cast<hegadb::client::ast::ColumnRef const*>(
             comparison->left());
 
         assert(left != nullptr);
         assert(left->name() == "GRADE");
 
-        auto const* parameter = dynamic_cast<hegadb::ParameterRef const*>(
+        auto const* parameter = dynamic_cast<hegadb::client::ast::ParameterRef const*>(
             comparison->right());
 
         assert(parameter != nullptr);
@@ -62,30 +67,32 @@ int main()
 
         auto parameterized = parameterizer.parameterize(*ast);
 
-        auto const* select = dynamic_cast<hegadb::SelectStmt const*>(
+        auto const* select = dynamic_cast<hegadb::client::ast::SelectStmt const*>(
             parameterized.get());
 
         assert(select != nullptr);
 
-        auto const* logical = dynamic_cast<hegadb::LogicalExpr const*>(
+        auto const* logical = dynamic_cast<hegadb::client::ast::LogicalExpr const*>(
             select->where());
 
         assert(logical != nullptr);
-        assert(logical->op() == hegadb::LogicalOp::AND);
 
-        auto const* leftComparison = dynamic_cast<hegadb::ComparisonExpr const*>(
+        assert(
+            logical->op() == hegadb::operations::LogicalOp::AND);
+
+        auto const* leftComparison = dynamic_cast<hegadb::client::ast::ComparisonExpr const*>(
             logical->left());
 
-        auto const* rightComparison = dynamic_cast<hegadb::ComparisonExpr const*>(
+        auto const* rightComparison = dynamic_cast<hegadb::client::ast::ComparisonExpr const*>(
             logical->right());
 
         assert(leftComparison != nullptr);
         assert(rightComparison != nullptr);
 
-        auto const* leftParameter = dynamic_cast<hegadb::ParameterRef const*>(
+        auto const* leftParameter = dynamic_cast<hegadb::client::ast::ParameterRef const*>(
             leftComparison->right());
 
-        auto const* rightParameter = dynamic_cast<hegadb::ParameterRef const*>(
+        auto const* rightParameter = dynamic_cast<hegadb::client::ast::ParameterRef const*>(
             rightComparison->right());
 
         assert(leftParameter != nullptr);
@@ -94,10 +101,10 @@ int main()
         assert(leftParameter->parameterIndex() == 0);
         assert(rightParameter->parameterIndex() == 1);
 
-        auto const* leftColumn = dynamic_cast<hegadb::ColumnRef const*>(
+        auto const* leftColumn = dynamic_cast<hegadb::client::ast::ColumnRef const*>(
             leftComparison->left());
 
-        auto const* rightColumn = dynamic_cast<hegadb::ColumnRef const*>(
+        auto const* rightColumn = dynamic_cast<hegadb::client::ast::ColumnRef const*>(
             rightComparison->left());
 
         assert(leftColumn != nullptr);
@@ -117,22 +124,22 @@ int main()
 
         auto parameterized = parameterizer.parameterize(*ast);
 
-        auto const* select = dynamic_cast<hegadb::SelectStmt const*>(
+        auto const* select = dynamic_cast<hegadb::client::ast::SelectStmt const*>(
             parameterized.get());
 
         assert(select != nullptr);
 
-        auto const* notExpr = dynamic_cast<hegadb::NotExpr const*>(
+        auto const* notExpr = dynamic_cast<hegadb::client::ast::NotExpr const*>(
             select->where());
 
         assert(notExpr != nullptr);
 
-        auto const* comparison = dynamic_cast<hegadb::ComparisonExpr const*>(
+        auto const* comparison = dynamic_cast<hegadb::client::ast::ComparisonExpr const*>(
             notExpr->child());
 
         assert(comparison != nullptr);
 
-        auto const* parameter = dynamic_cast<hegadb::ParameterRef const*>(
+        auto const* parameter = dynamic_cast<hegadb::client::ast::ParameterRef const*>(
             comparison->right());
 
         assert(parameter != nullptr);
@@ -148,7 +155,7 @@ int main()
 
         auto parameterized = parameterizer.parameterize(*ast);
 
-        auto const* select = dynamic_cast<hegadb::SelectStmt const*>(
+        auto const* select = dynamic_cast<hegadb::client::ast::SelectStmt const*>(
             parameterized.get());
 
         assert(select != nullptr);
@@ -166,24 +173,29 @@ int main()
 
         auto parameterized = parameterizer.parameterize(*ast);
 
-        // Original AST still contains the literal.
-        auto const* originalComparison = dynamic_cast<hegadb::ComparisonExpr const*>(
+        auto const* originalComparison = dynamic_cast<
+            hegadb::client::ast::ComparisonExpr const*>(
             originalWhere);
 
         assert(originalComparison != nullptr);
-        assert(dynamic_cast<hegadb::Literal const*>(
-                   originalComparison->right())
+
+        assert(
+            dynamic_cast<
+                hegadb::client::ast::Literal const*>(
+                originalComparison->right())
             != nullptr);
 
-        // New AST contains ParameterRef.
-        auto const* newSelect = dynamic_cast<hegadb::SelectStmt const*>(
+        auto const* newSelect = dynamic_cast<hegadb::client::ast::SelectStmt const*>(
             parameterized.get());
 
-        auto const* newComparison = dynamic_cast<hegadb::ComparisonExpr const*>(
+        auto const* newComparison = dynamic_cast<
+            hegadb::client::ast::ComparisonExpr const*>(
             newSelect->where());
 
-        assert(dynamic_cast<hegadb::ParameterRef const*>(
-                   newComparison->right())
+        assert(
+            dynamic_cast<
+                hegadb::client::ast::ParameterRef const*>(
+                newComparison->right())
             != nullptr);
     }
 

@@ -1,6 +1,131 @@
-add_library(hegadb_operations INTERFACE)
+# ============================================================
+# Client Tests
+# ============================================================
 
-target_include_directories(hegadb_operations
-    INTERFACE
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
+add_executable(parser_tests
+    client/parser_tests.cpp
+)
+
+target_link_libraries(parser_tests
+    PRIVATE
+        hegadb_client_core
+)
+
+add_test(
+    NAME parser_tests
+    COMMAND parser_tests
+)
+
+
+add_executable(ast_tests
+    client/ast_tests.cpp
+)
+
+target_link_libraries(ast_tests
+    PRIVATE
+        hegadb_client_core
+)
+
+add_test(
+    NAME ast_tests
+    COMMAND ast_tests
+)
+
+
+add_executable(ast_builder_tests
+    client/ast_builder_tests.cpp
+)
+
+target_include_directories(ast_builder_tests
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}/client/generated
+        /usr/include/antlr4-runtime
+)
+
+target_link_libraries(ast_builder_tests
+    PRIVATE
+        hegadb_client_core
+)
+
+add_test(
+    NAME ast_builder_tests
+    COMMAND ast_builder_tests
+)
+
+add_executable(ast_parameterizer_tests
+    client/ast_parameterizer_tests.cpp
+)
+
+target_link_libraries(ast_parameterizer_tests
+    PRIVATE
+        hegadb_client_core
+)
+
+add_test(
+    NAME ast_parameterizer_tests
+    COMMAND ast_parameterizer_tests
+)
+
+
+add_executable(semantic_validator_tests
+    client/semantic_validator_tests.cpp
+)
+
+target_link_libraries(semantic_validator_tests
+    PRIVATE
+        hegadb_client_core
+)
+
+add_test(
+    NAME semantic_validator_tests
+    COMMAND semantic_validator_tests
+)
+
+
+add_executable(literal_extractor_tests
+    client/literal_extractor_tests.cpp
+)
+
+target_link_libraries(literal_extractor_tests
+    PRIVATE
+        hegadb_client_core
+)
+
+add_test(
+    NAME literal_extractor_tests
+    COMMAND literal_extractor_tests
+)
+
+
+add_executable(query_preparer_tests
+    client/query_preparer_tests.cpp
+)
+
+target_link_libraries(query_preparer_tests
+    PRIVATE
+        hegadb_client_core
+)
+
+add_test(
+    NAME query_preparer_tests
+    COMMAND query_preparer_tests
+)
+
+
+# ============================================================
+# Catalog Tests
+# ============================================================
+
+add_executable(catalog_tests
+    catalog/catalog_tests.cpp
+)
+
+target_link_libraries(catalog_tests
+    PRIVATE
+        hegadb_catalog
+)
+
+add_test(
+    NAME catalog_tests
+    COMMAND catalog_tests
 )

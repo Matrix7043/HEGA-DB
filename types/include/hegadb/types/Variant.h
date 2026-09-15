@@ -7,7 +7,6 @@
 namespace hegadb::types {
 
 using Variant = std::variant<
-    std::monostate,
     bool,
     long long,
     std::string>;

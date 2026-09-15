@@ -1,7 +1,7 @@
 #ifndef AST_NODE_H
 #define AST_NODE_H
 
-namespace hegadb {
+namespace hegadb::client::ast {
 
 enum class ASTNodeKind {
     SelectStmt,

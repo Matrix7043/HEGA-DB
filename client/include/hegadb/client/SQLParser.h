@@ -1,10 +1,13 @@
 #ifndef HEGADB_SQL_PARSER_H
 #define HEGADB_SQL_PARSER_H
 
-#include "ast/SelectStmt.h"
+#include "hegadb/client/ast/SelectStmt.h"
+
 #include <memory>
 #include <string>
 #include <vector>
+
+namespace hegadb::client {
 
 class SQLParser {
 public:
@@ -17,7 +20,9 @@ public:
     ParseResult parse(std::string const& sql);
 
     [[nodiscard]]
-    std::unique_ptr<hegadb::SelectStmt> parseToAST(std::string const& sql);
+    std::unique_ptr<ast::SelectStmt> parseToAST(std::string const& sql);
 };
+
+}
 
 #endif

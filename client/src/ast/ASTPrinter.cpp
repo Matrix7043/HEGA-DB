@@ -1,17 +1,17 @@
-#include "ast/ASTPrinter.h"
+#include "hegadb/client/ast/ASTPrinter.h"
 
-#include "ast/ColumnRef.h"
-#include "ast/ComparisonExpr.h"
-#include "ast/Literal.h"
-#include "ast/LogicalExpr.h"
-#include "ast/NotExpr.h"
-#include "ast/ParameterRef.h"
-#include "ast/TableRef.h"
+#include "hegadb/client/ast/ColumnRef.h"
+#include "hegadb/client/ast/ComparisonExpr.h"
+#include "hegadb/client/ast/Literal.h"
+#include "hegadb/client/ast/LogicalExpr.h"
+#include "hegadb/client/ast/NotExpr.h"
+#include "hegadb/client/ast/ParameterRef.h"
+#include "hegadb/client/ast/TableRef.h"
 
 #include <iostream>
 #include <variant>
 
-namespace hegadb {
+namespace hegadb::client::ast {
 
 void ASTPrinter::print(SelectStmt const* stmt) const
 {
@@ -90,22 +90,22 @@ void ASTPrinter::printExpr(Expr const* expr, std::string const& prefix,
         std::cout << prefix << branch << "ComparisonExpr: ";
 
         switch (comparison->op()) {
-        case ComparisonOp::EQ:
+        case operations::ComparisonOp::EQ:
             std::cout << '=';
             break;
-        case ComparisonOp::NEQ:
+        case operations::ComparisonOp::NEQ:
             std::cout << "!=";
             break;
-        case ComparisonOp::LT:
+        case operations::ComparisonOp::LT:
             std::cout << '<';
             break;
-        case ComparisonOp::GT:
+        case operations::ComparisonOp::GT:
             std::cout << '>';
             break;
-        case ComparisonOp::LTE:
+        case operations::ComparisonOp::LTE:
             std::cout << "<=";
             break;
-        case ComparisonOp::GTE:
+        case operations::ComparisonOp::GTE:
             std::cout << ">=";
             break;
         }
@@ -125,10 +125,10 @@ void ASTPrinter::printExpr(Expr const* expr, std::string const& prefix,
         std::cout << prefix << branch << "LogicalExpr: ";
 
         switch (logical->op()) {
-        case LogicalOp::AND:
+        case operations::LogicalOp::AND:
             std::cout << "AND";
             break;
-        case LogicalOp::OR:
+        case operations::LogicalOp::OR:
             std::cout << "OR";
             break;
         }

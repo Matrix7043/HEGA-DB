@@ -3,9 +3,8 @@
 
 #include <stdexcept>
 #include <string>
-#include <utility>
 
-namespace hegadb {
+namespace hegadb::client::semantic {
 
 enum class SemanticErrorKind {
     TableNotFound,

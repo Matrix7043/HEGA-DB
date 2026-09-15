@@ -1,19 +1,18 @@
-#include "preparation/ASTParameterizer.h"
-
-#include "ast/ColumnRef.h"
-#include "ast/ComparisonExpr.h"
-#include "ast/Literal.h"
-#include "ast/LogicalExpr.h"
-#include "ast/NotExpr.h"
-#include "ast/ParameterRef.h"
-#include "ast/SelectStmt.h"
-#include "ast/TableRef.h"
-#include "ast/Wildcard.h"
+#include "hegadb/client/ast/ASTParameterizer.h"
+#include "hegadb/client/ast/ColumnRef.h"
+#include "hegadb/client/ast/ComparisonExpr.h"
+#include "hegadb/client/ast/Literal.h"
+#include "hegadb/client/ast/LogicalExpr.h"
+#include "hegadb/client/ast/NotExpr.h"
+#include "hegadb/client/ast/ParameterRef.h"
+#include "hegadb/client/ast/SelectStmt.h"
+#include "hegadb/client/ast/TableRef.h"
+#include "hegadb/client/ast/Wildcard.h"
 
 #include <stdexcept>
 #include <utility>
 
-namespace hegadb {
+namespace hegadb::client::ast {
 
 std::unique_ptr<Expr>
 ASTParameterizer::transform(

@@ -1,33 +1,34 @@
 #ifndef SEMANTIC_VALIDATOR_H
 #define SEMANTIC_VALIDATOR_H
 
-#include "ast/ComparisonExpr.h"
-#include "ast/Expr.h"
-#include "ast/SelectStmt.h"
-#include "catalog/Catalog.h"
-#include "catalog/DataType.h"
-#include "catalog/TableSchema.h"
-namespace hegadb {
+#include "hegadb/catalog/Catalog.h"
+#include "hegadb/catalog/TableSchema.h"
+#include "hegadb/client/ast/ComparisonExpr.h"
+#include "hegadb/client/ast/Expr.h"
+#include "hegadb/client/ast/SelectStmt.h"
+#include "hegadb/types/DataType.h"
+
+namespace hegadb::client::semantic {
 
 class SemanticValidator {
 
 public:
-    SemanticValidator(Catalog const& catalog);
-    void validate(SelectStmt const& stmt) const;
+    SemanticValidator(catalog::Catalog const& catalog);
+    void validate(ast::SelectStmt const& stmt) const;
 
 private:
-    Catalog const& catalog_;
+    catalog::Catalog const& catalog_;
 
-    void validateProjection(Expr const* expr,
-        TableSchema const& tableSchema) const;
-    void validateExpression(Expr const* expr,
-        TableSchema const& tableSchema) const;
-    DataType inferType(Expr const* expr, TableSchema const& tableSchema) const;
+    void validateProjection(ast::Expr const* expr,
+        catalog::TableSchema const& tableSchema) const;
+    void validateExpression(ast::Expr const* expr,
+        catalog::TableSchema const& tableSchema) const;
+    types::DataType inferType(ast::Expr const* expr, catalog::TableSchema const& tableSchema) const;
 
-    void validateComparison(ComparisonExpr const* expr,
-        TableSchema const& table) const;
+    void validateComparison(ast::ComparisonExpr const* expr,
+        catalog::TableSchema const& table) const;
 
-    static bool areComparable(DataType left, DataType right);
+    static bool areComparable(types::DataType left, types::DataType right);
 };
 
 } // namespace hegadb

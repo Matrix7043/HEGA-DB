@@ -4,7 +4,7 @@
 #include "ASTNode.h"
 #include "Expr.h"
 
-namespace hegadb {
+namespace hegadb::client::ast {
 
 class Wildcard : public Expr {
 public:

@@ -1,25 +1,26 @@
 #ifndef LITERAL_EXTRACTOR_H
 #define LITERAL_EXTRACTOR_H
 
-#include "ast/Literal.h"
+#include "hegadb/client/ast/Literal.h"
+
 #include <cstddef>
 #include <vector>
 
-namespace hegadb {
+namespace hegadb::client::preparation {
 
 struct ExtractedLiteral {
 
     std::size_t parameter_index;
-    Literal::Value value;
+    ast::Literal::Value value;
 };
 
 class LiteralExtractor {
 public:
-    std::vector<ExtractedLiteral> extract(ASTNode const& root) const;
+    std::vector<ExtractedLiteral> extract(ast::ASTNode const& root) const;
 
 private:
     void visit(
-        ASTNode const& node,
+        ast::ASTNode const& node,
         std::vector<ExtractedLiteral>& literals) const;
 };
 

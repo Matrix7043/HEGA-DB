@@ -6,7 +6,7 @@
 
 #include <memory>
 
-namespace hegadb {
+namespace hegadb::client::ast {
 
 class ComparisonExpr : public Expr {
 public:

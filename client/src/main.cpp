@@ -1,18 +1,19 @@
-#include "SQLParser.h"
-#include "ast/ASTPrinter.h"
+#include <hegadb/client/SQLParser.h>
+#include <hegadb/client/ast/ASTPrinter.h>
 
-#include "catalog/CatalogSnapshot.h"
-#include "catalog/ColumnSchema.h"
-#include "catalog/DataType.h"
-#include "catalog/InMemoryCatalog.h"
-#include "catalog/TableSchema.h"
+#include <hegadb/catalog/CatalogSnapshot.h>
+#include <hegadb/catalog/ColumnSchema.h>
+#include <hegadb/catalog/InMemoryCatalog.h>
+#include <hegadb/catalog/TableSchema.h>
 
-#include "crypto/MockEncryption.h"
+#include <hegadb/types/DataType.h>
 
-#include "preparation/QueryPreparer.h"
+#include <hegadb/crypto/MockEncryption.h>
 
-#include "semantic/SemanticError.h"
-#include "semantic/SemanticValidator.h"
+#include <hegadb/client/preparation/QueryPreparer.h>
+
+#include <hegadb/client/semantic/SemanticError.h>
+#include <hegadb/client/semantic/SemanticValidator.h>
 
 #include <readline/history.h>
 #include <readline/readline.h>
@@ -25,45 +26,56 @@
 
 int main()
 {
-    std::cout << "HEGADB Client v0.4\n";
+    std::cout << "HEGADB Client v0.5\n";
     std::cout << "Type SQL queries. Type \\q to exit.\n\n";
-
-    using namespace hegadb;
 
     // ==========================================================
     // Client Catalog
     // ==========================================================
 
-    std::vector<ColumnSchema> studentColumns = {
-        { "NAME", DataType::String, false, 0 },
-        { "CLASS", DataType::Integer, false, 1 },
-        { "GRADE", DataType::Integer, false, 2 },
+    std::vector<hegadb::catalog::ColumnSchema> studentColumns = {
+        { "NAME",
+            hegadb::types::DataType::String,
+            false,
+            0 },
+        { "CLASS",
+            hegadb::types::DataType::Integer,
+            false,
+            1 },
+        { "GRADE",
+            hegadb::types::DataType::Integer,
+            false,
+            2 },
     };
 
-    TableSchema students(
+    hegadb::catalog::TableSchema students(
         "STUDENTS",
         std::move(studentColumns));
 
-    std::unordered_map<std::string, TableSchema> tables;
+    std::unordered_map<
+        std::string,
+        hegadb::catalog::TableSchema>
+        tables;
 
     tables.emplace(
         "STUDENTS",
         std::move(students));
 
-    auto snapshot = std::make_shared<CatalogSnapshot const>(
+    auto snapshot = std::make_shared<hegadb::catalog::CatalogSnapshot const>(
         1,
         std::move(tables));
 
-    InMemoryCatalog catalog(snapshot);
+    hegadb::catalog::InMemoryCatalog catalog(snapshot);
 
-    SemanticValidator validator(catalog);
+    hegadb::client::semantic::SemanticValidator validator(catalog);
 
     // ==========================================================
     // Query Preparation
     // ==========================================================
 
-    MockEncryption encryption;
-    QueryPreparer preparer(encryption);
+    hegadb::crypto::MockEncryption encryption;
+
+    hegadb::client::preparation::QueryPreparer preparer(encryption);
 
     // ==========================================================
     // Readline
@@ -97,7 +109,7 @@ int main()
         // Parse
         // ========================================================
 
-        SQLParser sqlParser;
+        hegadb::client::SQLParser sqlParser;
 
         auto ast { sqlParser.parseToAST(input) };
 
@@ -112,9 +124,11 @@ int main()
 
         try {
             validator.validate(*ast);
-        } catch (SemanticError const& error) {
-            std::cout << "Semantic error: "
-                      << error.what() << '\n';
+        } catch (hegadb::client::semantic::SemanticError const& error) {
+            std::cout
+                << "Semantic error: "
+                << error.what()
+                << '\n';
 
             continue;
         }
@@ -127,7 +141,8 @@ int main()
 
         std::cout << "AST:\n";
 
-        ASTPrinter printer;
+        hegadb::client::ast::ASTPrinter printer;
+
         printer.print(ast.get());
 
         // ========================================================
@@ -157,8 +172,8 @@ int main()
             std::cout
                 << "Parameterized AST:\n";
 
-            auto const* preparedSelect = dynamic_cast<SelectStmt const*>(
-                &prepared.query());
+            auto const* preparedSelect = dynamic_cast<
+                hegadb::client::ast::SelectStmt const*>(&prepared.query());
 
             if (preparedSelect != nullptr) {
                 printer.print(preparedSelect);
@@ -166,7 +181,6 @@ int main()
 
             std::cout
                 << "Query preparation successful.\n\n";
-
         } catch (std::exception const& error) {
 
             std::cout

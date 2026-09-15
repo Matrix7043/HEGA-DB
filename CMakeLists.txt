@@ -10,14 +10,15 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-option(HEGADB_BUILD_CLIENT "Build HEGADB client" OFF)
+option(HEGADB_BUILD_CLIENT "Build HEGADB client" ON)
 option(HEGADB_BUILD_SERVER "Build HEGADB server" OFF)
-option(HEGADB_BUILD_TESTS "Build HEGADB tests" OFF)
+option(HEGADB_BUILD_TESTS "Build HEGADB tests" ON)
 
 add_subdirectory(operations)
 add_subdirectory(types)
 add_subdirectory(crypto)
 add_subdirectory(catalog)
+add_subdirectory(protocol)
 
 if(HEGADB_BUILD_CLIENT)
   add_subdirectory(client)
@@ -26,8 +27,6 @@ endif()
 if(HEGADB_BUILD_SERVER)
   add_subdirectory(server)
 endif()
-
-#add_subdirectory(protocol)
 
 if(HEGADB_BUILD_TESTS)
   enable_testing()

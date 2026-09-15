@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+namespace hegadb::client {
+
 class SyntaxErrorListener final : public antlr4::BaseErrorListener {
 public:
     void syntaxError(antlr4::Recognizer* recognizer,
@@ -23,5 +25,7 @@ public:
 private:
     std::vector<std::string> errors_;
 };
+
+}
 
 #endif

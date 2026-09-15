@@ -7,7 +7,7 @@
 #include <memory>
 #include <utility>
 
-namespace hegadb {
+namespace hegadb::client::ast {
 
 class LogicalExpr : public Expr {
 

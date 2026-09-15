@@ -3,7 +3,7 @@
 
 #include "ASTNode.h"
 
-namespace hegadb {
+namespace hegadb::client::ast {
 
 class Expr : public ASTNode {
 public:

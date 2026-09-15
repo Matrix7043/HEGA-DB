@@ -6,7 +6,7 @@
 #include <memory>
 #include <utility>
 
-namespace hegadb {
+namespace hegadb::client::ast {
 
 class NotExpr : public Expr {
 

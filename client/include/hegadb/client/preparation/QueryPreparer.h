@@ -1,23 +1,23 @@
 #ifndef QUERY_PREPARER_H
 #define QUERY_PREPARER_H
 
-#include "ast/ASTNode.h"
-#include "crypto/EncryptionWrapper.h"
-#include "preparation/PreparedQuery.h"
+#include "hegadb/client/ast/ASTNode.h"
+#include "hegadb/client/preparation/PreparedQuery.h"
+#include "hegadb/crypto/EncryptionWrapper.h"
 
 #include <memory>
 
-namespace hegadb {
+namespace hegadb::client::preparation {
 
 class QueryPreparer {
 public:
-    explicit QueryPreparer(EncryptionWrapper& encryption);
+    explicit QueryPreparer(crypto::EncryptionWrapper& encryption);
 
     PreparedQuery
-    prepare(std::unique_ptr<ASTNode> root) const;
+    prepare(std::unique_ptr<ast::ASTNode> root) const;
 
 private:
-    EncryptionWrapper& encryption_;
+    crypto::EncryptionWrapper& encryption_;
 };
 
 }

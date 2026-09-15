@@ -8,7 +8,7 @@
 #include <memory>
 #include <vector>
 
-namespace hegadb {
+namespace hegadb::client::ast {
 
 class SelectStmt : public Statement {
 public:

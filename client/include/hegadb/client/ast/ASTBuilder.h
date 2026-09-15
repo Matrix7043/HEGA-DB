@@ -5,7 +5,7 @@
 
 #include "HEGADBParserBaseVisitor.h"
 
-namespace hegadb {
+namespace hegadb::client::ast {
 
 class ASTBuilder : public HEGADBParserBaseVisitor {
 public:

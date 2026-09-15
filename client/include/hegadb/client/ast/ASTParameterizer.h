@@ -1,12 +1,12 @@
 #ifndef AST_PARAMETERIZER_H
 #define AST_PARAMETERIZER_H
 
-#include "ast/ASTNode.h"
-#include "ast/Expr.h"
+#include "ASTNode.h"
+#include "Expr.h"
 
 #include <memory>
 
-namespace hegadb {
+namespace hegadb::client::ast {
 
 class ASTParameterizer {
 public:

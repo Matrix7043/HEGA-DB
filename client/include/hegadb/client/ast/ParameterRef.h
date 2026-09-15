@@ -1,12 +1,12 @@
 #ifndef PARAMETER_REF_H
 #define PARAMETER_REF_H
 
+#include "ASTNode.h"
 #include "Expr.h"
-#include "ast/ASTNode.h"
 
 #include <cstddef>
 
-namespace hegadb {
+namespace hegadb::client::ast {
 
 class ParameterRef : public Expr {
 

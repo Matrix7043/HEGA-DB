@@ -1,14 +1,13 @@
-#include "SQLParser.h"
-#include "preparation/LiteralExtractor.h"
+#include <hegadb/client/SQLParser.h>
+#include <hegadb/client/preparation/LiteralExtractor.h>
 
 #include <cassert>
 #include <iostream>
 
 int main()
 {
-
-    SQLParser parser;
-    hegadb::LiteralExtractor extractor;
+    hegadb::client::SQLParser parser;
+    hegadb::client::preparation::LiteralExtractor extractor;
 
     // Single literal
     {

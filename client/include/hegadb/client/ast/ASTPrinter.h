@@ -4,7 +4,7 @@
 #include "SelectStmt.h"
 #include <string>
 
-namespace hegadb {
+namespace hegadb::client::ast {
 
 class ASTPrinter {
 public:

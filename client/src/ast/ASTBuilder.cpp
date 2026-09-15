@@ -13,10 +13,9 @@
 #include <any>
 #include <memory>
 #include <stdexcept>
-#include <utility>
 #include <vector>
 
-namespace hegadb {
+namespace hegadb::client::ast {
 
 std::any ASTBuilder::visitQuery(HEGADBParser::QueryContext* ctx)
 {

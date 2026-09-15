@@ -1,13 +1,13 @@
-#include "preparation/EncryptedParameter.h"
+#include "hegadb/client/preparation/EncryptedParameter.h"
 
 #include <memory>
 #include <utility>
 
-namespace hegadb {
+namespace hegadb::client::preparation {
 
 EncryptedParameter::EncryptedParameter(
     std::size_t index,
-    std::unique_ptr<Ciphertext> ciphertext)
+    std::unique_ptr<crypto::Ciphertext> ciphertext)
     : index_(index)
     , ciphertext_(std::move(ciphertext))
 {
@@ -15,6 +15,6 @@ EncryptedParameter::EncryptedParameter(
 
 std::size_t EncryptedParameter::index() const { return index_; }
 
-Ciphertext const& EncryptedParameter::ciphertext() const { return *ciphertext_; }
+crypto::Ciphertext const& EncryptedParameter::ciphertext() const { return *ciphertext_; }
 
 }

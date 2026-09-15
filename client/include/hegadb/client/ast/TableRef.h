@@ -6,7 +6,7 @@
 #include <string>
 #include <utility>
 
-namespace hegadb {
+namespace hegadb::client::ast {
 
 class TableRef : public ASTNode {
 public:

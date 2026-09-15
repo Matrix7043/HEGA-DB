@@ -7,6 +7,8 @@
 #include "hegadb/client/ast/SelectStmt.h"
 #include <memory>
 
+namespace hegadb::client {
+
 SQLParser::ParseResult SQLParser::parse(std::string const& sql)
 {
     antlr4::ANTLRInputStream input(sql);
@@ -44,7 +46,7 @@ SQLParser::ParseResult SQLParser::parse(std::string const& sql)
     return result;
 }
 
-std::unique_ptr<hegadb::SelectStmt>
+std::unique_ptr<ast::SelectStmt>
 SQLParser::parseToAST(std::string const& sql)
 {
 
@@ -72,11 +74,13 @@ SQLParser::parseToAST(std::string const& sql)
         return nullptr;
     }
 
-    hegadb::ASTBuilder builder;
+    ast::ASTBuilder builder;
 
     auto result = builder.visitQuery(tree);
 
-    auto* stmt = std::any_cast<hegadb::SelectStmt*>(result);
+    auto* stmt = std::any_cast<ast::SelectStmt*>(result);
 
-    return std::unique_ptr<hegadb::SelectStmt>(stmt);
+    return std::unique_ptr<ast::SelectStmt>(stmt);
+}
+
 }
