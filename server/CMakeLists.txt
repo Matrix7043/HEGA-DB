@@ -1,6 +1,6 @@
-add_library(hegadb_operations INTERFACE)
+add_library(hegadb_server INTERFACE)
 
-target_include_directories(hegadb_operations
+target_include_directories(hegadb_server
     INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
