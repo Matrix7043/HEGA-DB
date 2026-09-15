@@ -6,7 +6,7 @@
 
 #include "ColumnSchema.h"
 
-namespace hegadb {
+namespace hegadb::catalog {
 
 class TableSchema {
 public:

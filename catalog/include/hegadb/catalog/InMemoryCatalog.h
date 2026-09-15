@@ -5,7 +5,7 @@
 
 #include "Catalog.h"
 
-namespace hegadb {
+namespace hegadb::catalog {
 
 class InMemoryCatalog final : public Catalog {
 public:

@@ -7,7 +7,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace hegadb {
+namespace hegadb::catalog {
 
 using SchemaVersion = std::uint64_t;
 

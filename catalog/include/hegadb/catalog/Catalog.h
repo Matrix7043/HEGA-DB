@@ -5,7 +5,7 @@
 
 #include "CatalogSnapshot.h"
 
-namespace hegadb {
+namespace hegadb::catalog {
 
 class Catalog {
 public:

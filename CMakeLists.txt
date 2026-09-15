@@ -17,6 +17,7 @@ option(HEGADB_BUILD_TESTS "Build HEGADB tests" OFF)
 add_subdirectory(operations)
 add_subdirectory(types)
 add_subdirectory(crypto)
+add_subdirectory(catalog)
 
 if(HEGADB_BUILD_CLIENT)
   add_subdirectory(client)
@@ -26,7 +27,6 @@ if(HEGADB_BUILD_SERVER)
   add_subdirectory(server)
 endif()
 
-#add_subdirectory(catalog)
 #add_subdirectory(protocol)
 
 if(HEGADB_BUILD_TESTS)

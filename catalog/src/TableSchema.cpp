@@ -1,25 +1,30 @@
-#include "catalog/TableSchema.h"
+#include "hegadb/catalog/TableSchema.h"
 #include <utility>
 
-namespace hegadb {
+namespace hegadb::catalog {
 
 TableSchema::TableSchema(std::string name, std::vector<ColumnSchema> columns)
-    : name_(std::move(name)), columns_(std::move(columns)) {}
-
-const std::string &TableSchema::name() const { return name_; }
-
-const std::vector<ColumnSchema> &TableSchema::columns() const {
-  return columns_;
+    : name_(std::move(name))
+    , columns_(std::move(columns))
+{
 }
 
-const ColumnSchema *TableSchema::findColumn(const std::string &name) const {
+std::string const& TableSchema::name() const { return name_; }
 
-  for (auto const &column : columns_) {
-    if (column.name == name)
-      return &column;
-  }
+std::vector<ColumnSchema> const& TableSchema::columns() const
+{
+    return columns_;
+}
 
-  return nullptr;
+ColumnSchema const* TableSchema::findColumn(std::string const& name) const
+{
+
+    for (auto const& column : columns_) {
+        if (column.name == name)
+            return &column;
+    }
+
+    return nullptr;
 }
 
 } // namespace hegadb

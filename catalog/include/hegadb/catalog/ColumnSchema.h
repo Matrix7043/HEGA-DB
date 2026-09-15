@@ -4,13 +4,13 @@
 #include <cstddef>
 #include <string>
 
-#include "DataType.h"
+#include "hegadb/types/DataType.h"
 
-namespace hegadb {
+namespace hegadb::catalog {
 
 struct ColumnSchema {
     std::string name;
-    DataType type;
+    types::DataType type;
     bool nullable;
     std::size_t ordinal;
 };
