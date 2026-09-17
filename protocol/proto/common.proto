@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package hegadb.protocol;
+
+enum StatusCode {
+  STATUS_OK = 0;
+  STATUS_ERROR = 1;
+  STATUS_SYNTAX_ERROR = 2;
+  // STATUS_AUTH_ERROR = 3;
+}
+
+message Status {
+  StatusCode code = 1;
+  string message = 2; // Optional
+}

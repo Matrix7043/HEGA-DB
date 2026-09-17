@@ -129,3 +129,24 @@ add_test(
     NAME catalog_tests
     COMMAND catalog_tests
 )
+
+
+# ============================================================
+# Server Protocol tests
+# ============================================================
+
+add_executable(protocol_server_tests
+    server/protocol_server_tests.cpp
+)
+
+target_link_libraries(protocol_server_tests
+    PRIVATE
+        hegadb_protocol
+        hegadb_client_core
+)
+
+add_test(
+    NAME protocol_server_tests
+    COMMAND protocol_server_tests
+)
+
