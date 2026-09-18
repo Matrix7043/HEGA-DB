@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-import "common.proto";
-
 package hegadb.protocol;
+
+import "common.proto";
 
 message EncryptedParameter {
   uint32 index = 1;
@@ -21,23 +21,25 @@ message ParameterRef {
 message Wildcard {}
 
 enum ComparisonOp {
-  EQ = 0;
-  NEQ = 1;
-  LT = 2;
-  GT = 3;
-  LTE = 4;
-  GTE = 5;
+  COMPARISON_OP_UNSPECIFIED = 0;
+  COMPARISON_OP_EQ = 1;
+  COMPARISON_OP_NEQ = 2;
+  COMPARISON_OP_LT = 3;
+  COMPARISON_OP_GT = 4;
+  COMPARISON_OP_LTE = 5;
+  COMPARISON_OP_GTE = 6;
+}
+
+enum LogicalOp {
+  LOGICAL_OP_UNSPECIFIED = 0;
+  LOGICAL_OP_AND = 1;
+  LOGICAL_OP_OR = 2;
 }
 
 message ComparisonExpr {
   Expression left = 1;
   ComparisonOp operator = 2;
   Expression right = 3;
-}
-
-enum LogicalOp {
-  AND = 0;
-  OR = 1;
 }
 
 message LogicalExpr {
@@ -51,7 +53,6 @@ message NotExpr {
 }
 
 message Expression {
-  // Variant type that can be one of these types
   oneof expr_type {
     ColumnRef column_ref = 1;
     ParameterRef parameter_ref = 2;
@@ -68,19 +69,25 @@ message TableRef {
 
 message SelectStatement {
   repeated Expression projections = 1;
-  TableRef from_table = 2; 
-  Expression where = 3; // Optional 
+  TableRef from_table = 2;
+  Expression where = 3;
 }
 
 message Statement {
   oneof statement {
     SelectStatement select_statement = 1;
-    // Add further implementation
   }
 }
 
 message ExecuteQuery {
-  uint32 query_id = 1;
-  Statement statement = 2;
-  repeated EncryptedParameter parameters = 3;
+  ProtocolVersion protocol_version = 1;
+  RequestId request_id = 2;
+  Statement statement = 3;
+  repeated EncryptedParameter parameters = 4;
+}
+
+message QueryResponse {
+  ProtocolVersion protocol_version = 1;
+  RequestId request_id = 2;
+  Status status = 3;
 }
