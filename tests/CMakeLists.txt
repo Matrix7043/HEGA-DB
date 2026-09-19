@@ -130,6 +130,24 @@ add_test(
     COMMAND catalog_tests
 )
 
+# protocol_test
+
+add_executable(hegadb_protocol_test
+    protocol/protocol_tests.cpp
+)
+
+target_link_libraries(hegadb_protocol_test
+    PRIVATE
+        hegadb_protocol
+        hegadb_client_core
+        hegadb_crypto
+)
+
+add_test(
+    NAME hegadb_protocol_test
+    COMMAND hegadb_protocol_test
+)
+
 # ============================================================
 # Crypto Tests
 # ============================================================

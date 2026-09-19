@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package hegadb.protocol;
+
+message ProtocolVersion {
+  uint32 major = 1;
+  uint32 minor = 2;
+}
+
+message RequestId {
+  string value = 1;
+}
+
+enum MessageType {
+  MESSAGE_TYPE_UNSPECIFIED = 0;
+  QUERY_REQUEST = 1;
+  QUERY_RESPONSE = 2;
+  ERROR_RESPONSE = 3;
+}
+
+enum StatusCode {
+  STATUS_OK = 0;
+  STATUS_ERROR = 1;
+  STATUS_SYNTAX_ERROR = 2;
+}
+
+message Status {
+  StatusCode code = 1;
+  string message = 2; // Optional
+}
