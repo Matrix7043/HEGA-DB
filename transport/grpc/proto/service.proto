@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package hegadb.transport.grpc;
+
+import "query.proto";
+
+service HEGADBService {
+  rpc Execute(
+      hegadb.protocol.ExecuteQuery) 
+    returns (
+        hegadb.protocol.QueryResponse
+        );
+}

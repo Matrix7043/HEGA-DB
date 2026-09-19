@@ -19,6 +19,7 @@ add_subdirectory(types)
 add_subdirectory(crypto)
 add_subdirectory(catalog)
 add_subdirectory(protocol)
+add_subdirectory(transport/grpc)
 
 if(HEGADB_BUILD_CLIENT)
   add_subdirectory(client)
