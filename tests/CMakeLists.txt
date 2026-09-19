@@ -150,6 +150,68 @@ add_test(
     COMMAND hegadb_protocol_test
 )
 
+
+# ============================================================
+# Crypto Tests
+# ============================================================
+
+add_executable(crypto_basic_tests
+    crypto/crypto_basic_tests.cpp
+)
+
+target_link_libraries(crypto_basic_tests
+    PRIVATE
+        hegadb_crypto
+)
+
+add_test(
+    NAME crypto_basic_tests
+    COMMAND crypto_basic_tests
+)
+
+add_executable(crypto_string_tests
+    crypto/crypto_string_tests.cpp
+)
+
+target_link_libraries(crypto_string_tests
+    PRIVATE
+        hegadb_crypto
+)
+
+add_test(
+    NAME crypto_string_tests
+    COMMAND crypto_string_tests
+)
+
+add_executable(crypto_context_tests
+    crypto/crypto_context_tests.cpp
+)
+
+target_link_libraries(crypto_context_tests
+    PRIVATE
+        hegadb_crypto
+)
+
+add_test(
+    NAME crypto_context_tests
+    COMMAND crypto_context_tests
+)
+
+add_executable(crypto_edge_cases_tests
+    crypto/crypto_edge_cases_tests.cpp
+)
+
+target_link_libraries(crypto_edge_cases_tests
+    PRIVATE
+        hegadb_crypto
+)
+
+add_test(
+    NAME crypto_edge_cases_tests
+    COMMAND crypto_edge_cases_tests
+)
+
+
 # ============================================================
 # gRPC Tests
 # ============================================================
