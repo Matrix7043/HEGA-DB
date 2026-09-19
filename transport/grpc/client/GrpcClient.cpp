@@ -11,13 +11,13 @@
 namespace hegadb::transport::grpc {
 
 GrpcClient::GrpcClient(std::string const& address)
-    : channel_(
-          ::grpc::CreateChannel(address, ::grpc::InsecureChannelCredentials()))
-    , stub_(HEGADBService::NewStub(channel_))
+    : stub_(HEGADBService::NewStub(
+          ::grpc::CreateChannel(address,
+              ::grpc::InsecureChannelCredentials())))
 {
 }
 
-protocol::QueryResponse GrpcClient::Execute(
+protocol::QueryResponse GrpcClient::execute(
     protocol::ExecuteQuery const& request)
 {
     protocol::QueryResponse response;

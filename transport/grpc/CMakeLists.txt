@@ -58,8 +58,8 @@ add_library(hegadb_grpc_server
 
 target_link_libraries(hegadb_grpc_server
   PUBLIC
+    hegadb_transport
     hegadb_grpc
-    gRPC::grpc++
 )
 
 target_include_directories(hegadb_grpc_server
@@ -73,8 +73,8 @@ add_library(hegadb_grpc_client
 
 target_link_libraries(hegadb_grpc_client
   PUBLIC
+    hegadb_transport
     hegadb_grpc
-    gRPC::grpc++
 )
 
 target_include_directories(hegadb_grpc_client
