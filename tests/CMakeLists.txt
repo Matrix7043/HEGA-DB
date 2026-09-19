@@ -130,7 +130,9 @@ add_test(
     COMMAND catalog_tests
 )
 
-# protocol_test
+# ============================================================
+# Protocol Tests
+# ============================================================
 
 add_executable(hegadb_protocol_test
     protocol/protocol_tests.cpp
@@ -147,6 +149,7 @@ add_test(
     NAME hegadb_protocol_test
     COMMAND hegadb_protocol_test
 )
+
 
 # ============================================================
 # Crypto Tests
@@ -207,3 +210,24 @@ add_test(
     NAME crypto_edge_cases_tests
     COMMAND crypto_edge_cases_tests
 )
+
+
+# ============================================================
+# gRPC Tests
+# ============================================================
+
+find_package(GTest CONFIG REQUIRED)
+
+add_executable(hegadb_grpc_tests
+  grpc/grpc_tests.cpp
+)
+
+target_link_libraries(hegadb_grpc_tests
+  hegadb_grpc_client
+  hegadb_grpc_server
+  GTest::gtest_main
+)
+
+include(GoogleTest)
+
+gtest_discover_tests(hegadb_grpc_tests)
