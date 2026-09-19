@@ -14,6 +14,9 @@ public:
     void Wait();
     void Shutdown();
 
+    [[nodiscard]]
+    std::string const& address() const noexcept;
+
 private:
     std::string address_;
 
