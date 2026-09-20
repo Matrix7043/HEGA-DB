@@ -1,4 +1,11 @@
-find_package(Protobuf REQUIRED)
+find_package(Protobuf CONFIG QUIET)
+
+# If not found
+# fall back to CMake's generic Module Mode (For Fedora/older systems)
+
+if(NOT Protobuf_FOUND)
+  find_package(Protobuf REQUIRED)
+endif()
 find_package(gRPC CONFIG REQUIRED)
 
 set(HEGADB_GRPC_PROTO_FILES
