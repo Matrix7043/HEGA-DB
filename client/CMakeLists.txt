@@ -44,6 +44,8 @@ add_library(hegadb_client_core
 
     src/semantic/SemanticValidator.cpp
 
+    src/protocol/ExecuteQueryEncoder.cpp
+
     ${ANTLR_GENERATED_SOURCES}
 )
 
@@ -74,6 +76,8 @@ target_link_libraries(hegadb_client_core
         hegadb_types
         hegadb_crypto
         hegadb_catalog
+        hegadb_protocol
+        hegadb_client_transport
         antlr4-runtime
 )
 

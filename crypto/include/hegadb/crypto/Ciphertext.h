@@ -6,6 +6,7 @@ namespace hegadb::crypto {
 class Ciphertext {
 public:
     virtual ~Ciphertext() = default;
+    // TODO: virtual std::string serialize() = 0
 };
 
 }

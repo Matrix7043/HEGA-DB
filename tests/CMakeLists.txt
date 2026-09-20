@@ -111,6 +111,19 @@ add_test(
     COMMAND query_preparer_tests
 )
 
+add_executable(execute_query_encoder_tests
+    client/execute_query_encoder_tests.cpp
+)
+
+target_link_libraries(execute_query_encoder_tests
+    PRIVATE
+      hegadb_client_core
+)
+
+add_test(
+    NAME execute_query_encoder_tests
+    COMMAND execute_query_encoder_tests
+)
 
 # ============================================================
 # Catalog Tests
