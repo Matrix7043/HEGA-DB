@@ -1,4 +1,4 @@
-#include "GrpcServer.h"
+#include "hegadb/transport/grpc/GrpcServer.h"
 
 #include <iostream>
 #include <stdexcept>

@@ -1,5 +1,5 @@
-#include <GrpcClient.h>
-#include <GrpcServer.h>
+#include "hegadb/transport/grpc/GrpcClient.h"
+#include "hegadb/transport/grpc/GrpcServer.h"
 #include <hegadb/server/ExecuteQueryReceiver.h>
 
 #include <chrono>

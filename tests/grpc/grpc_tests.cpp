@@ -1,5 +1,5 @@
-#include "GrpcClient.h"
-#include "GrpcServer.h"
+#include "hegadb/transport/grpc/GrpcClient.h"
+#include "hegadb/transport/grpc/GrpcServer.h"
 
 #include <gtest/gtest.h>
 

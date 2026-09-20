@@ -1,4 +1,4 @@
-#include "HEGADBServiceImpl.h"
+#include "hegadb/transport/grpc/HEGADBServiceImpl.h"
 
 #include <utility>
 

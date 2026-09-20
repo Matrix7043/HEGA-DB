@@ -11,7 +11,7 @@ target_include_directories(hegadb_server
 target_link_libraries(hegadb_server
     PUBLIC
         hegadb_protocol
-        hegadb_grpc_server
+        hegadb_server_transport
         hegadb_catalog
         hegadb_operations
         hegadb_types

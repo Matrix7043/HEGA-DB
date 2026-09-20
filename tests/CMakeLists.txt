@@ -223,8 +223,8 @@ add_executable(hegadb_grpc_tests
 )
 
 target_link_libraries(hegadb_grpc_tests
-  hegadb_grpc_client
-  hegadb_grpc_server
+  hegadb_server_transport
+  hegadb_client_transport
   GTest::gtest_main
 )
 
@@ -244,8 +244,8 @@ add_executable(server_receiver_tests
 target_link_libraries(server_receiver_tests
     PRIVATE
         hegadb_server
-        hegadb_grpc_client
-        hegadb_grpc_server
+        hegadb_server_transport
+        hegadb_client_transport
         GTest::gtest_main
 )
 

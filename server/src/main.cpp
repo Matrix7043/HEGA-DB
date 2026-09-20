@@ -1,8 +1,8 @@
-#include <GrpcServer.h>
 #include <hegadb/catalog/InMemoryCatalog.h>
 #include <hegadb/server/ExecuteQueryReceiver.h>
 #include <hegadb/server/QueryExecutor.h>
 #include <hegadb/transport/ServerTransport.h>
+#include <hegadb/transport/grpc/GrpcServer.h>
 
 #include <iostream>
 #include <memory>
