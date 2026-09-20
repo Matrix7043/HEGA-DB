@@ -1,4 +1,4 @@
-find_package(Protobuf CONFIG REQUIRED)
+find_package(Protobuf REQUIRED)
 
 set(HEGADB_PROTOCOL_PROTO_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/proto/common.proto
