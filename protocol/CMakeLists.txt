@@ -1,4 +1,11 @@
-find_package(Protobuf REQUIRED)
+find_package(Protobuf CONFIG QUIET)
+
+# If not found
+# fall back to CMake's generic Module Mode (For Fedora/older systems)
+
+if(NOT Protobuf_FOUND)
+  find_package(Protobuf REQUIRED)
+endif()
 
 set(HEGADB_PROTOCOL_PROTO_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/proto/common.proto
