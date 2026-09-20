@@ -231,3 +231,22 @@ target_link_libraries(hegadb_grpc_tests
 include(GoogleTest)
 
 gtest_discover_tests(hegadb_grpc_tests)
+
+
+# ============================================================
+# Server Receiver Tests
+# ============================================================
+
+add_executable(server_receiver_tests
+    server/server_receiver_tests.cpp
+)
+
+target_link_libraries(server_receiver_tests
+    PRIVATE
+        hegadb_server
+        hegadb_grpc_client
+        hegadb_grpc_server
+        GTest::gtest_main
+)
+
+gtest_discover_tests(server_receiver_tests)
