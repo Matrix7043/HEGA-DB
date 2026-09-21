@@ -1,4 +1,4 @@
-#include "GrpcClient.h"
+#include "hegadb/transport/grpc/GrpcClient.h"
 #include "query.pb.h"
 #include "service.grpc.pb.h"
 

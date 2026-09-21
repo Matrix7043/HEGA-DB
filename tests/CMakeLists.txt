@@ -111,6 +111,19 @@ add_test(
     COMMAND query_preparer_tests
 )
 
+add_executable(execute_query_encoder_tests
+    client/execute_query_encoder_tests.cpp
+)
+
+target_link_libraries(execute_query_encoder_tests
+    PRIVATE
+      hegadb_client_core
+)
+
+add_test(
+    NAME execute_query_encoder_tests
+    COMMAND execute_query_encoder_tests
+)
 
 # ============================================================
 # Catalog Tests
@@ -223,11 +236,30 @@ add_executable(hegadb_grpc_tests
 )
 
 target_link_libraries(hegadb_grpc_tests
-  hegadb_grpc_client
-  hegadb_grpc_server
+  hegadb_server_transport
+  hegadb_client_transport
   GTest::gtest_main
 )
 
 include(GoogleTest)
 
 gtest_discover_tests(hegadb_grpc_tests)
+
+
+# ============================================================
+# Server Receiver Tests
+# ============================================================
+
+add_executable(server_receiver_tests
+    server/server_receiver_tests.cpp
+)
+
+target_link_libraries(server_receiver_tests
+    PRIVATE
+        hegadb_server
+        hegadb_server_transport
+        hegadb_client_transport
+        GTest::gtest_main
+)
+
+gtest_discover_tests(server_receiver_tests)

@@ -11,9 +11,12 @@
 #include <hegadb/crypto/MockEncryption.h>
 
 #include <hegadb/client/preparation/QueryPreparer.h>
+#include <hegadb/client/protocol/ExecuteQueryEncoder.h>
 
 #include <hegadb/client/semantic/SemanticError.h>
 #include <hegadb/client/semantic/SemanticValidator.h>
+
+#include <hegadb/transport/ClientTransportFactory.h>
 
 #include <readline/history.h>
 #include <readline/readline.h>
@@ -26,7 +29,7 @@
 
 int main()
 {
-    std::cout << "HEGADB Client v0.5\n";
+    std::cout << "HEGADB Client v0.7\n";
     std::cout << "Type SQL queries. Type \\q to exit.\n\n";
 
     // ==========================================================
@@ -61,13 +64,15 @@ int main()
         "STUDENTS",
         std::move(students));
 
-    auto snapshot = std::make_shared<hegadb::catalog::CatalogSnapshot const>(
+    auto snapshot = std::make_shared<
+        hegadb::catalog::CatalogSnapshot const>(
         1,
         std::move(tables));
 
     hegadb::catalog::InMemoryCatalog catalog(snapshot);
 
-    hegadb::client::semantic::SemanticValidator validator(catalog);
+    hegadb::client::semantic::SemanticValidator validator(
+        catalog);
 
     // ==========================================================
     // Query Preparation
@@ -75,11 +80,21 @@ int main()
 
     hegadb::crypto::MockEncryption encryption;
 
-    hegadb::client::preparation::QueryPreparer preparer(encryption);
+    hegadb::client::preparation::QueryPreparer preparer(
+        encryption);
+
+    // ==========================================================
+    // Client Transport
+    // ==========================================================
+
+    auto transport = hegadb::transport::ClientTransportFactory::createGrpc(
+        "localhost:50051");
 
     // ==========================================================
     // Readline
     // ==========================================================
+
+    int count { 0 };
 
     using_history();
 
@@ -124,7 +139,9 @@ int main()
 
         try {
             validator.validate(*ast);
-        } catch (hegadb::client::semantic::SemanticError const& error) {
+        } catch (
+            hegadb::client::semantic::SemanticError const& error) {
+
             std::cout
                 << "Semantic error: "
                 << error.what()
@@ -173,18 +190,49 @@ int main()
                 << "Parameterized AST:\n";
 
             auto const* preparedSelect = dynamic_cast<
-                hegadb::client::ast::SelectStmt const*>(&prepared.query());
+                hegadb::client::ast::SelectStmt const*>(
+                &prepared.query());
 
             if (preparedSelect != nullptr) {
                 printer.print(preparedSelect);
             }
 
             std::cout
-                << "Query preparation successful.\n\n";
+                << "Query preparation successful.\n";
+
+            // ====================================================
+            // Encode request
+            // ====================================================
+
+            auto request = hegadb::client::protocol::ExecuteQueryEncoder::encode(
+                prepared,
+                "client-request-" + std::to_string(count++));
+
+            std::cout
+                << "Sending query to server...\n";
+
+            // ====================================================
+            // Execute remotely
+            // ====================================================
+
+            auto response = transport->execute(request);
+
+            std::cout
+                << "Server response:\n"
+                << "  Request ID: "
+                << response.request_id().value()
+                << '\n'
+                << "  Status: "
+                << response.status().code()
+                << '\n'
+                << "  Message: "
+                << response.status().message()
+                << "\n\n";
+
         } catch (std::exception const& error) {
 
             std::cout
-                << "Query preparation failed: "
+                << "Query execution failed: "
                 << error.what()
                 << '\n';
 
