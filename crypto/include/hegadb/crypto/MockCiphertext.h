@@ -4,12 +4,16 @@
 #include "Ciphertext.h"
 #include "Plaintext.h"
 
+#include<string>
+
 namespace hegadb::crypto {
 
 class MockCiphertext final : public Ciphertext {
 public:
     explicit MockCiphertext(Plaintext value);
     Plaintext const& value() const;
+
+    std::string serialize() const override;
 
 private:
     Plaintext value_;

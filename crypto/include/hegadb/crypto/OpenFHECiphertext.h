@@ -58,6 +58,13 @@ public:
      */
     size_t getStringLength() const;
 
+    // Serialize the wrapper (OpenFHE ciphertext + metadata) to bytes
+    std::string serialize() const override;
+
+    // Reconstruct a OpenFHECiphertext from bytes made by serialize()
+    static OpenFHECiphertext deserialize(std::string const& bytes);
+
+
 private:
     lbcrypto::Ciphertext<lbcrypto::DCRTPoly> ciphertext_;
     SchemeType schemeType_;
