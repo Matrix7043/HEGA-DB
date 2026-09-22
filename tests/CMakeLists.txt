@@ -224,6 +224,21 @@ add_test(
     COMMAND crypto_edge_cases_tests
 )
 
+add_executable(crypto_serialization_tests
+    crypto/crypto_serialization_tests.cpp
+)
+
+target_link_libraries(crypto_serialization_tests
+    PRIVATE
+        hegadb_crypto
+        hegadb_protocol
+)
+
+add_test(
+    NAME crypto_serialization_tests
+    COMMAND crypto_serialization_tests
+)
+
 
 # ============================================================
 # gRPC Tests

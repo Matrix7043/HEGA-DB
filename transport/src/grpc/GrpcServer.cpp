@@ -7,6 +7,19 @@
 
 namespace hegadb::transport::grpc {
 
+    namespace {
+ 
+        /*
+        * gRPC rejects incoming messages larger than 4 MiB by default. A single
+        * serialized BFV ciphertext is ~1 MiB and a CKKS one ~3.5 MiB, so a query
+        * with just a few encrypted parameters would otherwise fail with
+        * RESOURCE_EXHAUSTED. 64 MiB fits roughly 60 BFV / 18 CKKS parameters
+        * per request; tune to taste.
+        */
+        constexpr int MAX_MESSAGE_BYTES = 64 * 1024 * 1024;
+ 
+    } // namespace
+
 GrpcServer::GrpcServer(std::string address)
     : address_(std::move(address))
 {
@@ -29,6 +42,9 @@ void GrpcServer::start()
         address_,
         ::grpc::InsecureServerCredentials(),
         &selected_port_);
+    
+    builder.SetMaxReceiveMessageSize(MAX_MESSAGE_BYTES);
+    builder.SetMaxSendMessageSize(MAX_MESSAGE_BYTES);
 
     builder.RegisterService(&service_);
 

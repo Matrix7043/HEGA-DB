@@ -1,12 +1,17 @@
 #ifndef CIPHERTEXT_H
 #define CIPHERTEXT_H
 
+#include<string>
+#include<stdexcept>
+
 namespace hegadb::crypto {
 
 class Ciphertext {
 public:
     virtual ~Ciphertext() = default;
-    // TODO: virtual std::string serialize() = 0
+    virtual std::string serialize() const{
+        throw std::runtime_error("This ciphertext does not support serialization");
+    }
 };
 
 }
