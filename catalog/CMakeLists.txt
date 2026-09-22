@@ -12,4 +12,6 @@ target_include_directories(hegadb_catalog
 target_link_libraries(hegadb_catalog
     PUBLIC
         hegadb_types
+    PRIVATE
+        hegadb_warnings
 )

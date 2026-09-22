@@ -75,6 +75,8 @@ target_include_directories(hegadb_client_transport
 target_link_libraries(hegadb_client_transport
     PUBLIC
         hegadb_grpc_stub
+    PRIVATE
+        hegadb_warnings
 )
 
 
@@ -98,4 +100,6 @@ target_include_directories(hegadb_server_transport
 target_link_libraries(hegadb_server_transport
     PUBLIC
         hegadb_grpc_stub
+    PRIVATE
+        hegadb_warnings
 )

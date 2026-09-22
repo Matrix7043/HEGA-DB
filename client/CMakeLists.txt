@@ -2,12 +2,7 @@
 # ANTLR4 C++ Runtime
 # ============================================================
 
-find_package(antlr4-runtime CONFIG REQUIRED)
-
-set(ANTLR4_RUNTIME_INCLUDE_DIR
-    "/usr/include/antlr4-runtime"
-)
-
+find_package(antlr4-runtime REQUIRED)
 
 # ============================================================
 # Generated ANTLR sources
@@ -77,8 +72,9 @@ target_link_libraries(hegadb_client_core
         hegadb_crypto
         hegadb_catalog
         hegadb_protocol
-        hegadb_client_transport
-        antlr4-runtime
+    PRIVATE
+        antlr4_shared
+        hegadb_warnings
 )
 
 # ============================================================
@@ -120,5 +116,6 @@ target_link_libraries(hegadb_client
 
     PRIVATE
         hegadb_client_core
+        hegadb_client_transport
         ${READLINE_LIBRARY}
 )

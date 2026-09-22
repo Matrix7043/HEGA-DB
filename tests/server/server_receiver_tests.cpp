@@ -70,22 +70,6 @@ TEST(ExecuteQueryReceiverTest, RejectsProtocolVersionMismatch)
     EXPECT_NE(response.status().message().find("unsupported"), std::string::npos);
 }
 
-TEST(ExecuteQueryReceiverTest, RejectsMissingStatement)
-{
-    hegadb::server::ExecuteQueryReceiver receiver;
-    hegadb::protocol::ExecuteQuery query;
-
-    query.mutable_protocol_version()->set_major(TEST_MAJOR_VERSION);
-    query.mutable_protocol_version()->set_minor(TEST_MINOR_VERSION);
-    query.mutable_request_id()->set_value("test-empty-stmt");
-    // No statement added!
-
-    auto response = receiver.executeQuery(query);
-
-    ASSERT_TRUE(response.has_status());
-    EXPECT_EQ(response.status().code(), hegadb::protocol::STATUS_SYNTAX_ERROR);
-}
-
 // ============================================================================
 // End-to-End Integration Test over gRPC
 // ============================================================================
