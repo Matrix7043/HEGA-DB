@@ -44,6 +44,7 @@ void GrpcServer::start()
         &selected_port_);
     
     builder.SetMaxReceiveMessageSize(MAX_MESSAGE_BYTES);
+    builder.SetMaxSendMessageSize(MAX_MESSAGE_BYTES);
 
     builder.RegisterService(&service_);
 
