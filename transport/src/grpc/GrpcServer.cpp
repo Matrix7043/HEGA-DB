@@ -42,6 +42,8 @@ void GrpcServer::start()
         address_,
         ::grpc::InsecureServerCredentials(),
         &selected_port_);
+    
+    builder.SetMaxReceiveMessageSize(MAX_MESSAGE_BYTES);
 
     builder.RegisterService(&service_);
 
