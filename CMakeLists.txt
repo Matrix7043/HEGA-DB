@@ -39,6 +39,7 @@ option(HEGADB_BUILD_CLIENT "Build HEGADB client" ON)
 option(HEGADB_BUILD_SERVER "Build HEGADB server" ON)
 option(HEGADB_BUILD_TESTS "Build HEGADB tests" ON)
 
+add_subdirectory(logging)
 add_subdirectory(operations)
 add_subdirectory(types)
 add_subdirectory(crypto)
