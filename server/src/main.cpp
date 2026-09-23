@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <memory>
+#include <sys/stat.h>
 
 int main(int argc, char** argv)
 {

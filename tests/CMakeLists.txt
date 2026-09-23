@@ -278,3 +278,25 @@ target_link_libraries(server_receiver_tests
 )
 
 gtest_discover_tests(server_receiver_tests)
+
+
+# ============================================================
+# Server Storage Tests
+# ============================================================
+
+add_executable(storage_tests
+    server/storage_tests.cpp
+    server/dictionary_encoder.cpp
+    server/mock_student_ingestion.cpp
+)
+
+target_link_libraries(storage_tests
+    PRIVATE
+        hegadb_server
+        hegadb_crypto
+        GTest::gtest_main
+)
+
+gtest_discover_tests(storage_tests)
+
+
