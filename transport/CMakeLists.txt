@@ -62,20 +62,26 @@ target_link_libraries(hegadb_grpc_stub
 # Contains the ClientTransport interface, the GrpcClient implementation,
 # and the ClientTransportFactory.
 
-add_library(hegadb_client_transport
+if(HEGADB_BUILD_CLIENT)
+
+  add_library(hegadb_client_transport
     src/grpc/GrpcClient.cpp
     src/ClientTransportFactory.cpp
 )
 
-target_include_directories(hegadb_client_transport
+  target_include_directories(hegadb_client_transport
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-target_link_libraries(hegadb_client_transport
+  target_link_libraries(hegadb_client_transport
     PUBLIC
         hegadb_grpc_stub
+    PRIVATE
+        hegadb_warnings
 )
+
+endif()
 
 
 # ============================================================
@@ -84,18 +90,24 @@ target_link_libraries(hegadb_client_transport
 # Contains the ServerTransport interface, the GrpcServer implementation,
 # the ServiceImpl, and the ServerTransportFactory.
 
-add_library(hegadb_server_transport
+if(HEGADB_BUILD_SERVER)
+
+  add_library(hegadb_server_transport
     src/grpc/GrpcServer.cpp
     src/grpc/HEGADBServiceImpl.cpp
     src/ServerTransportFactory.cpp
 )
 
-target_include_directories(hegadb_server_transport
+  target_include_directories(hegadb_server_transport
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-target_link_libraries(hegadb_server_transport
+  target_link_libraries(hegadb_server_transport
     PUBLIC
         hegadb_grpc_stub
+    PRIVATE
+        hegadb_warnings
 )
+
+endif()

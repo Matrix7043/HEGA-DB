@@ -1,5 +1,5 @@
 # Find OpenFHE package
-find_package(OpenFHE REQUIRED)  
+find_package(OpenFHE REQUIRED)
 
 add_library(hegadb_crypto
     src/MockCiphertext.cpp

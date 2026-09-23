@@ -18,8 +18,8 @@ class SemanticError : public std::runtime_error {
 
 public:
     SemanticError(SemanticErrorKind kind, std::string message)
-        : kind_(kind)
-        , std::runtime_error(message)
+        : std::runtime_error(message)
+        , kind_(kind)
     {
     }
 

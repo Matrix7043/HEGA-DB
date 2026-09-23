@@ -26,6 +26,8 @@ add_library(hegadb_protocol
 target_link_libraries(hegadb_protocol
     PUBLIC
         protobuf::libprotobuf
+    PRIVATE
+        hegadb_warnings
 )
 
 target_include_directories(hegadb_protocol

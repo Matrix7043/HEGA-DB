@@ -2,12 +2,7 @@
 # ANTLR4 C++ Runtime
 # ============================================================
 
-find_package(antlr4-runtime CONFIG REQUIRED)
-
-set(ANTLR4_RUNTIME_INCLUDE_DIR
-    "/usr/include/antlr4-runtime"
-)
-
+find_package(antlr4-runtime REQUIRED)
 
 # ============================================================
 # Generated ANTLR sources
@@ -50,6 +45,7 @@ add_library(hegadb_client_core
 )
 
 
+
 # ============================================================
 # Include directories
 # ============================================================
@@ -77,8 +73,9 @@ target_link_libraries(hegadb_client_core
         hegadb_crypto
         hegadb_catalog
         hegadb_protocol
-        hegadb_client_transport
-        antlr4-runtime
+    PRIVATE
+        antlr4_shared
+        hegadb_warnings
 )
 
 # ============================================================
@@ -102,23 +99,42 @@ if(NOT READLINE_INCLUDE_DIR OR NOT READLINE_LIBRARY)
 endif()
 
 # ============================================================
+# HEGADB Client Application
+# ============================================================
+
+add_library(hegadb_client_app
+    src/Client.cpp
+    src/ClientConfig.cpp
+)
+
+target_include_directories(
+    hegadb_client_app
+    PRIVATE
+        ${READLINE_INCLUDE_DIR}
+)
+
+target_link_libraries(
+    hegadb_client_app
+    PUBLIC
+        hegadb_client_core
+        hegadb_client_transport
+        ${READLINE_LIBRARY}
+    PRIVATE
+        hegadb_warnings
+)
+
+
+# ============================================================
 # HEGADB Client Executable
 # ============================================================
 
-add_executable(hegadb_client
-
+add_executable(
+    hegadb_client
     src/main.cpp
 )
 
-target_include_directories(hegadb_client
-
-  PRIVATE
-    ${READLINE_INCLUDE_DIR}
-)
-
-target_link_libraries(hegadb_client
-
+target_link_libraries(
+    hegadb_client
     PRIVATE
-        hegadb_client_core
-        ${READLINE_LIBRARY}
+        hegadb_client_app
 )
