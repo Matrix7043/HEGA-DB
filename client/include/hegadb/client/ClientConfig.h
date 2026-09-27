@@ -15,13 +15,19 @@ public:
     static void printVersion();
 
     std::string const& serverAddress() const;
+    std::string const& logFile() const;
+    std::string const& logLevel() const;
 
 private:
     explicit ClientConfig(
-        std::string server_address);
+        std::string server_address,
+        std::string log_file,
+        std::string log_level);
 
 private:
     std::string server_address_;
+    std::string log_file_;
+    std::string log_level_;
 };
 
 }
