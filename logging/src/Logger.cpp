@@ -45,6 +45,7 @@ spdlog::level::level_enum logLevelEnumParser(std::string const& str)
 {
     static std::unordered_map<std::string, spdlog::level::level_enum> const log_level_map = {
         { "info", spdlog::level::info },
+        { "debug", spdlog::level::debug },
         { "critical", spdlog::level::critical },
         { "warn", spdlog::level::warn },
         { "error", spdlog::level::err },

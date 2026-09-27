@@ -3,7 +3,6 @@
 #include <hegadb/client/Client.h>
 #include <hegadb/client/ClientConfig.h>
 #include <hegadb/logging/Logger.h>
-#include <iostream>
 #include <spdlog/common.h>
 
 int main(int argc, char** argv)
@@ -34,10 +33,8 @@ int main(int argc, char** argv)
     } catch (
         std::exception const& error) {
 
-        std::cerr
-            << "HEGADB client error: "
-            << error.what()
-            << '\n';
+        hegadb::logging::error(
+            "HEGADB client error {} \n", error.what());
 
         return 1;
     }

@@ -55,21 +55,19 @@ ClientConfig ClientConfig::fromArguments(
             if (i + 1 >= argc) {
                 throw std::invalid_argument(
                     "--log-level requires an log-level(info, debug, ...etc)");
-
-                log_level = argv[++i];
-
-                continue;
             }
+            log_level = argv[++i];
+
+            continue;
         }
 
         if (argument == "--log-file") {
             if (i + 1 >= argc) {
                 throw std::invalid_argument(
                     "--log-file requires a path");
-
-                log_file = argv[++i];
-                continue;
             }
+            log_file = argv[++i];
+            continue;
         }
         throw std::invalid_argument(
             "Unknown argument: " + argument);

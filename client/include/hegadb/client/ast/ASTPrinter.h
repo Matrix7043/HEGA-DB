@@ -1,20 +1,33 @@
-#ifndef AST_PRINTER_H
-#define AST_PRINTER_H
+#ifndef HEGADB_CLIENT_AST_AST_PRINTER_H
+#define HEGADB_CLIENT_AST_AST_PRINTER_H
 
-#include "SelectStmt.h"
+#include <filesystem>
 #include <string>
 
 namespace hegadb::client::ast {
 
+class SelectStmt;
+class Expr;
+
 class ASTPrinter {
 public:
-    void print(SelectStmt const* stmt) const;
+    std::filesystem::path print(
+        SelectStmt const* stmt,
+        std::filesystem::path const& directory,
+        std::string const& queryId) const;
 
 private:
-    void printExpr(Expr const* expr, std::string const& prefix,
+    void print(
+        SelectStmt const* stmt,
+        std::ostream& output) const;
+
+    void printExpr(
+        Expr const* expr,
+        std::ostream& output,
+        std::string const& prefix,
         bool isLast) const;
 };
 
-} // namespace hegadb
+}
 
 #endif
