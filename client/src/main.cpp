@@ -1,12 +1,19 @@
+#include <exception>
 #include <hegadb/client/Client.h>
 #include <hegadb/client/ClientConfig.h>
-
-#include <exception>
+#include <hegadb/logging/Logger.h>
 #include <iostream>
 
 int main(int argc, char** argv)
 {
+
     try {
+
+        hegadb::logging::initialize();
+
+        hegadb::logging::info("HEGADB client starting");
+
+        hegadb::logging::debug("Arguments recieved: {}", argc);
 
         auto config = hegadb::client::ClientConfig::fromArguments(
             argc,
