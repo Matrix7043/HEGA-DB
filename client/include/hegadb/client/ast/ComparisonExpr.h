@@ -1,5 +1,5 @@
-#ifndef COMPARISION_EXPR_H
-#define COMPARISION_EXPR_H
+#ifndef COMPARISON_EXPR_H
+#define COMPARISON_EXPR_H
 
 #include "Expr.h"
 #include "hegadb/operations/ComparisonOp.h"

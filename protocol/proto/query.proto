@@ -84,10 +84,30 @@ message ExecuteQuery {
   RequestId request_id = 2;
   Statement statement = 3;
   repeated EncryptedParameter parameters = 4;
+  ResultMode result_mode = 5;
+}
+
+enum ResultMode{
+  RESULT_MODE_UNSPECIFIED = 0;
+  RESULT_MODE_ROWS_AND_MASK = 1;
+  RESULT_MODE_MASKED_ROWS = 2;
+}
+
+message EncryptedColumn {
+  string column_name = 1;
+  repeated bytes ciphertexts = 2;
+}
+
+message QueryResult {
+  ResultMode mode = 1;
+  repeated EncryptedColumn columns = 2;
+  bytes encrypted_mask = 3;
+  uint32 row_count = 4;
 }
 
 message QueryResponse {
   ProtocolVersion protocol_version = 1;
   RequestId request_id = 2;
   Status status = 3;
+  QueryResult result = 4;
 }

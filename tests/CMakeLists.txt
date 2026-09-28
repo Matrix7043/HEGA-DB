@@ -299,4 +299,86 @@ target_link_libraries(storage_tests
 
 gtest_discover_tests(storage_tests)
 
+# ============================================================
+# Server Execution Engine Tests
+# ============================================================
+
+add_executable(execution_batch_tests
+    server/execution_batch_tests.cpp
+)
+
+target_link_libraries(execution_batch_tests
+    PRIVATE
+        hegadb_server
+        hegadb_crypto
+        GTest::gtest_main
+)
+
+gtest_discover_tests(execution_batch_tests)
+
+add_executable(execution_parameters_tests
+    server/execution_parameters_tests.cpp
+)
+
+target_link_libraries(execution_parameters_tests
+    PRIVATE
+        hegadb_server
+        hegadb_crypto
+        GTest::gtest_main
+)
+
+gtest_discover_tests(execution_parameters_tests)
+
+add_executable(query_planner_tests
+    server/query_planner_tests.cpp
+)
+
+target_link_libraries(query_planner_tests
+    PRIVATE
+        hegadb_server
+        hegadb_catalog
+        GTest::gtest_main
+)
+
+gtest_discover_tests(query_planner_tests)
+
+add_executable(expression_planner_tests
+    server/expression_planner_tests.cpp
+)
+
+target_link_libraries(expression_planner_tests
+    PRIVATE
+        hegadb_server
+        hegadb_protocol
+        GTest::gtest_main
+)
+
+gtest_discover_tests(expression_planner_tests)
+
+add_executable(comparison_evaluator_tests
+    server/comparison_evaluator_tests.cpp
+)
+
+target_link_libraries(comparison_evaluator_tests
+    PRIVATE
+        hegadb_server
+        hegadb_crypto
+        GTest::gtest_main
+)
+
+gtest_discover_tests(comparison_evaluator_tests)
+
+add_executable(end_to_end_execution_tests
+    server/end_to_end_execution_tests.cpp
+)
+
+target_link_libraries(end_to_end_execution_tests
+    PRIVATE
+        hegadb_server
+        hegadb_catalog
+        hegadb_crypto
+        GTest::gtest_main
+)
+
+gtest_discover_tests(end_to_end_execution_tests)
 
