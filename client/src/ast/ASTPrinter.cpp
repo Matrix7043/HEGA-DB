@@ -6,50 +6,91 @@
 #include "hegadb/client/ast/LogicalExpr.h"
 #include "hegadb/client/ast/NotExpr.h"
 #include "hegadb/client/ast/ParameterRef.h"
+#include "hegadb/client/ast/SelectStmt.h"
 #include "hegadb/client/ast/TableRef.h"
 
-#include <iostream>
-#include <variant>
+#include <filesystem>
+#include <fstream>
+#include <ostream>
 
 namespace hegadb::client::ast {
 
-void ASTPrinter::print(SelectStmt const* stmt) const
+std::filesystem::path ASTPrinter::print(
+    SelectStmt const* stmt,
+    std::filesystem::path const& directory,
+    std::string const& queryId) const
+{
+    if (stmt == nullptr) {
+        return { };
+    }
+
+    std::filesystem::create_directories(directory);
+
+    auto path = directory / (queryId + ".ast");
+
+    std::ofstream output(path);
+
+    if (!output) {
+        return { };
+    }
+
+    print(stmt, output);
+
+    return path;
+}
+
+void ASTPrinter::print(
+    SelectStmt const* stmt,
+    std::ostream& output) const
 {
     if (stmt == nullptr) {
         return;
     }
 
-    std::cout << "SelectStmt\n";
+    output << "SelectStmt\n";
 
-    std::cout << "├── Projections\n";
+    output << "├── Projections\n";
 
     auto const& projections = stmt->projections();
 
     for (std::size_t i = 0; i < projections.size(); ++i) {
         bool const isLast = (i == projections.size() - 1);
 
-        printExpr(projections[i].get(), "│   ", isLast);
+        printExpr(
+            projections[i].get(),
+            output,
+            "│   ",
+            isLast);
     }
 
-    std::cout << "├── From\n";
+    output << "├── From\n";
 
     if (stmt->from() != nullptr) {
-        std::cout << "│   └── TableRef: " << stmt->from()->name() << '\n';
+        output
+            << "│   └── TableRef: "
+            << stmt->from()->name()
+            << '\n';
     }
 
-    std::cout << "└── Where\n";
+    output << "└── Where\n";
 
     if (stmt->where() != nullptr) {
-        printExpr(stmt->where(), "    ", true);
+        printExpr(
+            stmt->where(),
+            output,
+            "    ",
+            true);
     } else {
-        std::cout << "    └── <none>\n";
+        output << "    └── <none>\n";
     }
 }
 
-void ASTPrinter::printExpr(Expr const* expr, std::string const& prefix,
+void ASTPrinter::printExpr(
+    Expr const* expr,
+    std::ostream& output,
+    std::string const& prefix,
     bool isLast) const
 {
-
     if (expr == nullptr) {
         return;
     }
@@ -61,25 +102,37 @@ void ASTPrinter::printExpr(Expr const* expr, std::string const& prefix,
     case ASTNodeKind::ColumnRef: {
         auto* column = static_cast<ColumnRef const*>(expr);
 
-        std::cout << prefix << branch << "ColumnRef: " << column->name() << '\n';
+        output
+            << prefix
+            << branch
+            << "ColumnRef: "
+            << column->name()
+            << '\n';
 
         break;
     }
 
     case ASTNodeKind::Wildcard: {
-        std::cout << prefix << branch << "Wildcard\n";
+        output
+            << prefix
+            << branch
+            << "Wildcard\n";
 
         break;
     }
 
     case ASTNodeKind::Literal: {
-        auto* literal = static_cast<Literal const*>(expr);
-
-        std::cout << prefix << branch << "Literal: ";
-
-        std::visit([](auto const& value) { std::cout << value; }, literal->value());
-
-        std::cout << '\n';
+        /*
+         * Literals should not appear in the
+         * parameterized AST.
+         *
+         * Do not print their value because the
+         * debug artifact must not expose plaintext.
+         */
+        output
+            << prefix
+            << branch
+            << "Literal: <redacted>\n";
 
         break;
     }
@@ -87,34 +140,51 @@ void ASTPrinter::printExpr(Expr const* expr, std::string const& prefix,
     case ASTNodeKind::ComparisonExpr: {
         auto* comparison = static_cast<ComparisonExpr const*>(expr);
 
-        std::cout << prefix << branch << "ComparisonExpr: ";
+        output
+            << prefix
+            << branch
+            << "ComparisonExpr: ";
 
         switch (comparison->op()) {
+
         case operations::ComparisonOp::EQ:
-            std::cout << '=';
+            output << '=';
             break;
+
         case operations::ComparisonOp::NEQ:
-            std::cout << "!=";
+            output << "!=";
             break;
+
         case operations::ComparisonOp::LT:
-            std::cout << '<';
+            output << '<';
             break;
+
         case operations::ComparisonOp::GT:
-            std::cout << '>';
+            output << '>';
             break;
+
         case operations::ComparisonOp::LTE:
-            std::cout << "<=";
+            output << "<=";
             break;
+
         case operations::ComparisonOp::GTE:
-            std::cout << ">=";
+            output << ">=";
             break;
         }
 
-        std::cout << '\n';
+        output << '\n';
 
-        printExpr(comparison->left(), prefix + (isLast ? "    " : "│   "), false);
+        printExpr(
+            comparison->left(),
+            output,
+            prefix + (isLast ? "    " : "│   "),
+            false);
 
-        printExpr(comparison->right(), prefix + (isLast ? "    " : "│   "), true);
+        printExpr(
+            comparison->right(),
+            output,
+            prefix + (isLast ? "    " : "│   "),
+            true);
 
         break;
     }
@@ -122,22 +192,35 @@ void ASTPrinter::printExpr(Expr const* expr, std::string const& prefix,
     case ASTNodeKind::LogicalExpr: {
         auto* logical = static_cast<LogicalExpr const*>(expr);
 
-        std::cout << prefix << branch << "LogicalExpr: ";
+        output
+            << prefix
+            << branch
+            << "LogicalExpr: ";
 
         switch (logical->op()) {
+
         case operations::LogicalOp::AND:
-            std::cout << "AND";
+            output << "AND";
             break;
+
         case operations::LogicalOp::OR:
-            std::cout << "OR";
+            output << "OR";
             break;
         }
 
-        std::cout << '\n';
+        output << '\n';
 
-        printExpr(logical->left(), prefix + (isLast ? "    " : "│   "), false);
+        printExpr(
+            logical->left(),
+            output,
+            prefix + (isLast ? "    " : "│   "),
+            false);
 
-        printExpr(logical->right(), prefix + (isLast ? "    " : "│   "), true);
+        printExpr(
+            logical->right(),
+            output,
+            prefix + (isLast ? "    " : "│   "),
+            true);
 
         break;
     }
@@ -145,9 +228,16 @@ void ASTPrinter::printExpr(Expr const* expr, std::string const& prefix,
     case ASTNodeKind::NotExpr: {
         auto* notExpr = static_cast<NotExpr const*>(expr);
 
-        std::cout << prefix << branch << "NotExpr\n";
+        output
+            << prefix
+            << branch
+            << "NotExpr\n";
 
-        printExpr(notExpr->child(), prefix + (isLast ? "    " : "│   "), true);
+        printExpr(
+            notExpr->child(),
+            output,
+            prefix + (isLast ? "    " : "│   "),
+            true);
 
         break;
     }
@@ -155,18 +245,24 @@ void ASTPrinter::printExpr(Expr const* expr, std::string const& prefix,
     case ASTNodeKind::ParameterRef: {
         auto* parameter = static_cast<ParameterRef const*>(expr);
 
-        std::cout << prefix << branch
-                  << "ParameterRef: "
-                  << parameter->parameterIndex()
-                  << '\n';
+        output
+            << prefix
+            << branch
+            << "ParameterRef: "
+            << parameter->parameterIndex()
+            << '\n';
 
         break;
     }
 
     default:
-        std::cout << prefix << branch << "Unknown expression\n";
+        output
+            << prefix
+            << branch
+            << "Unknown expression\n";
+
         break;
     }
 }
 
-} // namespace hegadb
+}

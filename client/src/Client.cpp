@@ -1,4 +1,6 @@
+#include "hegadb/client/ast/SelectStmt.h"
 #include "hegadb/client/protocol/ExecuteQueryEncoder.h"
+#include "hegadb/logging/Logger.h"
 #include <hegadb/client/Client.h>
 
 #include <hegadb/catalog/CatalogSnapshot.h>
@@ -90,8 +92,9 @@ int Client::run()
     // Client Transport
     // ==========================================================
 
-    auto transport = hegadb::transport::ClientTransportFactory::createGrpc(
-        "localhost:50051");
+    logging::debug("Creating gRPC client transport");
+    logging::debug("Connecting to serverAddress {}", config_.serverAddress());
+    auto transport = hegadb::transport::ClientTransportFactory::createGrpc(config_.serverAddress());
 
     // ==========================================================
     // Readline
@@ -103,6 +106,8 @@ int Client::run()
 
     while (true) {
         char* raw_input { readline("hegadb> ") };
+
+        auto const queryId = "client-request-" + std::to_string(count++);
 
         if (raw_input == nullptr) {
             std::cout << '\n';
@@ -132,19 +137,26 @@ int Client::run()
         auto ast { sqlParser.parseToAST(input) };
 
         if (!ast) {
+            logging::debug("SQL Parsing failed");
             std::cout << "Query rejected.\n";
             continue;
         }
+
+        logging::debug("SQL Parsing completed successfully");
 
         // ========================================================
         // Semantic validation
         // ========================================================
 
+        logging::debug("Started semantic validation");
         try {
             validator.validate(*ast);
         } catch (
             hegadb::client::semantic::SemanticError const& error) {
 
+            logging::warn(
+                "Semantic validation rejected query: {}",
+                error.what());
             std::cout
                 << "Semantic error: "
                 << error.what()
@@ -152,28 +164,43 @@ int Client::run()
 
             continue;
         }
-
         // ========================================================
         // Query accepted
         // ========================================================
 
+        logging::debug(
+            "Semantic validation completed successfully");
+
         std::cout << "Query accepted.\n";
 
-        std::cout << "AST:\n";
-
         hegadb::client::ast::ASTPrinter printer;
-
-        printer.print(ast.get());
+        auto const astPath = printer.print(dynamic_cast<ast::SelectStmt const*>(ast.get()),
+            "logs/ast", queryId);
+        if (!astPath.empty()) {
+            logging::debug(
+                "AST written to: {}",
+                astPath.string());
+        } else {
+            logging::warn(
+                "Failed to write AST: query_id={}",
+                queryId);
+        }
 
         // ========================================================
         // Query preparation
         // ========================================================
 
         try {
+            logging::debug(
+                "Preparing query for encrypted execution");
             auto prepared = preparer.prepare(std::move(ast));
 
             std::cout
                 << "Preparing query for encrypted execution...\n";
+
+            logging::debug(
+                "Query preparation completed: encrypted_parameters={}",
+                prepared.parameters().size());
 
             std::cout
                 << "Encrypted parameters: "
@@ -197,7 +224,16 @@ int Client::run()
                 &prepared.query());
 
             if (preparedSelect != nullptr) {
-                printer.print(preparedSelect);
+                auto const astpPath = printer.print(preparedSelect, "logs/ast-p", queryId);
+                if (!astpPath.empty()) {
+                    logging::debug(
+                        "Parameterized AST written to: {}",
+                        astpPath.string());
+                } else {
+                    logging::warn(
+                        "Failed to write parameterized AST: query_id={}",
+                        queryId);
+                }
             }
 
             std::cout
@@ -206,10 +242,16 @@ int Client::run()
             // ====================================================
             // Encode request
             // ====================================================
+            logging::debug(
+                "Encoding query request: query_id={}",
+                queryId);
 
             auto request = hegadb::client::protocol::ExecuteQueryEncoder::encode(
-                prepared,
-                "client-request-" + std::to_string(count++));
+                prepared, queryId);
+
+            logging::debug(
+                "Sending query: query_id={}",
+                queryId);
 
             std::cout
                 << "Sending query to server...\n";
@@ -219,6 +261,11 @@ int Client::run()
             // ====================================================
 
             auto response = transport->execute(request);
+
+            logging::debug(
+                "Received query response: query_id={} status={}",
+                response.request_id().SerializeAsString(),
+                response.status().SerializeAsString());
 
             std::cout
                 << "Server response:\n"
@@ -239,9 +286,17 @@ int Client::run()
                 << error.what()
                 << '\n';
 
+            logging::error(
+                "Query execution failed: query_id={} error={}",
+                queryId,
+                error.what());
+
             continue;
         }
     }
+
+    logging::info(
+        "HEGADB client shutting down");
 
     return 0;
 }
