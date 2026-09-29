@@ -2,6 +2,7 @@
 #include "hegadb/crypto/Ciphertext.h"
 #include "hegadb/crypto/MockCiphertext.h"
 #include "hegadb/crypto/Plaintext.h"
+#include "hegadb/crypto/KeyManager.h"
 
 #include <memory>
 #include <stdexcept>
@@ -22,6 +23,14 @@ Plaintext MockEncryption::decrypt(Ciphertext const& value)
     }
 
     return mockCiphertext->value();
+}
+
+KeyManager const& MockEncryption::getKeyManager() const
+{
+    throw std::runtime_error(
+        "MockEncryption::getKeyManager() should not be called. "
+        "MockEncryption is a test mock that doesn't manage real keys. "
+        "Use CompositeEncryption for production encryption operations.");
 }
 
 }
