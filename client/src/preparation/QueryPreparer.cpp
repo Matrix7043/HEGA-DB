@@ -35,9 +35,16 @@ QueryPreparer::prepare(
         parameters.emplace_back(literal.parameter_index, std::move(ciphertexts));
     }
 
+    // TODO: REPLACE THE BFV AND CKKS PUBLIC KEY WITH ACTUAL SERIALIZE METHODS
+
+    std::string bfv_public_key = "BFV_PUBLIC_KEY";
+    std::string ckks_public_key = "CKKS_PUBLIC_KEY";
+
     return PreparedQuery(
         std::move(parameterizedQuery),
-        std::move(parameters));
+        std::move(parameters),
+        std::move(bfv_public_key),
+        std::move(ckks_public_key));
 }
 
 } // namespace hegadb

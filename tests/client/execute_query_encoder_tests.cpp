@@ -1,3 +1,4 @@
+#include "hegadb/crypto/CompositeEncryption.h"
 #include <hegadb/client/SQLParser.h>
 #include <hegadb/client/protocol/ExecuteQueryEncoder.h>
 
@@ -27,7 +28,7 @@ int main()
 
     hegadb::client::SQLParser parser;
 
-    hegadb::crypto::MockEncryption encryption;
+    hegadb::crypto::CompositeEncryption encryption;
 
     hegadb::client::preparation::QueryPreparer preparer(
         encryption);
@@ -106,6 +107,7 @@ int main()
          */
         assert(
             request.parameters_size() == 0);
+        assert(!request.has_keys());
 
         std::cout << "[PASS]\n\n";
     }
@@ -218,7 +220,16 @@ int main()
 
         assert(
             request.parameters(0).ciphertext()
-            == "MOCK_ENCRYPTED_BYTES");
+            == prepared.parameters().at(0).ciphertext().serialize());
+
+        /*
+         * Public keys
+         */
+
+        assert(request.has_keys());
+
+        assert(request.keys().bfv_key() == "BFV_PUBLIC_KEY");
+        assert(request.keys().ckks_key() == "CKKS_PUBLIC_KEY");
 
         std::cout << "[PASS]\n\n";
     }
@@ -300,11 +311,20 @@ int main()
 
         assert(
             request.parameters(0).ciphertext()
-            == "MOCK_ENCRYPTED_BYTES");
+            == prepared.parameters().at(0).ciphertext().serialize());
 
         assert(
             request.parameters(1).ciphertext()
-            == "MOCK_ENCRYPTED_BYTES");
+            == prepared.parameters().at(1).ciphertext().serialize());
+
+        /*
+         * Public keys
+         */
+
+        assert(request.has_keys());
+
+        assert(request.keys().bfv_key() == "BFV_PUBLIC_KEY");
+        assert(request.keys().ckks_key() == "CKKS_PUBLIC_KEY");
 
         std::cout << "[PASS]\n\n";
     }

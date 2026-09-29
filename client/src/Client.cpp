@@ -1,5 +1,6 @@
 #include "hegadb/client/ast/SelectStmt.h"
 #include "hegadb/client/protocol/ExecuteQueryEncoder.h"
+#include "hegadb/crypto/CompositeEncryption.h"
 #include "hegadb/logging/Logger.h"
 #include <hegadb/client/Client.h>
 
@@ -83,7 +84,7 @@ int Client::run()
     // Query Preparation
     // ==========================================================
 
-    hegadb::crypto::MockEncryption encryption;
+    hegadb::crypto::CompositeEncryption encryption;
 
     hegadb::client::preparation::QueryPreparer preparer(
         encryption);
