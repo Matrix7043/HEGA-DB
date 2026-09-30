@@ -1,5 +1,6 @@
 #include "hegadb/crypto/BFVEncryption.h"
 #include "hegadb/crypto/OpenFHECiphertext.h"
+#include "hegadb/crypto/KeyManager.h"
 
 #include <stdexcept>
 #include <vector>
@@ -176,6 +177,14 @@ Plaintext BFVEncryption::decryptBoolean(OpenFHECiphertext const& ciphertext)
 
     bool value = (values[0] != 0);
     return Plaintext(value);
+}
+
+KeyManager const& BFVEncryption::getKeyManager() const
+{
+    throw std::runtime_error(
+        "BFVEncryption::getKeyManager() should not be called. "
+        "BFVEncryption is an internal implementation detail. "
+        "Use CompositeEncryption for client-facing encryption operations.");
 }
 
 } // namespace hegadb::crypto

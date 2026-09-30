@@ -32,6 +32,23 @@ public:
 
 
     bool hasKeys() const;
+    
+    // Key serialization methods
+    std::string serializeBFVPublicKey() const;
+    std::string serializeCKKSPublicKey() const;
+    
+    // Key deserialization methods (for server)
+    void deserializeBFVPublicKey(std::string const& serialized);
+    void deserializeCKKSPublicKey(std::string const& serialized);
+    
+    // Key persistence methods
+    void saveKeys(std::string const& directory_path) const;
+    void loadKeys(std::string const& directory_path);
+    bool keyFilesExist(std::string const& directory_path) const;
+    
+    // Context persistence methods
+    void saveContext(std::string const& directory_path) const;
+    void loadContext(std::string const& directory_path);
 
 private:
     OpenFHEContext context_;
@@ -45,6 +62,10 @@ private:
     lbcrypto::PrivateKey<lbcrypto::DCRTPoly> ckksPrivateKey_;
 
     bool keysGenerated_;
+    
+    // Track individual key availability for deserialization scenarios
+    bool bfvPublicKeyAvailable_;
+    bool ckksPublicKeyAvailable_;
 };
 
 } // namespace hegadb::crypto

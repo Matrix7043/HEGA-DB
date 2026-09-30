@@ -2,20 +2,63 @@
 #include "hegadb/crypto/OpenFHECiphertext.h"
 
 #include <stdexcept>
+#include <filesystem>
+#include <iostream>
 
 namespace hegadb::crypto {
 
 CompositeEncryption::CompositeEncryption()
+    : CompositeEncryption(getDefaultKeyDirectory())
+{
+}
+
+CompositeEncryption::CompositeEncryption(std::string const& key_directory)
     : context_()
     , keyManager_(context_)
 {
-    // Generate keys for both schemes
-    keyManager_.generateKeys();
-    keyManager_.generateEvaluationKeys();
+    context_.enableFeatures();
+    initializeKeys(key_directory);
 
     // Initialize encryption engines
     bfvEngine_ = std::make_unique<BFVEncryption>(context_, keyManager_);
     ckksEngine_ = std::make_unique<CKKSEncryption>(context_, keyManager_);
+}
+
+void CompositeEncryption::initializeKeys(std::string const& key_directory)
+{
+    std::cout << "Initializing keys in directory: " << key_directory << "\n";
+    
+    try {
+        if (keyManager_.keyFilesExist(key_directory)) {
+            std::cout << "Found existing keys, loading...\n";
+            keyManager_.loadKeys(key_directory);
+            std::cout << "Loaded existing keys - consistent encryption guaranteed\n";
+        } else {
+            std::cout << "No existing keys found, generating new keys...\n";
+            keyManager_.generateKeys();
+            keyManager_.generateEvaluationKeys();
+            
+            try {
+                keyManager_.saveKeys(key_directory);
+                std::cout << "Generated and saved new keys to: " << key_directory << "\n";
+            } catch (std::exception const& e) {
+                std::cerr << "Warning: Could not save keys to disk: " << e.what() << "\n";
+                std::cerr << "Keys will be regenerated on next session!\n";
+            }
+        }
+    } catch (std::exception const& e) {
+        std::cerr << "Error with persistent keys: " << e.what() << "\n";
+        std::cerr << "Falling back to temporary key generation...\n";
+        keyManager_.generateKeys();
+        keyManager_.generateEvaluationKeys();
+    }
+}
+
+std::string CompositeEncryption::getDefaultKeyDirectory()
+{
+    // Use user's home directory for key storage
+    std::string home = std::getenv("HOME") ? std::getenv("HOME") : ".";
+    return home + "/.hegadb/keys";
 }
 
 std::unique_ptr<Ciphertext> CompositeEncryption::encrypt(Plaintext const& value)

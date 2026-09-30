@@ -1,5 +1,6 @@
 #include "hegadb/crypto/CKKSEncryption.h"
 #include "hegadb/crypto/OpenFHECiphertext.h"
+#include "hegadb/crypto/KeyManager.h"
 
 #include <stdexcept>
 #include <vector>
@@ -89,6 +90,14 @@ Plaintext CKKSEncryption::decryptFloat(OpenFHECiphertext const& ciphertext)
 
     // Temporary: throw error
     throw std::runtime_error("Float type not yet supported in Variant");
+}
+
+KeyManager const& CKKSEncryption::getKeyManager() const
+{
+    throw std::runtime_error(
+        "CKKSEncryption::getKeyManager() should not be called. "
+        "CKKSEncryption is an internal implementation detail. "
+        "Use CompositeEncryption for client-facing encryption operations.");
 }
 
 } // namespace hegadb::crypto

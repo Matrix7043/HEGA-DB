@@ -28,6 +28,12 @@ public:
 
 
     Plaintext decrypt(Ciphertext const& value) override;
+    
+    /**
+     * @brief Get the KeyManager (not supported for internal encryption engines)
+     * @throws std::runtime_error Always throws - CKKSEncryption is an internal implementation detail
+     */
+    KeyManager const& getKeyManager() const override;
 
 private:
     std::unique_ptr<Ciphertext> encryptFloat(double value);
