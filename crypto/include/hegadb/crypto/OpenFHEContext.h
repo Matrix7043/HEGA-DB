@@ -33,6 +33,16 @@ public:
      */
     void enableFeatures();
 
+    /**
+     * @brief Replace the BFV context (used when loading from disk)
+     */
+    void setBFVContext(lbcrypto::CryptoContext<lbcrypto::DCRTPoly> context);
+
+    /**
+     * @brief Replace the CKKS context (used when loading from disk)
+     */
+    void setCKKSContext(lbcrypto::CryptoContext<lbcrypto::DCRTPoly> context);
+
 private:
     void initializeBFVContext();
     void initializeCKKSContext();

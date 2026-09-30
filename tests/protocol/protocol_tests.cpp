@@ -459,6 +459,7 @@ int main()
 
     hegadb::client::SQLParser parser;
 
+    // TODO: REPLACE MockEncryption with CompositeEncryption
     hegadb::crypto::MockEncryption encryption;
 
     hegadb::client::preparation::QueryPreparer preparer(

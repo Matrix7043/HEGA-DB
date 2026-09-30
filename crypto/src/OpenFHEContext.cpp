@@ -11,53 +11,77 @@ OpenFHEContext::OpenFHEContext()
 
 void OpenFHEContext::initializeBFVContext()
 {
-   // BFV parameters for 128-bit security
+    // BFV parameters for 128-bit security - EXPLICITLY SET ALL PARAMETERS FOR CONTEXT DETERMINISM
     lbcrypto::CCParams<lbcrypto::CryptoContextBFVRNS> parameters;
 
-    // Set security level to 128 bits
+    // DETERMINISM: Set security level first (affects all other parameters)
     parameters.SetSecurityLevel(lbcrypto::HEStd_128_classic);
 
-    // Ring dimension (meets security requirements)
+    // DETERMINISM: Ring dimension (power of 2, affects all calculations)
     parameters.SetRingDim(16384);
 
-    // Plaintext modulus for integer operations
-    // Compatible prime that supports SQL INTEGER range (±2 billion)
-    // 2013265921 is compatible with ring dimension 16384
-    parameters.SetPlaintextModulus(2013265921);  // ← CHANGED
+    // DETERMINISM: Plaintext modulus (specific prime)
+    parameters.SetPlaintextModulus(2013265921);
 
-    // Multiplicative depth (number of multiplications supported)
+    // DETERMINISM: Multiplicative depth (affects modulus chain)
     parameters.SetMultiplicativeDepth(3);
 
-    // Set standard deviation for noise generation
+    // DETERMINISM: Noise parameters (must be consistent)
     parameters.SetStandardDeviation(3.2);
-
-    // Create the BFV context
+    
+    // DETERMINISM: Batch size (must be consistent)
+    parameters.SetBatchSize(8192);
+    
+    // DETERMINISM: Key distribution (affects key generation algorithm)
+    parameters.SetSecretKeyDist(lbcrypto::UNIFORM_TERNARY);
+    
+    // DETERMINISM: Key switching technique (affects context structure)
+    parameters.SetKeySwitchTechnique(lbcrypto::HYBRID);
+    
+    // Create context with fully specified parameters
     bfvContext_ = lbcrypto::GenCryptoContext(parameters);
+    
+    if (!bfvContext_) {
+        throw std::runtime_error("Failed to create BFV context");
+    }
 }
 
 void OpenFHEContext::initializeCKKSContext()
 {
-    // CKKS parameters for 128-bit security
+    // CKKS parameters for 128-bit security - EXPLICITLY SET ALL PARAMETERS FOR CONTEXT DETERMINISM
     lbcrypto::CCParams<lbcrypto::CryptoContextCKKSRNS> parameters;
 
-    // Set security level to 128 bits
+    // DETERMINISM: Set security level first (affects all other parameters)
     parameters.SetSecurityLevel(lbcrypto::HEStd_128_classic);
 
-    // Ring dimension
+    // DETERMINISM: Ring dimension (power of 2)
     parameters.SetRingDim(32768);
 
-    // Multiplicative depth for CKKS
+    // DETERMINISM: Multiplicative depth (affects modulus chain)
     parameters.SetMultiplicativeDepth(5);
 
-    // Scaling factor bits (controls precision)
-    // 50 bits gives good precision for most database float operations
+    // DETERMINISM: Scaling parameters (critical for CKKS determinism)
     parameters.SetScalingModSize(50);
+    parameters.SetFirstModSize(60);
 
-    // Batch size (number of values that can be packed into one ciphertext)
-    parameters.SetBatchSize(8);
+    // DETERMINISM: Batch size (must be consistent)
+    parameters.SetBatchSize(16384);
+    
+    // DETERMINISM: Key distribution (affects key generation algorithm)
+    parameters.SetSecretKeyDist(lbcrypto::UNIFORM_TERNARY);
+    
+    // DETERMINISM: Noise parameters (must be consistent)
+    parameters.SetStandardDeviation(3.2);
+    
+    // DETERMINISM: Key switching technique (affects context structure)
+    parameters.SetKeySwitchTechnique(lbcrypto::HYBRID);
 
-    // Create the CKKS context
+    // Create context with fully specified parameters
     ckksContext_ = lbcrypto::GenCryptoContext(parameters);
+    
+    if (!ckksContext_) {
+        throw std::runtime_error("Failed to create CKKS context");
+    }
 }
 
 void OpenFHEContext::enableFeatures()
@@ -83,6 +107,16 @@ lbcrypto::CryptoContext<lbcrypto::DCRTPoly> OpenFHEContext::getBFVContext() cons
 lbcrypto::CryptoContext<lbcrypto::DCRTPoly> OpenFHEContext::getCKKSContext() const
 {
     return ckksContext_;
+}
+
+void OpenFHEContext::setBFVContext(lbcrypto::CryptoContext<lbcrypto::DCRTPoly> context)
+{
+    bfvContext_ = context;
+}
+
+void OpenFHEContext::setCKKSContext(lbcrypto::CryptoContext<lbcrypto::DCRTPoly> context)
+{
+    ckksContext_ = context;
 }
 
 } // namespace hegadb::crypto

@@ -50,6 +50,12 @@ public:
      * @brief Decrypt a ciphertext back to plaintext
      */
     Plaintext decrypt(Ciphertext const& value) override;
+    
+    /**
+     * @brief Get the KeyManager (not supported for internal encryption engines)
+     * @throws std::runtime_error Always throws - BFVEncryption is an internal implementation detail
+     */
+    KeyManager const& getKeyManager() const override;
 
 private:
     std::unique_ptr<Ciphertext> encryptInteger(long long value);

@@ -239,6 +239,50 @@ add_test(
     COMMAND crypto_serialization_tests
 )
 
+add_executable(key_serialization_tests
+    crypto/key_serialization_tests.cpp
+)
+
+target_link_libraries(key_serialization_tests
+    PRIVATE
+        hegadb_crypto
+        GTest::gtest_main
+)
+
+add_test(
+    NAME key_serialization_tests
+    COMMAND key_serialization_tests
+)
+
+add_executable(key_persistence_tests
+    crypto/key_persistence_tests.cpp
+)
+
+target_link_libraries(key_persistence_tests
+    PRIVATE
+        hegadb_crypto
+        GTest::gtest_main
+)
+
+add_test(
+    NAME key_persistence_tests
+    COMMAND key_persistence_tests
+)
+
+add_executable(key_persistence_integration_test
+    crypto/key_persistence_integration_test.cpp
+)
+
+target_link_libraries(key_persistence_integration_test
+    PRIVATE
+        hegadb_crypto
+)
+
+add_test(
+    NAME key_persistence_integration_test
+    COMMAND key_persistence_integration_test
+)
+
 
 # ============================================================
 # gRPC Tests

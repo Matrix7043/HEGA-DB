@@ -1,15 +1,19 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
+#include <hegadb/logging/LoggingConfig.h>
 #include <utility>
 
 #include <spdlog/spdlog.h>
 
 namespace hegadb::logging {
 
-void initialize();
+void initialize(LoggingConfig const& config);
 
 void shutdown();
+
+spdlog::level::level_enum
+logLevelEnumParser(std::string const& str);
 
 template<typename... Args>
 void trace(

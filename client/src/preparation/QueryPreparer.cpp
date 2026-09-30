@@ -1,6 +1,7 @@
 #include "hegadb/client/preparation/QueryPreparer.h"
 #include "hegadb/client/ast/ASTParameterizer.h"
 #include "hegadb/client/preparation/LiteralExtractor.h"
+#include "hegadb/crypto/KeyManager.h"
 #include "hegadb/crypto/Plaintext.h"
 
 #include <memory>
@@ -35,9 +36,15 @@ QueryPreparer::prepare(
         parameters.emplace_back(literal.parameter_index, std::move(ciphertexts));
     }
 
+    crypto::KeyManager const& key_manager = encryption_.getKeyManager();
+    std::string bfv_public_key = key_manager.serializeBFVPublicKey();
+    std::string ckks_public_key = key_manager.serializeCKKSPublicKey();
+
     return PreparedQuery(
         std::move(parameterizedQuery),
-        std::move(parameters));
+        std::move(parameters),
+        std::move(bfv_public_key),
+        std::move(ckks_public_key));
 }
 
 } // namespace hegadb
