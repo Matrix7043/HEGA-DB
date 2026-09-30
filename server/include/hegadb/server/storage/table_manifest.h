@@ -1,4 +1,5 @@
-#pragma once
+#ifndef TABLE_MANIFEST_H
+#define TABLE_MANIFEST_H
 
 #include <string>
 #include <vector>
@@ -39,3 +40,4 @@ struct TableManifest {
 };
 
 } // namespace hegadb::server::storage
+#endif

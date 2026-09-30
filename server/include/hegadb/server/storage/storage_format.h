@@ -1,4 +1,5 @@
-#pragma once
+#ifndef STORAGE_FORMAT_H
+#define STORAGE_FORMAT_H
 
 #include <cstdint>
 #include <cstddef>
@@ -37,3 +38,4 @@ struct alignas(64) BlockHeader {
 static_assert(sizeof(BlockHeader) == 64, "BlockHeader must be exactly 64 bytes");
 
 } // namespace hegadb::server::storage
+#endif

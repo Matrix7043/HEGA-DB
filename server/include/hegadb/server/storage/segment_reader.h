@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SEGMENT_READER_H
+#define SEGMENT_READER_H
 
 #include "storage_format.h"
 #include "io_utils.h"
@@ -30,3 +31,4 @@ private:
 };
 
 } // namespace hegadb::server::storage
+#endif

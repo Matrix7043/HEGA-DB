@@ -1,17 +1,19 @@
 #include "hegadb/server/storage/segment_writer.h"
 #include <cstring>
-#include <sys/types.h>
+#include <stdexcept>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <sys/uio.h>
 #include <vector>
 
 namespace hegadb::server::storage {
 
 // Simple CRC32 for block integrity
-uint32_t SegmentWriter::calculate_crc32(const BlockHeader& header, std::span<const std::byte> payload) const {
+uint32_t SegmentWriter::calculate_crc32(BlockHeader const& header, std::span<std::byte const> payload) const
+{
     uint32_t crc = 0xFFFFFFFF;
-    
-    auto process_bytes = [&crc](const std::byte* data, size_t len) {
+
+    auto process_bytes = [&crc](std::byte const* data, size_t len) {
         for (size_t i = 0; i < len; ++i) {
             crc ^= static_cast<uint32_t>(data[i]);
             for (int j = 0; j < 8; ++j) {
@@ -19,40 +21,43 @@ uint32_t SegmentWriter::calculate_crc32(const BlockHeader& header, std::span<con
             }
         }
     };
-    
+
     // Don't include the crc field itself in the calculation
-    process_bytes(reinterpret_cast<const std::byte*>(&header), offsetof(BlockHeader, crc32_checksum));
+    process_bytes(reinterpret_cast<std::byte const*>(&header), offsetof(BlockHeader, crc32_checksum));
     process_bytes(payload.data(), payload.size());
-    
+
     return ~crc;
 }
 
-SegmentWriter::SegmentWriter(const std::string& file_path, const SegmentFileHeader& header)
-    : file_path_(file_path), header_(header) {
-    
+SegmentWriter::SegmentWriter(std::string const& file_path, SegmentFileHeader const& header)
+    : file_path_(file_path)
+    , header_(header)
+{
+
     // Use standard POSIX open without O_DIRECT for now as requested by user
     int flags = O_WRONLY | O_CREAT | O_TRUNC;
     mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-    
+
     int fd = ::open(file_path.c_str(), flags, mode);
     if (fd < 0) {
         throw std::runtime_error("Failed to open segment file for writing: " + file_path);
     }
     fd_.reset(fd);
-    
+
     // Write the 64-byte file header
     ssize_t written = ::pwrite(fd_.get(), &header_, sizeof(header_), 0);
     if (written != sizeof(header_)) {
         throw std::runtime_error("Failed to write segment file header");
     }
-    
+
     current_offset_ = sizeof(header_);
 }
 
 StorageResult SegmentWriter::write_block(
-    const BlockHeader& header,
-    std::span<const std::byte> payload) {
-    
+    BlockHeader const& header,
+    std::span<std::byte const> payload)
+{
+
     if (!fd_.is_valid()) {
         return StorageError::IOError;
     }
@@ -93,7 +98,8 @@ StorageResult SegmentWriter::write_block(
     return {};
 }
 
-StorageResult SegmentWriter::close() {
+StorageResult SegmentWriter::close()
+{
     if (fd_.is_valid()) {
         if (::fsync(fd_.get()) != 0) {
             return StorageError::IOError;
