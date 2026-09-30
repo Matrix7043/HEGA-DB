@@ -228,8 +228,8 @@ int main()
 
         assert(request.has_keys());
 
-        assert(request.keys().bfv_key() == "BFV_PUBLIC_KEY");
-        assert(request.keys().ckks_key() == "CKKS_PUBLIC_KEY");
+        assert(request.keys().bfv_key() == prepared.bfvPublicKey());
+        assert(request.keys().ckks_key() == prepared.ckksPublicKey());
 
         std::cout << "[PASS]\n\n";
     }
@@ -323,8 +323,8 @@ int main()
 
         assert(request.has_keys());
 
-        assert(request.keys().bfv_key() == "BFV_PUBLIC_KEY");
-        assert(request.keys().ckks_key() == "CKKS_PUBLIC_KEY");
+        assert(request.keys().bfv_key() == prepared.bfvPublicKey());
+        assert(request.keys().ckks_key() == prepared.ckksPublicKey());
 
         std::cout << "[PASS]\n\n";
     }
