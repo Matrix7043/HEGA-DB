@@ -15,6 +15,15 @@ PreparedQuery::PreparedQuery(
     , ckks_public_key_(std::move(ckks_public_key))
 {
 }
+PreparedQuery::PreparedQuery(
+    std::unique_ptr<ast::ASTNode> query,
+    std::vector<EncryptedParameter> parameters)
+    : query_(std::move(query))
+    , parameters_(std::move(parameters))
+    , bfv_public_key_("")
+    , ckks_public_key_("")
+{
+}
 ast::ASTNode const& PreparedQuery::query() const
 {
     return *query_;

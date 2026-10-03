@@ -17,6 +17,10 @@ public:
         std::string bfv_public_key,
         std::string ckks_public_key);
 
+    PreparedQuery(
+        std::unique_ptr<ast::ASTNode> query,
+        std::vector<EncryptedParameter> parameters);
+
     ast::ASTNode const& query() const;
     std::vector<EncryptedParameter> const& parameters() const;
     std::string const& bfvPublicKey() const;
