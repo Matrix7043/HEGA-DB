@@ -79,11 +79,17 @@ message Statement {
   }
 }
 
+message PublicKeys {
+  bytes bfv_key = 1;
+  bytes ckks_key = 2;
+}
+
 message ExecuteQuery {
   ProtocolVersion protocol_version = 1;
   RequestId request_id = 2;
   Statement statement = 3;
   repeated EncryptedParameter parameters = 4;
+  PublicKeys keys = 5;
 }
 
 message QueryResponse {

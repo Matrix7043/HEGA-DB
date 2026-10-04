@@ -13,14 +13,24 @@ class PreparedQuery {
 public:
     PreparedQuery(
         std::unique_ptr<ast::ASTNode> query,
+        std::vector<EncryptedParameter> parameters,
+        std::string bfv_public_key,
+        std::string ckks_public_key);
+
+    PreparedQuery(
+        std::unique_ptr<ast::ASTNode> query,
         std::vector<EncryptedParameter> parameters);
 
     ast::ASTNode const& query() const;
     std::vector<EncryptedParameter> const& parameters() const;
+    std::string const& bfvPublicKey() const;
+    std::string const& ckksPublicKey() const;
 
 private:
     std::unique_ptr<ast::ASTNode> query_;
     std::vector<EncryptedParameter> parameters_;
+    std::string bfv_public_key_;
+    std::string ckks_public_key_;
 };
 
 }

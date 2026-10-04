@@ -230,7 +230,18 @@ proto::ExecuteQuery ExecuteQueryEncoder::encode(
             parameter.index());
 
         proto_parameter->set_ciphertext(
-            "MOCK_ENCRYPTED_BYTES");
+            parameter.ciphertext().serialize());
+    }
+
+    /*
+     * -----------------------------------------------------
+     * Public Key
+     * -----------------------------------------------------
+     */
+
+    if (!prepared.parameters().empty()) {
+        request.mutable_keys()->set_bfv_key(prepared.bfvPublicKey());
+        request.mutable_keys()->set_ckks_key(prepared.ckksPublicKey());
     }
 
     return request;
