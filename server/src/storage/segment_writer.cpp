@@ -1,4 +1,6 @@
 #include "hegadb/server/storage/segment_writer.h"
+#include <hegadb/logging/Logger.h>
+#include <cerrno>
 #include <cstring>
 #include <stdexcept>
 #include <sys/stat.h>
@@ -40,6 +42,7 @@ SegmentWriter::SegmentWriter(std::string const& file_path, SegmentFileHeader con
 
     int fd = ::open(file_path.c_str(), flags, mode);
     if (fd < 0) {
+        hegadb::logging::error("Failed to open segment file for writing: '{}' (errno={})", file_path, errno);
         throw std::runtime_error("Failed to open segment file for writing: " + file_path);
     }
     fd_.reset(fd);
@@ -47,10 +50,12 @@ SegmentWriter::SegmentWriter(std::string const& file_path, SegmentFileHeader con
     // Write the 64-byte file header
     ssize_t written = ::pwrite(fd_.get(), &header_, sizeof(header_), 0);
     if (written != sizeof(header_)) {
+        hegadb::logging::error("Failed to write segment file header to '{}'", file_path);
         throw std::runtime_error("Failed to write segment file header");
     }
 
     current_offset_ = sizeof(header_);
+    hegadb::logging::info("Initialized segment writer for file: '{}'", file_path_);
 }
 
 StorageResult SegmentWriter::write_block(
@@ -59,6 +64,7 @@ StorageResult SegmentWriter::write_block(
 {
 
     if (!fd_.is_valid()) {
+        hegadb::logging::error("Attempted write_block on invalid file descriptor for file: '{}'", file_path_);
         return StorageError::IOError;
     }
 
@@ -69,6 +75,7 @@ StorageResult SegmentWriter::write_block(
     // Write header
     ssize_t written = ::pwrite(fd_.get(), &final_header, sizeof(final_header), current_offset_);
     if (written != sizeof(final_header)) {
+        hegadb::logging::error("Failed to write block header to '{}' at offset {}", file_path_, current_offset_);
         return StorageError::IOError;
     }
     current_offset_ += written;
@@ -77,6 +84,7 @@ StorageResult SegmentWriter::write_block(
     if (!payload.empty()) {
         written = ::pwrite(fd_.get(), payload.data(), payload.size(), current_offset_);
         if (written != static_cast<ssize_t>(payload.size())) {
+            hegadb::logging::error("Failed to write payload to '{}' at offset {}", file_path_, current_offset_);
             return StorageError::IOError;
         }
         current_offset_ += written;
@@ -90,10 +98,14 @@ StorageResult SegmentWriter::write_block(
         std::vector<char> pad(pad_size, 0);
         written = ::pwrite(fd_.get(), pad.data(), pad.size(), current_offset_);
         if (written != static_cast<ssize_t>(pad_size)) {
+            hegadb::logging::error("Failed to write alignment padding to '{}' at offset {}", file_path_, current_offset_);
             return StorageError::IOError;
         }
         current_offset_ += pad_size;
     }
+
+    hegadb::logging::trace("Wrote block to '{}': payload_size={}, crc32=0x{:08x}, new_offset={}",
+                           file_path_, payload.size(), final_header.crc32_checksum, current_offset_);
 
     return {};
 }
@@ -102,8 +114,10 @@ StorageResult SegmentWriter::close()
 {
     if (fd_.is_valid()) {
         if (::fsync(fd_.get()) != 0) {
+            hegadb::logging::error("fsync failed during close on segment file '{}' (errno={})", file_path_, errno);
             return StorageError::IOError;
         }
+        hegadb::logging::info("Closed segment writer for '{}' (total bytes: {})", file_path_, current_offset_);
         fd_.reset();
     }
     return {};

@@ -1,5 +1,6 @@
 #include "hegadb/server/storage/pinned_memory_pool.h"
 #include "hegadb/server/storage/io_utils.h"
+#include <hegadb/logging/Logger.h>
 
 #ifdef HEGADB_ENABLE_CUDA
 #    include <cuda_runtime.h>
@@ -14,16 +15,20 @@ PinnedMemoryPool::PinnedMemoryPool(size_t block_capacity_bytes)
 #ifdef HEGADB_ENABLE_CUDA
     cudaError_t err = cudaMallocHost(reinterpret_cast<void**>(&primary_buf_), capacity_);
     if (err != cudaSuccess) {
+        hegadb::logging::critical("cudaMallocHost failed for primary_buf_ (capacity: {} bytes)", capacity_);
         throw std::runtime_error("cudaMallocHost failed for primary_buf_");
     }
     err = cudaMallocHost(reinterpret_cast<void**>(&secondary_buf_), capacity_);
     if (err != cudaSuccess) {
         cudaFreeHost(primary_buf_);
+        hegadb::logging::critical("cudaMallocHost failed for secondary_buf_ (capacity: {} bytes)", capacity_);
         throw std::runtime_error("cudaMallocHost failed for secondary_buf_");
     }
+    hegadb::logging::info("Allocated CUDA pinned host memory pool with capacity {} bytes per buffer", capacity_);
 #else
     primary_buf_ = static_cast<std::byte*>(aligned_allocate(64, capacity_));
     secondary_buf_ = static_cast<std::byte*>(aligned_allocate(64, capacity_));
+    hegadb::logging::debug("Allocated POSIX 64-byte aligned memory pool with capacity {} bytes per buffer", capacity_);
 #endif
 }
 
@@ -40,6 +45,7 @@ PinnedMemoryPool::~PinnedMemoryPool()
     if (secondary_buf_)
         aligned_deallocate(secondary_buf_);
 #endif
+    hegadb::logging::debug("Deallocated memory pool buffers (capacity: {} bytes)", capacity_);
 }
 
 std::span<std::byte> PinnedMemoryPool::get_primary_buffer() noexcept
@@ -54,6 +60,7 @@ std::span<std::byte> PinnedMemoryPool::get_secondary_buffer() noexcept
 
 void PinnedMemoryPool::swap_buffers() noexcept
 {
+    hegadb::logging::trace("Swapping primary and secondary memory pool buffers");
     std::byte* temp = primary_buf_;
     primary_buf_ = secondary_buf_;
     secondary_buf_ = temp;

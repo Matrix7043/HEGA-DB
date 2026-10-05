@@ -1,5 +1,7 @@
 #include "hegadb/transport/ServerTransportFactory.h"
 #include <hegadb/catalog/InMemoryCatalog.h>
+#include <hegadb/logging/Logger.h>
+#include <hegadb/logging/LoggingConfig.h>
 #include <hegadb/server/ExecuteQueryReceiver.h>
 #include <hegadb/server/QueryExecutor.h>
 #include <hegadb/transport/ServerTransport.h>
@@ -11,9 +13,14 @@
 
 int main(int argc, char** argv)
 {
+    hegadb::logging::LoggingConfig logging_config;
+    logging_config.console_enabled = true;
+    logging_config.level = spdlog::level::info;
+    hegadb::logging::initialize(logging_config);
+
     std::string server_address = "0.0.0.0:50051";
 
-    std::cout << "Starting HEGA-DB Server on " << server_address << "...\n";
+    hegadb::logging::info("Starting HEGA-DB Server on {}...", server_address);
 
     // Instantiate Query Receiver
     auto receiver = std::make_shared<hegadb::server::ExecuteQueryReceiver>();
@@ -24,12 +31,12 @@ int main(int argc, char** argv)
     server->setRequestHandler(
         [receiver](hegadb::protocol::ExecuteQuery const& request) {
             if (request.has_request_id())
-                std::cout << request.request_id().SerializeAsString() << std::endl;
+                hegadb::logging::debug("Request ID: {}", request.request_id().SerializeAsString());
             return receiver->executeQuery(request);
         });
 
     server->start();
-    std::cout << "HEGA-DB Server ready to receive ExecuteQuery requests.\n";
+    hegadb::logging::info("HEGA-DB Server ready to receive ExecuteQuery requests.");
 
     server->wait();
 

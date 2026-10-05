@@ -3,8 +3,9 @@
 
 #include <cstdlib>
 #include <fcntl.h>
-#include <string>
+#include <new>
 #include <unistd.h>
+#include <utility>
 
 namespace hegadb::server::storage {
 

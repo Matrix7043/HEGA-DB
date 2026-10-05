@@ -5,7 +5,6 @@
 #include <vector>
 #include <unordered_map>
 #include <cstdint>
-#include <expected>
 #include "io_utils.h"
 
 namespace hegadb::server::storage {
