@@ -1,5 +1,7 @@
 #include "hegadb/catalog/CatalogSnapshot.h"
+#include "hegadb/catalog/TableSchema.h"
 
+#include <unordered_map>
 #include <utility>
 
 namespace hegadb::catalog {
@@ -21,6 +23,11 @@ TableSchema const* CatalogSnapshot::findTable(std::string const& name) const
         return nullptr;
 
     return &it->second;
+}
+
+std::unordered_map<std::string, TableSchema> const& CatalogSnapshot::tables() const
+{
+    return tables_;
 }
 
 } // namespace hegadb

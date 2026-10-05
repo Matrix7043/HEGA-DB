@@ -21,6 +21,8 @@ public:
 
     TableSchema const* findTable(std::string const& name) const;
 
+    std::unordered_map<std::string, TableSchema> const& tables() const;
+
 private:
     SchemaVersion version_;
     std::unordered_map<std::string, TableSchema> tables_;

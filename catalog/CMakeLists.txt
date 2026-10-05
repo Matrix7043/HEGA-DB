@@ -2,6 +2,7 @@ add_library(hegadb_catalog
     src/CatalogSnapshot.cpp
     src/InMemoryCatalog.cpp
     src/TableSchema.cpp
+    src/CatalogManager.cpp
 )
 
 target_include_directories(hegadb_catalog
