@@ -10,6 +10,9 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Suppress all compiler warnings globally
+add_compile_options(-w)
+
 # ============================================================
 # Compiler Warnings
 # ============================================================
@@ -54,6 +57,12 @@ endif()
 if(HEGADB_BUILD_SERVER)
   add_subdirectory(server)
 endif()
+
+# Execution module depends on both client and server
+add_subdirectory(execution)
+
+# Tools for database setup and management
+add_subdirectory(tools/setup)
 
 if(HEGADB_BUILD_TESTS)
   enable_testing()

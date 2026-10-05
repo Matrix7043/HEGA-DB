@@ -21,10 +21,8 @@ execution::EncryptedMask LogicalEvaluator::evaluateAND(
     auto result = ctx->EvalMult(left_ct.getCiphertext(), right_ct.getCiphertext());
 
     return execution::EncryptedMask(crypto::OpenFHECiphertext(
-        result,
-        left_ct.getSchemeType(),
-        left_ct.getOriginalType()
-    ));
+        result, left_ct.getSchemeType(), left_ct.getOriginalType()),
+        execution::MaskKind::COMPOSED);
 }
 
 execution::EncryptedMask LogicalEvaluator::evaluateOR(
@@ -44,10 +42,8 @@ execution::EncryptedMask LogicalEvaluator::evaluateOR(
     auto result = ctx->EvalSub(sum, product);
 
     return execution::EncryptedMask(crypto::OpenFHECiphertext(
-        result,
-        left_ct.getSchemeType(),
-        left_ct.getOriginalType()
-    ));
+        result, left_ct.getSchemeType(), left_ct.getOriginalType()),
+        execution::MaskKind::COMPOSED);
 }
 
 execution::EncryptedMask LogicalEvaluator::evaluateNOT(
@@ -71,8 +67,8 @@ execution::EncryptedMask LogicalEvaluator::evaluateNOT(
     return execution::EncryptedMask(crypto::OpenFHECiphertext(
         result,
         ct.getSchemeType(),
-        ct.getOriginalType()
-    ));
+        ct.getOriginalType()),
+        execution::MaskKind::COMPOSED);
 }
 
 } // namespace hegadb::server::evaluator

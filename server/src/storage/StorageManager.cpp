@@ -21,6 +21,7 @@ namespace hegadb::server::storage {
 class FileStorageManager : public StorageManager {
 private:
     std::filesystem::path data_directory_;
+    std::filesystem::path catalog_directory_;
     
     /**
      * @brief Implementation of EncryptedTable that reads from segment files
@@ -142,7 +143,49 @@ private:
                 );
                 
                 try {
-                    auto ciphertext = crypto::OpenFHECiphertext::deserialize(payload_str);
+                    // Deserialize OpenFHE ciphertext directly (no HGCT wrapper)
+                    std::istringstream blob_stream(payload_str, std::ios::in | std::ios::binary);
+                    lbcrypto::Ciphertext<lbcrypto::DCRTPoly> openfhe_ct;
+                    lbcrypto::Serial::Deserialize(openfhe_ct, blob_stream, lbcrypto::SerType::BINARY);
+                    
+                    if (!openfhe_ct) {
+                        throw std::runtime_error("Deserialized ciphertext is null");
+                    }
+                    
+                    // Determine scheme type and data type from column metadata
+                    crypto::SchemeType scheme_type = (col.scheme == "CKKS") ? 
+                        crypto::SchemeType::CKKS : crypto::SchemeType::BFV;
+                    
+                    types::DataType data_type;
+                    if (col.type == "INTEGER") {
+                        data_type = types::DataType::Integer;
+                    } else if (col.type == "STRING") {
+                        data_type = types::DataType::String;
+                    } else if (col.type == "FLOAT") {
+                        data_type = types::DataType::Float;
+                    } else if (col.type == "BOOLEAN") {
+                        data_type = types::DataType::Boolean;
+                    } else {
+                        throw std::runtime_error("Unknown data type: " + col.type);
+                    }
+                    
+                    // Wrap in OpenFHECiphertext with correct metadata.
+                    // For String: stores (row_count * 1000 + stride) where stride=32
+                    //             matches the encoding in BFVEncryption::encryptStringVector
+                    // For Integer/Boolean/Float: stringLength must be 0 per OpenFHECiphertext specification
+                    size_t meta_length = 0;
+                    if (data_type == types::DataType::String) {
+                        constexpr size_t STRING_STRIDE = 32;
+                        meta_length = batch.row_count * 1000 + STRING_STRIDE;
+                    }
+
+                    auto ciphertext = crypto::OpenFHECiphertext(
+                        openfhe_ct,
+                        scheme_type,
+                        data_type,
+                        meta_length
+                    );
+                    
                     batch.columns.emplace(col.name, std::move(ciphertext));
                 } catch (std::exception const& e) {
                     throw std::runtime_error(
@@ -172,20 +215,28 @@ private:
     };
     
 public:
-    explicit FileStorageManager(std::string data_directory)
+    FileStorageManager(std::string data_directory, std::string catalog_directory)
         : data_directory_(std::move(data_directory))
+        , catalog_directory_(std::move(catalog_directory))
     {
         if (!std::filesystem::exists(data_directory_)) {
             throw std::runtime_error(
-                "Storage directory does not exist: " + 
+                "Storage directory does not exist: " +
                 data_directory_.string()
             );
         }
-        
+
         if (!std::filesystem::is_directory(data_directory_)) {
             throw std::runtime_error(
-                "Storage path is not a directory: " + 
+                "Storage path is not a directory: " +
                 data_directory_.string()
+            );
+        }
+
+        if (!std::filesystem::exists(catalog_directory_)) {
+            throw std::runtime_error(
+                "Catalog directory does not exist: " +
+                catalog_directory_.string()
             );
         }
     }
@@ -202,10 +253,10 @@ public:
             );
         }
         
-        // Load table manifest
-        auto manifest_path = table_dir / "manifest.json";
+        // Load table manifest from the catalog directory
+        auto manifest_path = catalog_directory_ / (table_name + ".manifest.json");
         auto manifest_result = TableManifest::deserialize(manifest_path.string());
-        
+
         if (!manifest_result.has_value()) {
             throw std::runtime_error(
                 "Failed to load table manifest: " + manifest_path.string()
@@ -232,9 +283,10 @@ public:
 
 // Factory function to create a FileStorageManager
 std::unique_ptr<StorageManager> StorageManager::createFileStorage(
-    std::string const& data_directory)
+    std::string const& data_directory,
+    std::string const& catalog_directory)
 {
-    return std::make_unique<FileStorageManager>(data_directory);
+    return std::make_unique<FileStorageManager>(data_directory, catalog_directory);
 }
 
 } // namespace hegadb::server::storage

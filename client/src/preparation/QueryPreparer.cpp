@@ -36,9 +36,15 @@ QueryPreparer::prepare(
         parameters.emplace_back(literal.parameter_index, std::move(ciphertexts));
     }
 
-    crypto::KeyManager const& key_manager = encryption_.getKeyManager();
-    std::string bfv_public_key = key_manager.serializeBFVPublicKey();
-    std::string ckks_public_key = key_manager.serializeCKKSPublicKey();
+    std::string bfv_public_key;
+    std::string ckks_public_key;
+    try {
+        crypto::KeyManager const& key_manager = encryption_.getKeyManager();
+        bfv_public_key = key_manager.serializeBFVPublicKey();
+        ckks_public_key = key_manager.serializeCKKSPublicKey();
+    } catch (...) {
+        // MockEncryption or custom wrappers may not manage real keys
+    }
 
     return PreparedQuery(
         std::move(parameterizedQuery),

@@ -29,18 +29,22 @@ int main(int argc, char** argv)
     auto crypto_context = std::make_shared<hegadb::crypto::OpenFHEContext>();
     crypto_context->enableFeatures();
     
-    // Initialize storage manager with file-based storage
-    // Default to "./data" directory - can be configured via command line args
-    std::string data_dir = (argc > 1) ? argv[1] : "./data";
-    
+    // Initialize storage manager with file-based storage.
+    // argv[1] = data directory (default: ~/.hegadb/data)
+    // argv[2] = catalog directory (default: ~/.hegadb/catalog)
+    std::string home_dir    = std::getenv("HOME") ? std::getenv("HOME") : ".";
+    std::string data_dir    = (argc > 1) ? argv[1] : (home_dir + "/.hegadb/data");
+    std::string catalog_dir = (argc > 2) ? argv[2] : (home_dir + "/.hegadb/catalog");
+
     std::shared_ptr<hegadb::server::storage::StorageManager> storage;
     try {
-        storage = hegadb::server::storage::StorageManager::createFileStorage(data_dir);
-        std::cout << "Storage initialized from directory: " << data_dir << "\n";
+        storage = hegadb::server::storage::StorageManager::createFileStorage(data_dir, catalog_dir);
+        std::cout << "Storage initialized: data=" << data_dir
+                  << " catalog=" << catalog_dir << "\n";
     } catch (std::exception const& e) {
         std::cerr << "Warning: Could not initialize file storage: " << e.what() << "\n";
         std::cerr << "Creating mock storage for testing...\n";
-        
+
         // Fallback to mock storage for testing
         class MockStorageManager : public hegadb::server::storage::StorageManager {
         public:

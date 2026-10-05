@@ -426,3 +426,8 @@ target_link_libraries(end_to_end_execution_tests
 
 gtest_discover_tests(end_to_end_execution_tests)
 
+# ============================================================
+# Integration Tests
+# ============================================================
+
+add_subdirectory(integration)

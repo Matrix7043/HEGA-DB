@@ -36,19 +36,78 @@ std::unique_ptr<Ciphertext> BFVEncryption::encrypt(Plaintext const& value)
     }
 }
 
-std::unique_ptr<Ciphertext> BFVEncryption::encryptInteger(long long value)
+std::unique_ptr<Ciphertext> BFVEncryption::encryptIntegerVector(
+    std::vector<int64_t> const& values)
 {
-    // Create plaintext from integer
-    lbcrypto::Plaintext plaintext = context_->MakePackedPlaintext(std::vector<int64_t>{value});
+    if (values.empty()) {
+        throw std::runtime_error("encryptIntegerVector: empty value vector");
+    }
 
-    // Encrypt using public key
+    lbcrypto::Plaintext plaintext = context_->MakePackedPlaintext(values);
     auto ciphertext = context_->Encrypt(publicKey_, plaintext);
 
-    // Wrap in our ciphertext class with metadata
     return std::make_unique<OpenFHECiphertext>(
         ciphertext,
         SchemeType::BFV,
-        types::DataType::Integer);
+        types::DataType::Integer,
+        0
+    );
+}
+
+std::unique_ptr<Ciphertext> BFVEncryption::encryptStringVector(
+    std::vector<std::string> const& values,
+    size_t max_string_len)
+{
+    if (values.empty()) {
+        throw std::runtime_error("encryptStringVector: empty value vector");
+    }
+
+    // Layout: each row occupies max_string_len consecutive slots.
+    // slot[i * max_string_len + j] = ASCII of values[i][j]  (0 if j >= values[i].size())
+    size_t total_slots = values.size() * max_string_len;
+    std::vector<int64_t> packed(total_slots, 0);
+
+    for (size_t row = 0; row < values.size(); ++row) {
+        std::string const& s = values[row];
+        size_t chars = std::min(s.size(), max_string_len);
+        for (size_t c = 0; c < chars; ++c) {
+            packed[row * max_string_len + c] =
+                static_cast<int64_t>(static_cast<unsigned char>(s[c]));
+        }
+    }
+
+    lbcrypto::Plaintext plaintext = context_->MakePackedPlaintext(packed);
+    auto ciphertext = context_->Encrypt(publicKey_, plaintext);
+
+    // Encode (row_count, max_string_len) into stringLength as a combined key:
+    // stringLength = row_count * 1000 + max_string_len  (works for reasonable sizes)
+    size_t encoded = values.size() * 1000 + max_string_len;
+    return std::make_unique<OpenFHECiphertext>(
+        ciphertext,
+        SchemeType::BFV,
+        types::DataType::String,
+        encoded
+    );
+}
+
+
+std::unique_ptr<Ciphertext> BFVEncryption::encryptInteger(long long value)
+{
+    // Broadcast the scalar into all BFV slots so that per-slot subtraction
+    // with a column ciphertext (which packs one row per slot) works correctly.
+    // N/2 slots available in BFV packed encoding; fill them all with the same value.
+    uint32_t ring_dim = context_->GetRingDimension();
+    uint32_t num_slots = ring_dim;  // BFV uses all N slots
+    std::vector<int64_t> slots(num_slots, value);
+
+    lbcrypto::Plaintext plaintext = context_->MakePackedPlaintext(slots);
+    auto ciphertext = context_->Encrypt(publicKey_, plaintext);
+
+    return std::make_unique<OpenFHECiphertext>(
+        ciphertext,
+        SchemeType::BFV,
+        types::DataType::Integer,
+        0);  // stringLength unused for integers
 }
 
 std::unique_ptr<Ciphertext> BFVEncryption::encryptString(std::string const& value)
@@ -80,11 +139,12 @@ std::unique_ptr<Ciphertext> BFVEncryption::encryptString(std::string const& valu
 
 std::unique_ptr<Ciphertext> BFVEncryption::encryptBoolean(bool value)
 {
-    // Encode boolean as 0 (false) or 1 (true)
+    // Broadcast into all slots, matching encryptInteger behaviour
     int64_t intValue = value ? 1 : 0;
+    uint32_t num_slots = context_->GetRingDimension();
+    std::vector<int64_t> slots(num_slots, intValue);
 
-    lbcrypto::Plaintext plaintext = context_->MakePackedPlaintext(std::vector<int64_t>{intValue});
-
+    lbcrypto::Plaintext plaintext = context_->MakePackedPlaintext(slots);
     auto ciphertext = context_->Encrypt(publicKey_, plaintext);
 
     return std::make_unique<OpenFHECiphertext>(

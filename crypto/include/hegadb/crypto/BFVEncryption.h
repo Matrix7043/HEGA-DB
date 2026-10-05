@@ -41,6 +41,26 @@ public:
      */
     std::unique_ptr<Ciphertext> encrypt(Plaintext const& value) override;
 
+    /**
+     * @brief Pack and encrypt a vector of integers into a single BFV ciphertext.
+     *
+     * Uses BFV slot packing so that the i-th slot holds values[i].
+     * This is the correct way to store a whole database column.
+     */
+    std::unique_ptr<Ciphertext> encryptIntegerVector(std::vector<int64_t> const& values);
+
+    /**
+     * @brief Pack and encrypt a vector of strings into a single BFV ciphertext.
+     *
+     * Encodes each string as its first character's ASCII value in slot i.
+     * For short columns (<=50 chars) the full string is stored in consecutive slots
+     * with a stride of max_string_len.
+     * Returns the ciphertext and stores row_count + max_string_len in metadata.
+     */
+    std::unique_ptr<Ciphertext> encryptStringVector(
+        std::vector<std::string> const& values,
+        size_t max_string_len = 32);
+
 
 
 

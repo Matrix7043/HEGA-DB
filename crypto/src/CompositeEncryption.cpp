@@ -14,13 +14,16 @@ CompositeEncryption::CompositeEncryption()
 
 CompositeEncryption::CompositeEncryption(std::string const& key_directory)
     : context_()
-    , keyManager_(context_)
+    , keyManager_(context_)  // keyManager_ holds a reference to context_
 {
     context_.enableFeatures();
+    // Load (or generate) keys first — loadContext() will replace context_'s
+    // internal shared_ptrs in-place via the reference stored in keyManager_
     initializeKeys(key_directory);
 
-    // Initialize encryption engines
-    bfvEngine_ = std::make_unique<BFVEncryption>(context_, keyManager_);
+    // Engines are created AFTER initializeKeys so they snapshot the
+    // fully-loaded context and keys, not the initial empty ones
+    bfvEngine_  = std::make_unique<BFVEncryption>(context_, keyManager_);
     ckksEngine_ = std::make_unique<CKKSEncryption>(context_, keyManager_);
 }
 

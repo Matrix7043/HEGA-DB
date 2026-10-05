@@ -10,7 +10,7 @@ namespace hegadb::crypto {
 class KeyManager {
 public:
 
-    explicit KeyManager(OpenFHEContext const& context);
+    explicit KeyManager(OpenFHEContext& context);
 
 
     void generateKeys();
@@ -51,7 +51,7 @@ public:
     void loadContext(std::string const& directory_path);
 
 private:
-    OpenFHEContext context_;
+    OpenFHEContext& context_;  // non-owning reference — owned by CompositeEncryption
 
     // BFV keys
     lbcrypto::PublicKey<lbcrypto::DCRTPoly> bfvPublicKey_;
