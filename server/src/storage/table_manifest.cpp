@@ -1,8 +1,8 @@
 #include "hegadb/server/storage/table_manifest.h"
+#include <hegadb/logging/Logger.h>
+#include <cerrno>
 #include <cstdio>
 #include <fstream>
-#include <sstream>
-#include <stdexcept>
 #include <unistd.h>
 #include <algorithm>
 #include <cctype>
@@ -16,8 +16,10 @@ namespace hegadb::server::storage {
 StorageResult TableManifest::serialize(std::string const& file_path) const
 {
     std::string tmp_file = file_path + ".tmp";
+    hegadb::logging::debug("Serializing manifest for table '{}' to temporary file '{}'", table_name, tmp_file);
     std::ofstream out(tmp_file);
     if (!out) {
+        hegadb::logging::error("Failed to open temporary manifest file for writing: '{}' (errno={})", tmp_file, errno);
         return StorageError::IOError;
     }
 
@@ -69,8 +71,12 @@ StorageResult TableManifest::serialize(std::string const& file_path) const
 
     // atomic rename
     if (std::rename(tmp_file.c_str(), file_path.c_str()) != 0) {
+        hegadb::logging::error("Failed atomic rename for manifest: '{}' -> '{}' (errno={})", tmp_file, file_path, errno);
         return StorageError::IOError;
     }
+
+    hegadb::logging::info("Successfully serialized manifest for table '{}' to '{}' (columns={}, segments={}, total_records={})",
+                          table_name, file_path, columns.size(), segments.size(), total_records);
 
     return {};
 }
@@ -78,8 +84,10 @@ StorageResult TableManifest::serialize(std::string const& file_path) const
 // Simple parsing based on known structure (very fragile, just for mock purposes)
 ValueResult<TableManifest> TableManifest::deserialize(std::string const& file_path)
 {
+    hegadb::logging::debug("Deserializing table manifest from file: '{}'", file_path);
     std::ifstream in(file_path);
     if (!in) {
+        hegadb::logging::error("Failed to open table manifest file for reading: '{}'", file_path);
         return StorageError::FileNotFound;
     }
 
@@ -248,6 +256,7 @@ ValueResult<TableManifest> TableManifest::deserialize(std::string const& file_pa
         }
     }
 
+    hegadb::logging::info("Successfully loaded manifest for table '{}' from '{}'", manifest.table_name, file_path);
     return manifest;
 }
 

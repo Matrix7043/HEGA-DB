@@ -8,6 +8,8 @@
 #include <hegadb/crypto/MockEncryption.h>
 #include <hegadb/crypto/MockCiphertext.h>
 #include <hegadb/crypto/Plaintext.h>
+#include <chrono>
+#include <cstring>
 #include <filesystem>
 #include <vector>
 
@@ -159,6 +161,57 @@ TEST(StorageEngineTest, EncryptedRowRoundTrip) {
 
     EXPECT_EQ(retrieved_bytes, serialized_bytes);
     std::cout << "[Test Result] SUCCESS: Retrieved encrypted payload matches original client ciphertext exactly!\n";
+    std::cout << "===================================================================\n\n";
+
+    std::filesystem::remove(test_file);
+}
+
+TEST(StorageStressTest, PinnedMemoryAndWriterBenchmark) {
+    std::string test_file = "stress_benchmark_segment.bin";
+    constexpr size_t BLOCK_SIZE = 1 * 1024 * 1024; // 1 MB per block
+    constexpr size_t NUM_ITERATIONS = 200;         // 200 MB total I/O data throughput
+
+    std::cout << "\n================ STORAGE MODULE STRESS TEST ================\n";
+#ifdef HEGADB_ENABLE_CUDA
+    std::cout << "[Mode] CUDA ENABLED (Host Pinned Memory - cudaMallocHost)\n";
+#else
+    std::cout << "[Mode] CUDA DISABLED (POSIX 64-byte Aligned Memory)\n";
+#endif
+    std::cout << "[Parameters] Block Size: " << (BLOCK_SIZE / 1024 / 1024) << " MB, Iterations: " << NUM_ITERATIONS
+              << " (" << (BLOCK_SIZE * NUM_ITERATIONS / 1024 / 1024) << " MB Total)\n";
+
+    SegmentFileHeader header = {
+        {'S','T','R','E','S','S','_','S'}, 1, 1, 1024, 1, 100, 0, 12345, NUM_ITERATIONS, BLOCK_SIZE * NUM_ITERATIONS, {0}
+    };
+
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    {
+        PinnedMemoryPool memory_pool(BLOCK_SIZE);
+        SegmentWriter writer(test_file, header);
+
+        for (size_t i = 0; i < NUM_ITERATIONS; ++i) {
+            auto primary = memory_pool.get_primary_buffer();
+            // Fill buffer with dummy data
+            ::memset(primary.data(), static_cast<int>(i % 256), primary.size());
+
+            BlockHeader block = {i, 100, 100, static_cast<uint32_t>(BLOCK_SIZE), 0, {0}};
+            auto res = writer.write_block(block, primary);
+            ASSERT_TRUE(res.success);
+
+            memory_pool.swap_buffers();
+        }
+        writer.close();
+    }
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    double duration_ms = std::chrono::duration<double, std::milli>(end_time - start_time).count();
+    double total_mb = static_cast<double>(BLOCK_SIZE * NUM_ITERATIONS) / (1024.0 * 1024.0);
+    double throughput_mb_s = total_mb / (duration_ms / 1000.0);
+
+    std::cout << "-------------------------------------------------------------------\n";
+    std::cout << "  Elapsed Time : " << std::fixed << std::setprecision(2) << duration_ms << " ms\n";
+    std::cout << "  Throughput   : " << std::fixed << std::setprecision(2) << throughput_mb_s << " MB/s\n";
     std::cout << "===================================================================\n\n";
 
     std::filesystem::remove(test_file);

@@ -36,21 +36,21 @@ QueryPreparer::prepare(
         parameters.emplace_back(literal.parameter_index, std::move(ciphertexts));
     }
 
-    std::string bfv_public_key;
-    std::string ckks_public_key;
-    try {
+    if (literals.size() > 0) {
         crypto::KeyManager const& key_manager = encryption_.getKeyManager();
-        bfv_public_key = key_manager.serializeBFVPublicKey();
-        ckks_public_key = key_manager.serializeCKKSPublicKey();
-    } catch (...) {
-        // MockEncryption or custom wrappers may not manage real keys
+        std::string bfv_public_key = key_manager.serializeBFVPublicKey();
+        std::string ckks_public_key = key_manager.serializeCKKSPublicKey();
+
+        return PreparedQuery(
+            std::move(parameterizedQuery),
+            std::move(parameters),
+            std::move(bfv_public_key),
+            std::move(ckks_public_key));
     }
 
     return PreparedQuery(
         std::move(parameterizedQuery),
-        std::move(parameters),
-        std::move(bfv_public_key),
-        std::move(ckks_public_key));
+        std::move(parameters));
 }
 
 } // namespace hegadb

@@ -61,7 +61,10 @@ add_library(hegadb_server
 # Compiler Definitions
 # ============================================================
 if(HEGADB_ENABLE_CUDA)
+    find_package(CUDAToolkit REQUIRED)
     target_compile_definitions(hegadb_server PUBLIC HEGADB_ENABLE_CUDA)
+    target_include_directories(hegadb_server PUBLIC ${CUDAToolkit_INCLUDE_DIRS})
+    target_link_libraries(hegadb_server PUBLIC CUDA::cudart)
 endif()
 
 # ============================================================
@@ -91,6 +94,7 @@ target_include_directories(hegadb_server
 # ============================================================
 target_link_libraries(hegadb_server
     PUBLIC
+<<<<<<< HEAD
         # External dependencies
         OPENFHEpke
         OPENFHEbinfhe

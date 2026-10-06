@@ -1,3 +1,4 @@
+#include "hegadb/crypto/CompositeEncryption.h"
 #include <hegadb/client/SQLParser.h>
 
 #include <hegadb/client/ast/ColumnRef.h>
@@ -9,9 +10,6 @@
 
 #include <hegadb/client/preparation/QueryPreparer.h>
 
-#include <hegadb/crypto/MockCiphertext.h>
-#include <hegadb/crypto/MockEncryption.h>
-
 #include <hegadb/operations/ComparisonOp.h>
 #include <hegadb/operations/LogicalOp.h>
 
@@ -22,8 +20,7 @@
 int main()
 {
     hegadb::client::SQLParser parser;
-    // TODO: REPLACE MockEncryption with Composite Encryption
-    hegadb::crypto::MockEncryption encryption;
+    hegadb::crypto::CompositeEncryption encryption;
     hegadb::client::preparation::QueryPreparer preparer(encryption);
 
     // Single literal
@@ -64,14 +61,18 @@ int main()
         assert(prepared.parameters().size() == 1);
         assert(prepared.parameters()[0].index() == 0);
 
+        assert(!prepared.bfvPublicKey().empty());
+        assert(!prepared.ckksPublicKey().empty());
+
+        assert(prepared.bfvPublicKey() == encryption.getKeyManager().serializeBFVPublicKey());
+        assert(prepared.ckksPublicKey() == encryption.getKeyManager().serializeCKKSPublicKey());
+
         auto const& ciphertext = prepared.parameters()[0].ciphertext();
 
-        auto const* mockCiphertext = dynamic_cast<
-            hegadb::crypto::MockCiphertext const*>(&ciphertext);
+        assert(!ciphertext.serialize().empty());
 
-        assert(mockCiphertext != nullptr);
-
-        auto const& value = mockCiphertext->value().value();
+        auto decrypted = encryption.decrypt(ciphertext);
+        auto const& value = decrypted.value();
 
         assert(std::holds_alternative<long long>(value));
         assert(std::get<long long>(value) == 90);
@@ -138,15 +139,19 @@ int main()
         assert(prepared.parameters()[0].index() == 0);
         assert(prepared.parameters()[1].index() == 1);
 
+        assert(!prepared.bfvPublicKey().empty());
+        assert(!prepared.ckksPublicKey().empty());
+
+        assert(prepared.bfvPublicKey() == encryption.getKeyManager().serializeBFVPublicKey());
+        assert(prepared.ckksPublicKey() == encryption.getKeyManager().serializeCKKSPublicKey());
+
         {
             auto const& ciphertext = prepared.parameters()[0].ciphertext();
 
-            auto const* mockCiphertext = dynamic_cast<
-                hegadb::crypto::MockCiphertext const*>(&ciphertext);
+            assert(!ciphertext.serialize().empty());
 
-            assert(mockCiphertext != nullptr);
-
-            auto const& value = mockCiphertext->value().value();
+            auto decrypted = encryption.decrypt(ciphertext);
+            auto const& value = decrypted.value();
 
             assert(std::holds_alternative<long long>(value));
             assert(std::get<long long>(value) == 90);
@@ -155,18 +160,15 @@ int main()
         {
             auto const& ciphertext = prepared.parameters()[1].ciphertext();
 
-            auto const* mockCiphertext = dynamic_cast<
-                hegadb::crypto::MockCiphertext const*>(&ciphertext);
+            assert(!ciphertext.serialize().empty());
 
-            assert(mockCiphertext != nullptr);
-
-            auto const& value = mockCiphertext->value().value();
+            auto decrypted = encryption.decrypt(ciphertext);
+            auto const& value = decrypted.value();
 
             assert(std::holds_alternative<long long>(value));
             assert(std::get<long long>(value) == 10);
         }
     }
-
     // NOT expression
     {
         auto ast = parser.parseToAST(
@@ -200,14 +202,18 @@ int main()
 
         assert(prepared.parameters().size() == 1);
 
+        assert(!prepared.bfvPublicKey().empty());
+        assert(!prepared.ckksPublicKey().empty());
+
+        assert(prepared.bfvPublicKey() == encryption.getKeyManager().serializeBFVPublicKey());
+        assert(prepared.ckksPublicKey() == encryption.getKeyManager().serializeCKKSPublicKey());
+
         auto const& ciphertext = prepared.parameters()[0].ciphertext();
 
-        auto const* mockCiphertext = dynamic_cast<
-            hegadb::crypto::MockCiphertext const*>(&ciphertext);
+        assert(!ciphertext.serialize().empty());
 
-        assert(mockCiphertext != nullptr);
-
-        auto const& value = mockCiphertext->value().value();
+        auto decrypted = encryption.decrypt(ciphertext);
+        auto const& value = decrypted.value();
 
         assert(std::holds_alternative<long long>(value));
         assert(std::get<long long>(value) == 90);
@@ -229,6 +235,8 @@ int main()
 
         assert(select->where() == nullptr);
         assert(prepared.parameters().empty());
+        assert(prepared.bfvPublicKey().empty());
+        assert(prepared.ckksPublicKey().empty());
     }
 
     std::cout

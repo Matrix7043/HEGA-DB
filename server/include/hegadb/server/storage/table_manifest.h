@@ -1,10 +1,10 @@
-#pragma once
+#ifndef TABLE_MANIFEST_H
+#define TABLE_MANIFEST_H
 
 #include <string>
 #include <vector>
 #include <unordered_map>
 #include <cstdint>
-#include <expected>
 #include "io_utils.h"
 
 namespace hegadb::server::storage {
@@ -39,3 +39,4 @@ struct TableManifest {
 };
 
 } // namespace hegadb::server::storage
+#endif

@@ -1,12 +1,14 @@
-#include <hegadb/transport/ServerTransportFactory.h>
-#include <hegadb/catalog/InMemoryCatalog.h>
 #include <hegadb/catalog/CatalogSnapshot.h>
+#include <hegadb/catalog/InMemoryCatalog.h>
 #include <hegadb/catalog/TableSchema.h>
+#include <hegadb/crypto/OpenFHEContext.h>
+#include <hegadb/logging/Logger.h>
+#include <hegadb/logging/LoggingConfig.h>
 #include <hegadb/server/api/ExecuteQueryReceiver.h>
 #include <hegadb/server/execution/QueryExecutor.h>
 #include <hegadb/server/storage/StorageManager.h>
-#include <hegadb/crypto/OpenFHEContext.h>
 #include <hegadb/transport/ServerTransport.h>
+#include <hegadb/transport/ServerTransportFactory.h>
 #include <hegadb/transport/grpc/GrpcServer.h>
 
 #include <iostream>
@@ -16,24 +18,29 @@
 
 int main(int argc, char** argv)
 {
+    hegadb::logging::LoggingConfig logging_config;
+    logging_config.console_enabled = true;
+    logging_config.level = spdlog::level::info;
+    hegadb::logging::initialize(logging_config);
+
     std::string server_address = "0.0.0.0:50051";
 
-    std::cout << "Starting HEGA-DB Server on " << server_address << "...\n";
+    hegadb::logging::info("Starting HEGA-DB Server on {}...", server_address);
 
     // Initialize catalog with empty snapshot
     std::unordered_map<std::string, hegadb::catalog::TableSchema> tables;
     auto snapshot = std::make_shared<hegadb::catalog::CatalogSnapshot const>(1, std::move(tables));
     auto catalog = std::make_shared<hegadb::catalog::InMemoryCatalog>(snapshot);
-    
+
     // Initialize crypto context
     auto crypto_context = std::make_shared<hegadb::crypto::OpenFHEContext>();
     crypto_context->enableFeatures();
-    
+
     // Initialize storage manager with file-based storage.
     // argv[1] = data directory (default: ~/.hegadb/data)
     // argv[2] = catalog directory (default: ~/.hegadb/catalog)
-    std::string home_dir    = std::getenv("HOME") ? std::getenv("HOME") : ".";
-    std::string data_dir    = (argc > 1) ? argv[1] : (home_dir + "/.hegadb/data");
+    std::string home_dir = std::getenv("HOME") ? std::getenv("HOME") : ".";
+    std::string data_dir = (argc > 1) ? argv[1] : (home_dir + "/.hegadb/data");
     std::string catalog_dir = (argc > 2) ? argv[2] : (home_dir + "/.hegadb/catalog");
 
     std::shared_ptr<hegadb::server::storage::StorageManager> storage;
@@ -49,25 +56,24 @@ int main(int argc, char** argv)
         class MockStorageManager : public hegadb::server::storage::StorageManager {
         public:
             std::unique_ptr<hegadb::server::storage::EncryptedTable> openTable(
-                std::string const& table_name) override {
+                std::string const& table_name) override
+            {
                 throw std::runtime_error("Mock storage: table not found: " + table_name);
             }
         };
         storage = std::make_shared<MockStorageManager>();
     }
-    
+
     // Create query executor
     auto executor = std::make_shared<hegadb::server::QueryExecutor>(
         catalog,
         storage,
-        crypto_context
-    );
+        crypto_context);
 
     // Instantiate Query Receiver
     auto receiver = std::make_shared<hegadb::server::ExecuteQueryReceiver>(
         catalog,
-        executor
-    );
+        executor);
 
     // Instantiate gRPC Transport Server
     auto server = hegadb::transport::ServerTransportFactory::createGrpc(server_address);
@@ -75,12 +81,12 @@ int main(int argc, char** argv)
     server->setRequestHandler(
         [receiver](hegadb::protocol::ExecuteQuery const& request) {
             if (request.has_request_id())
-                std::cout << request.request_id().SerializeAsString() << std::endl;
+                hegadb::logging::debug("Request ID: {}", request.request_id().SerializeAsString());
             return receiver->executeQuery(request);
         });
 
     server->start();
-    std::cout << "HEGA-DB Server ready to receive ExecuteQuery requests.\n";
+    hegadb::logging::info("HEGA-DB Server ready to receive ExecuteQuery requests.");
 
     server->wait();
 
