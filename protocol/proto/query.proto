@@ -90,6 +90,7 @@ message ExecuteQuery {
   Statement statement = 3;
   repeated EncryptedParameter parameters = 4;
   ResultMode result_mode = 5;
+  PublicKeys keys = 6;
 }
 
 enum ResultMode{
