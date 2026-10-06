@@ -1,4 +1,4 @@
-#include "hegadb/server/storage/segment_writer.h"
+#include "hegadb/server/storage/SegmentWriter.h"
 #include <hegadb/logging/Logger.h>
 #include <cerrno>
 #include <cstring>

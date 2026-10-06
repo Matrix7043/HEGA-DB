@@ -4,9 +4,9 @@
 #include <hegadb/catalog/TableSchema.h>
 #include <hegadb/crypto/OpenFHECiphertext.h>
 #include <hegadb/types/DataType.h>
-#include <hegadb/server/storage/segment_writer.h>
-#include <hegadb/server/storage/table_manifest.h>
-#include <hegadb/server/storage/storage_format.h>
+#include <hegadb/server/storage/SegmentWriter.h>
+#include <hegadb/server/storage/TableManifest.h>
+#include <hegadb/server/storage/StorageFormat.h>
 
 #include <string>
 #include <vector>

@@ -1,3 +1,4 @@
+#include <hegadb/logging/Logger.h>
 #include <hegadb/server/storage/EncryptedBatch.h>
 #include <stdexcept>
 
@@ -14,6 +15,7 @@ crypto::OpenFHECiphertext const& EncryptedBatch::getColumn(
 {
     auto it = columns.find(column_name);
     if (it == columns.end()) {
+        hegadb::logging::warn("Attempted to access non-existent column '{}' in EncryptedBatch", column_name);
         throw std::out_of_range("Column not found in batch: " + column_name);
     }
     return it->second;

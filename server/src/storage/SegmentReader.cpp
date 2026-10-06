@@ -1,8 +1,8 @@
-#include "hegadb/server/storage/segment_reader.h"
-#include <hegadb/logging/Logger.h>
+#include "hegadb/server/storage/SegmentReader.h"
 #include <cerrno>
 #include <cstring>
 #include <fcntl.h>
+#include <hegadb/logging/Logger.h>
 #include <stdexcept>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -46,12 +46,12 @@ ValueResult<SegmentFileHeader> SegmentReader::read_header()
     ssize_t bytes_read = ::pread(fd_.get(), &header_, sizeof(header_), 0);
     if (bytes_read != sizeof(header_)) {
         hegadb::logging::error("Failed to read segment header from '{}': expected {} bytes, got {}",
-                               file_path_, sizeof(header_), bytes_read);
+            file_path_, sizeof(header_), bytes_read);
         return StorageError::IOError;
     }
     current_offset_ = sizeof(header_);
     hegadb::logging::debug("Successfully read segment header from '{}' (magic: {:.8s}, version: {})",
-                           file_path_, header_.magic_bytes, header_.version);
+        file_path_, header_.magic_bytes, header_.version);
     return header_;
 }
 
@@ -66,7 +66,7 @@ ValueResult<BlockHeader> SegmentReader::read_next_block(std::vector<std::byte>& 
     }
     if (bytes_read != sizeof(block_header)) {
         hegadb::logging::error("Incomplete block header read in '{}' at offset {}: expected {} bytes, got {}",
-                               file_path_, current_offset_, sizeof(block_header), bytes_read);
+            file_path_, current_offset_, sizeof(block_header), bytes_read);
         return StorageError::IOError;
     }
 
@@ -77,7 +77,7 @@ ValueResult<BlockHeader> SegmentReader::read_next_block(std::vector<std::byte>& 
         bytes_read = ::pread(fd_.get(), payload_buffer.data(), payload_buffer.size(), current_offset_);
         if (bytes_read != static_cast<ssize_t>(payload_buffer.size())) {
             hegadb::logging::error("Incomplete payload read in '{}' at offset {}: expected {} bytes, got {}",
-                                   file_path_, current_offset_, payload_buffer.size(), bytes_read);
+                file_path_, current_offset_, payload_buffer.size(), bytes_read);
             return StorageError::IOError;
         }
         current_offset_ += bytes_read;
@@ -87,8 +87,8 @@ ValueResult<BlockHeader> SegmentReader::read_next_block(std::vector<std::byte>& 
     uint32_t calculated_crc = calculate_crc32(block_header, payload_buffer);
     if (calculated_crc != block_header.crc32_checksum) {
         hegadb::logging::error("CRC32 checksum mismatch in segment '{}' at offset {}: expected 0x{:08x}, got 0x{:08x}",
-                               file_path_, current_offset_ - payload_buffer.size() - sizeof(block_header),
-                               block_header.crc32_checksum, calculated_crc);
+            file_path_, current_offset_ - payload_buffer.size() - sizeof(block_header),
+            block_header.crc32_checksum, calculated_crc);
         return StorageError::ChecksumMismatch;
     }
 
@@ -99,7 +99,7 @@ ValueResult<BlockHeader> SegmentReader::read_next_block(std::vector<std::byte>& 
     }
 
     hegadb::logging::trace("Read block from '{}': block_id={}, payload_size={}, crc32=0x{:08x}",
-                           file_path_, block_header.block_id, block_header.payload_byte_size, block_header.crc32_checksum);
+        file_path_, block_header.block_id, block_header.payload_byte_size, block_header.crc32_checksum);
 
     return block_header;
 }

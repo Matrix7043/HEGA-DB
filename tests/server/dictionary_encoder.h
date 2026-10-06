@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <cstdint>
 #include <expected>
-#include <hegadb/server/storage/io_utils.h>
+#include <hegadb/server/storage/IOUtils.h>
 
 namespace hegadb::server::storage {
 

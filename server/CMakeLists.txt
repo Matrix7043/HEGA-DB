@@ -51,10 +51,10 @@ add_library(hegadb_server
     src/storage/EncryptedBatch.cpp
 
     # Physical Storage Layer (Existing)
-    src/storage/pinned_memory_pool.cpp
-    src/storage/table_manifest.cpp
-    src/storage/segment_writer.cpp
-    src/storage/segment_reader.cpp
+    src/storage/PinnedMemoryPool.cpp
+    src/storage/TableManifest.cpp
+    src/storage/SegmentWriter.cpp
+    src/storage/SegmentReader.cpp
 )
 
 # ============================================================
@@ -94,7 +94,6 @@ target_include_directories(hegadb_server
 # ============================================================
 target_link_libraries(hegadb_server
     PUBLIC
-<<<<<<< HEAD
         # External dependencies
         OPENFHEpke
         OPENFHEbinfhe

@@ -1,11 +1,11 @@
-#include "hegadb/server/storage/table_manifest.h"
-#include <hegadb/logging/Logger.h>
+#include "hegadb/server/storage/TableManifest.h"
+#include <algorithm>
+#include <cctype>
 #include <cerrno>
 #include <cstdio>
 #include <fstream>
+#include <hegadb/logging/Logger.h>
 #include <unistd.h>
-#include <algorithm>
-#include <cctype>
 
 // Totally legit and not one bit AI generated json parser & serializer
 // Please use this in prod
@@ -76,7 +76,7 @@ StorageResult TableManifest::serialize(std::string const& file_path) const
     }
 
     hegadb::logging::info("Successfully serialized manifest for table '{}' to '{}' (columns={}, segments={}, total_records={})",
-                          table_name, file_path, columns.size(), segments.size(), total_records);
+        table_name, file_path, columns.size(), segments.size(), total_records);
 
     return {};
 }
@@ -98,9 +98,10 @@ ValueResult<TableManifest> TableManifest::deserialize(std::string const& file_pa
     while (std::getline(in, line)) {
         // Remove leading/trailing whitespace
         size_t first = line.find_first_not_of(" \t");
-        if (first == std::string::npos) continue;
+        if (first == std::string::npos)
+            continue;
         line = line.substr(first);
-        
+
         // Parse table_name
         if (line.find("\"table_name\":") != std::string::npos) {
             size_t start = line.find(":") + 1;
@@ -110,7 +111,7 @@ ValueResult<TableManifest> TableManifest::deserialize(std::string const& file_pa
                 manifest.table_name = line.substr(quote1 + 1, quote2 - quote1 - 1);
             }
         }
-        
+
         // Parse total_records
         if (line.find("\"total_records\":") != std::string::npos) {
             size_t start = line.find(":") + 1;
@@ -124,11 +125,11 @@ ValueResult<TableManifest> TableManifest::deserialize(std::string const& file_pa
                 manifest.total_records = 0;
             }
         }
-        
+
         // Parse columns (simplified - just extract name and type)
         if (line.find("\"name\":") != std::string::npos && line.find("\"type\":") != std::string::npos) {
             ColumnMetadata col;
-            
+
             // Extract name
             size_t name_start = line.find("\"name\":");
             if (name_start != std::string::npos) {
@@ -138,7 +139,7 @@ ValueResult<TableManifest> TableManifest::deserialize(std::string const& file_pa
                     col.name = line.substr(quote1 + 1, quote2 - quote1 - 1);
                 }
             }
-            
+
             // Extract type
             size_t type_start = line.find("\"type\":");
             if (type_start != std::string::npos) {
@@ -148,7 +149,7 @@ ValueResult<TableManifest> TableManifest::deserialize(std::string const& file_pa
                     col.type = line.substr(quote1 + 1, quote2 - quote1 - 1);
                 }
             }
-            
+
             // Extract scheme
             size_t scheme_start = line.find("\"scheme\":");
             if (scheme_start != std::string::npos) {
@@ -158,7 +159,7 @@ ValueResult<TableManifest> TableManifest::deserialize(std::string const& file_pa
                     col.scheme = line.substr(quote1 + 1, quote2 - quote1 - 1);
                 }
             }
-            
+
             // Extract slot_index
             size_t slot_start = line.find("\"slot_index\":");
             if (slot_start != std::string::npos) {
@@ -172,12 +173,12 @@ ValueResult<TableManifest> TableManifest::deserialize(std::string const& file_pa
                     col.slot_index = 0;
                 }
             }
-            
+
             if (!col.name.empty() && !col.type.empty()) {
                 manifest.columns.push_back(col);
             }
         }
-        
+
         // Parse segments — each segment block looks like:
         //   "col_name": {
         //     "file": "col_name.seg",
@@ -189,17 +190,9 @@ ValueResult<TableManifest> TableManifest::deserialize(std::string const& file_pa
         //
         // Detect: line matches pattern   "some_name": {
         // (only inside the segments object, i.e. after we've parsed all columns)
-        bool looks_like_segment_key =
-            !manifest.columns.empty() &&
-            line.size() >= 5 &&
-            line.front() == '"' &&
-            line.find("\"file\":") == std::string::npos &&   // not the file line
-            line.find("\"name\":") == std::string::npos &&   // not a column line
-            line.find("\"type\":") == std::string::npos &&
-            line.find("\"segments\"") == std::string::npos &&
-            line.find("\"columns\"") == std::string::npos &&
-            line.find("\"dictionary\"") == std::string::npos &&
-            line.find("{") != std::string::npos;
+        bool looks_like_segment_key = !manifest.columns.empty() && line.size() >= 5 && line.front() == '"' && line.find("\"file\":") == std::string::npos && // not the file line
+            line.find("\"name\":") == std::string::npos &&                                                                                                   // not a column line
+            line.find("\"type\":") == std::string::npos && line.find("\"segments\"") == std::string::npos && line.find("\"columns\"") == std::string::npos && line.find("\"dictionary\"") == std::string::npos && line.find("{") != std::string::npos;
 
         if (looks_like_segment_key) {
             // Extract the key name (the column name for this segment)
@@ -210,7 +203,8 @@ ValueResult<TableManifest> TableManifest::deserialize(std::string const& file_pa
                 seg_col_name = line.substr(q1 + 1, q2 - q1 - 1);
             }
 
-            if (seg_col_name.empty()) continue;
+            if (seg_col_name.empty())
+                continue;
 
             SegmentMetadata seg;
 
@@ -218,37 +212,47 @@ ValueResult<TableManifest> TableManifest::deserialize(std::string const& file_pa
             std::string seg_block;
             while (std::getline(in, line)) {
                 // Check for closing brace of this segment block
-                if (line.find("}") != std::string::npos) break;
+                if (line.find("}") != std::string::npos)
+                    break;
                 seg_block += line + "\n";
             }
 
             auto extract_str = [&](std::string const& key) -> std::string {
                 size_t pos = seg_block.find(key);
-                if (pos == std::string::npos) return "";
+                if (pos == std::string::npos)
+                    return "";
                 size_t colon = seg_block.find(":", pos);
-                if (colon == std::string::npos) return "";
+                if (colon == std::string::npos)
+                    return "";
                 size_t q1 = seg_block.find("\"", colon);
                 size_t q2 = seg_block.find("\"", q1 + 1);
-                if (q1 == std::string::npos || q2 == std::string::npos) return "";
+                if (q1 == std::string::npos || q2 == std::string::npos)
+                    return "";
                 return seg_block.substr(q1 + 1, q2 - q1 - 1);
             };
 
             auto extract_uint64 = [&](std::string const& key, uint64_t def) -> uint64_t {
                 size_t pos = seg_block.find(key);
-                if (pos == std::string::npos) return def;
+                if (pos == std::string::npos)
+                    return def;
                 size_t colon = seg_block.find(":", pos);
-                if (colon == std::string::npos) return def;
+                if (colon == std::string::npos)
+                    return def;
                 size_t end = seg_block.find_first_of(",}\n", colon + 1);
                 std::string v = seg_block.substr(colon + 1, end - colon - 1);
                 v.erase(remove_if(v.begin(), v.end(), ::isspace), v.end());
-                try { return std::stoull(v); } catch (...) { return def; }
+                try {
+                    return std::stoull(v);
+                } catch (...) {
+                    return def;
+                }
             };
 
-            seg.file           = extract_str("\"file\"");
-            seg.poly_N         = static_cast<uint32_t>(extract_uint64("\"poly_N\"", 16384));
+            seg.file = extract_str("\"file\"");
+            seg.poly_N = static_cast<uint32_t>(extract_uint64("\"poly_N\"", 16384));
             seg.param_scale_or_p = extract_uint64("\"param_scale_or_p\"", 65537);
             seg.rows_per_block = static_cast<uint32_t>(extract_uint64("\"rows_per_block\"", 1));
-            seg.total_blocks   = extract_uint64("\"total_blocks\"", 1);
+            seg.total_blocks = extract_uint64("\"total_blocks\"", 1);
 
             if (!seg.file.empty()) {
                 manifest.segments[seg_col_name] = seg;

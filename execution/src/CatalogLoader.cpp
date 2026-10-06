@@ -3,7 +3,7 @@
 #include <hegadb/catalog/CatalogSnapshot.h>
 #include <hegadb/catalog/TableSchema.h>
 #include <hegadb/catalog/ColumnSchema.h>
-#include <hegadb/server/storage/table_manifest.h>
+#include <hegadb/server/storage/TableManifest.h>
 #include <hegadb/types/DataType.h>
 #include <hegadb/logging/Logger.h>
 

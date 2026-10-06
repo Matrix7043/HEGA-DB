@@ -1,5 +1,5 @@
-#include "hegadb/server/storage/pinned_memory_pool.h"
-#include "hegadb/server/storage/io_utils.h"
+#include "hegadb/server/storage/PinnedMemoryPool.h"
+#include "hegadb/server/storage/IOUtils.h"
 #include <hegadb/logging/Logger.h>
 
 #ifdef HEGADB_ENABLE_CUDA

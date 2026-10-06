@@ -1,8 +1,8 @@
 #include <hegadb/execution/DataLoader.h>
 #include <hegadb/logging/Logger.h>
 #include <hegadb/crypto/Plaintext.h>
-#include <hegadb/server/storage/segment_writer.h>
-#include <hegadb/server/storage/table_manifest.h>
+#include <hegadb/server/storage/SegmentWriter.h>
+#include <hegadb/server/storage/TableManifest.h>
 
 #include <fstream>
 #include <sstream>

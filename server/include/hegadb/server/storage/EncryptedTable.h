@@ -2,7 +2,6 @@
 #define ENCRYPTED_TABLE_H
 
 #include <hegadb/server/storage/EncryptedBatch.h>
-#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
@@ -35,4 +34,3 @@ public:
 } // namespace hegadb::server::storage
 
 #endif // ENCRYPTED_TABLE_H
-

@@ -1,8 +1,8 @@
 #ifndef SEGMENT_READER_H
 #define SEGMENT_READER_H
 
-#include "io_utils.h"
-#include "storage_format.h"
+#include "IOUtils.h"
+#include "StorageFormat.h"
 #include <span>
 #include <string>
 #include <vector>
