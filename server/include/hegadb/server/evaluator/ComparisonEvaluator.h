@@ -14,40 +14,33 @@ public:
 
     execution::EncryptedMask evaluate(
         crypto::OpenFHECiphertext const& left,
-        planner::ComparisonOp op,
-        crypto::OpenFHECiphertext const& right
-    );
+        operations::ComparisonOp op,
+        crypto::OpenFHECiphertext const& right);
 
 private:
     execution::EncryptedMask evaluateEQ(
         crypto::OpenFHECiphertext const& left,
-        crypto::OpenFHECiphertext const& right
-    );
+        crypto::OpenFHECiphertext const& right);
 
     execution::EncryptedMask evaluateNEQ(
         crypto::OpenFHECiphertext const& left,
-        crypto::OpenFHECiphertext const& right
-    );
+        crypto::OpenFHECiphertext const& right);
 
     execution::EncryptedMask evaluateLT(
         crypto::OpenFHECiphertext const& left,
-        crypto::OpenFHECiphertext const& right
-    );
+        crypto::OpenFHECiphertext const& right);
 
     execution::EncryptedMask evaluateGT(
         crypto::OpenFHECiphertext const& left,
-        crypto::OpenFHECiphertext const& right
-    );
+        crypto::OpenFHECiphertext const& right);
 
     execution::EncryptedMask evaluateLTE(
         crypto::OpenFHECiphertext const& left,
-        crypto::OpenFHECiphertext const& right
-    );
+        crypto::OpenFHECiphertext const& right);
 
     execution::EncryptedMask evaluateGTE(
         crypto::OpenFHECiphertext const& left,
-        crypto::OpenFHECiphertext const& right
-    );
+        crypto::OpenFHECiphertext const& right);
 
     crypto::OpenFHEContext& crypto_context_;
 };
@@ -55,4 +48,3 @@ private:
 } // namespace hegadb::server::evaluator
 
 #endif // COMPARISON_EVALUATOR_H
-

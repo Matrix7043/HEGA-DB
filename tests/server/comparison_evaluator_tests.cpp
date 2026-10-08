@@ -1,7 +1,7 @@
-#include <hegadb/server/evaluator/ComparisonEvaluator.h>
-#include <hegadb/crypto/OpenFHEContext.h>
-#include <hegadb/crypto/OpenFHECiphertext.h>
 #include <gtest/gtest.h>
+#include <hegadb/crypto/OpenFHECiphertext.h>
+#include <hegadb/crypto/OpenFHEContext.h>
+#include <hegadb/server/evaluator/ComparisonEvaluator.h>
 
 using namespace hegadb::server::evaluator;
 using namespace hegadb::server::planner;
@@ -10,7 +10,8 @@ using namespace hegadb::types;
 
 class ComparisonEvaluatorTest : public ::testing::Test {
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         context_ = std::make_unique<OpenFHEContext>();
         context_->enableFeatures();
 
@@ -23,8 +24,9 @@ protected:
         evaluator_ = std::make_unique<ComparisonEvaluator>(*context_);
     }
 
-    OpenFHECiphertext encryptInt(int64_t value) {
-        std::vector<int64_t> vec = {value};
+    OpenFHECiphertext encryptInt(int64_t value)
+    {
+        std::vector<int64_t> vec = { value };
         auto plaintext = bfv_ctx_->MakePackedPlaintext(vec);
         auto ct = bfv_ctx_->Encrypt(public_key_, plaintext);
         return OpenFHECiphertext(ct, SchemeType::BFV, DataType::Integer);
@@ -37,66 +39,73 @@ protected:
     std::unique_ptr<ComparisonEvaluator> evaluator_;
 };
 
-TEST_F(ComparisonEvaluatorTest, EvaluateEqualityComparison) {
+TEST_F(ComparisonEvaluatorTest, EvaluateEqualityComparison)
+{
     auto left = encryptInt(42);
     auto right = encryptInt(42);
 
-    auto mask = evaluator_->evaluate(left, ComparisonOp::EQ, right);
+    auto mask = evaluator_->evaluate(left, hegadb::operations::ComparisonOp::EQ, right);
 
     // Mask should be encrypted
     EXPECT_NO_THROW(mask.getCiphertext());
 }
 
-TEST_F(ComparisonEvaluatorTest, EvaluateInequalityComparison) {
+TEST_F(ComparisonEvaluatorTest, EvaluateInequalityComparison)
+{
     auto left = encryptInt(42);
     auto right = encryptInt(10);
 
-    auto mask = evaluator_->evaluate(left, ComparisonOp::NEQ, right);
+    auto mask = evaluator_->evaluate(left, hegadb::operations::ComparisonOp::NEQ, right);
 
     EXPECT_NO_THROW(mask.getCiphertext());
 }
 
-TEST_F(ComparisonEvaluatorTest, EvaluateLessThan) {
+TEST_F(ComparisonEvaluatorTest, EvaluateLessThan)
+{
     auto left = encryptInt(10);
     auto right = encryptInt(42);
 
-    auto mask = evaluator_->evaluate(left, ComparisonOp::LT, right);
+    auto mask = evaluator_->evaluate(left, hegadb::operations::ComparisonOp::LT, right);
 
     EXPECT_NO_THROW(mask.getCiphertext());
 }
 
-TEST_F(ComparisonEvaluatorTest, EvaluateGreaterThan) {
+TEST_F(ComparisonEvaluatorTest, EvaluateGreaterThan)
+{
     auto left = encryptInt(42);
     auto right = encryptInt(10);
 
-    auto mask = evaluator_->evaluate(left, ComparisonOp::GT, right);
+    auto mask = evaluator_->evaluate(left, hegadb::operations::ComparisonOp::GT, right);
 
     EXPECT_NO_THROW(mask.getCiphertext());
 }
 
-TEST_F(ComparisonEvaluatorTest, EvaluateLessThanOrEqual) {
+TEST_F(ComparisonEvaluatorTest, EvaluateLessThanOrEqual)
+{
     auto left = encryptInt(42);
     auto right = encryptInt(42);
 
-    auto mask = evaluator_->evaluate(left, ComparisonOp::LTE, right);
+    auto mask = evaluator_->evaluate(left, hegadb::operations::ComparisonOp::LTE, right);
 
     EXPECT_NO_THROW(mask.getCiphertext());
 }
 
-TEST_F(ComparisonEvaluatorTest, EvaluateGreaterThanOrEqual) {
+TEST_F(ComparisonEvaluatorTest, EvaluateGreaterThanOrEqual)
+{
     auto left = encryptInt(42);
     auto right = encryptInt(42);
 
-    auto mask = evaluator_->evaluate(left, ComparisonOp::GTE, right);
+    auto mask = evaluator_->evaluate(left, hegadb::operations::ComparisonOp::GTE, right);
 
     EXPECT_NO_THROW(mask.getCiphertext());
 }
 
-TEST_F(ComparisonEvaluatorTest, MaskRemainsEncrypted) {
+TEST_F(ComparisonEvaluatorTest, MaskRemainsEncrypted)
+{
     auto left = encryptInt(42);
     auto right = encryptInt(10);
 
-    auto mask = evaluator_->evaluate(left, ComparisonOp::EQ, right);
+    auto mask = evaluator_->evaluate(left, hegadb::operations::ComparisonOp::EQ, right);
 
     // The mask should be serializable (indicating it's a valid ciphertext)
     EXPECT_NO_THROW({

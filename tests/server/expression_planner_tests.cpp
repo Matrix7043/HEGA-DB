@@ -1,10 +1,11 @@
-#include <hegadb/server/planner/ExpressionPlanner.h>
 #include <gtest/gtest.h>
+#include <hegadb/server/planner/ExpressionPlanner.h>
 
 using namespace hegadb::server::planner;
 using namespace hegadb::protocol;
 
-TEST(ExpressionPlannerTest, PlanColumnRef) {
+TEST(ExpressionPlannerTest, PlanColumnRef)
+{
     Expression proto_expr;
     auto* col_ref = proto_expr.mutable_column_ref();
     col_ref->set_table("employees");
@@ -18,7 +19,8 @@ TEST(ExpressionPlannerTest, PlanColumnRef) {
     EXPECT_EQ(col.column, "id");
 }
 
-TEST(ExpressionPlannerTest, PlanParameterRef) {
+TEST(ExpressionPlannerTest, PlanParameterRef)
+{
     Expression proto_expr;
     auto* param_ref = proto_expr.mutable_parameter_ref();
     param_ref->set_parameter_index(0);
@@ -30,7 +32,8 @@ TEST(ExpressionPlannerTest, PlanParameterRef) {
     EXPECT_EQ(param.parameter_index, 0);
 }
 
-TEST(ExpressionPlannerTest, PlanComparisonExpr) {
+TEST(ExpressionPlannerTest, PlanComparisonExpr)
+{
     Expression proto_expr;
     auto* comp = proto_expr.mutable_comparison_expr();
     comp->set_operator_(COMPARISON_OP_EQ);
@@ -41,10 +44,11 @@ TEST(ExpressionPlannerTest, PlanComparisonExpr) {
 
     ASSERT_TRUE(std::holds_alternative<hegadb::server::planner::ComparisonExpr>(*expr));
     auto const& comparison = std::get<hegadb::server::planner::ComparisonExpr>(*expr);
-    EXPECT_EQ(comparison.op, hegadb::server::planner::ComparisonOp::EQ);
+    EXPECT_EQ(comparison.op, hegadb::operations::ComparisonOp::EQ);
 }
 
-TEST(ExpressionPlannerTest, PlanLogicalExpr) {
+TEST(ExpressionPlannerTest, PlanLogicalExpr)
+{
     Expression proto_expr;
     auto* logical = proto_expr.mutable_logical_expr();
     logical->set_operator_(LOGICAL_OP_AND);
@@ -65,10 +69,11 @@ TEST(ExpressionPlannerTest, PlanLogicalExpr) {
 
     ASSERT_TRUE(std::holds_alternative<hegadb::server::planner::LogicalExpr>(*expr));
     auto const& log_expr = std::get<hegadb::server::planner::LogicalExpr>(*expr);
-    EXPECT_EQ(log_expr.op, hegadb::server::planner::LogicalOp::AND);
+    EXPECT_EQ(log_expr.op, hegadb::operations::LogicalOp::AND);
 }
 
-TEST(ExpressionPlannerTest, PlanNotExpr) {
+TEST(ExpressionPlannerTest, PlanNotExpr)
+{
     Expression proto_expr;
     auto* not_expr = proto_expr.mutable_not_expr();
     not_expr->mutable_child()->mutable_column_ref()->set_column("active");
@@ -78,14 +83,16 @@ TEST(ExpressionPlannerTest, PlanNotExpr) {
     ASSERT_TRUE(std::holds_alternative<hegadb::server::planner::NotExpr>(*expr));
 }
 
-TEST(ExpressionPlannerTest, WildcardThrows) {
+TEST(ExpressionPlannerTest, WildcardThrows)
+{
     Expression proto_expr;
     proto_expr.mutable_wildcard();
 
     EXPECT_THROW(ExpressionPlanner::plan(proto_expr), std::runtime_error);
 }
 
-TEST(ExpressionPlannerTest, ConvertComparisonOperators) {
+TEST(ExpressionPlannerTest, ConvertComparisonOperators)
+{
     EXPECT_NO_THROW({
         Expression expr;
         auto* comp = expr.mutable_comparison_expr();

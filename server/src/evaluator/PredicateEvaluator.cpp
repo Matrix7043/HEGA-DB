@@ -25,7 +25,7 @@ execution::EncryptedMask PredicateEvaluator::evaluate(
             auto left_mask = evaluate(arg.left, batch);
             auto right_mask = evaluate(arg.right, batch);
 
-            if (arg.op == planner::LogicalOp::AND) {
+            if (arg.op == operations::LogicalOp::AND) {
                 return logical_evaluator_.evaluateAND(left_mask, right_mask);
             } else {
                 return logical_evaluator_.evaluateOR(left_mask, right_mask);

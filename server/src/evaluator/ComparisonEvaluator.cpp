@@ -4,28 +4,38 @@
 namespace hegadb::server::evaluator {
 
 ComparisonEvaluator::ComparisonEvaluator(crypto::OpenFHEContext& crypto_context)
-    : crypto_context_(crypto_context) {
+    : crypto_context_(crypto_context)
+{
 }
 
 execution::EncryptedMask ComparisonEvaluator::evaluate(
     crypto::OpenFHECiphertext const& left,
-    planner::ComparisonOp op,
-    crypto::OpenFHECiphertext const& right) {
+    operations::ComparisonOp op,
+    crypto::OpenFHECiphertext const& right)
+{
 
     switch (op) {
-        case planner::ComparisonOp::EQ:  return evaluateEQ(left, right);
-        case planner::ComparisonOp::NEQ: return evaluateNEQ(left, right);
-        case planner::ComparisonOp::LT:  return evaluateLT(left, right);
-        case planner::ComparisonOp::GT:  return evaluateGT(left, right);
-        case planner::ComparisonOp::LTE: return evaluateLTE(left, right);
-        case planner::ComparisonOp::GTE: return evaluateGTE(left, right);
-        default: throw std::runtime_error("Unknown comparison operator");
+    case operations::ComparisonOp::EQ:
+        return evaluateEQ(left, right);
+    case operations::ComparisonOp::NEQ:
+        return evaluateNEQ(left, right);
+    case operations::ComparisonOp::LT:
+        return evaluateLT(left, right);
+    case operations::ComparisonOp::GT:
+        return evaluateGT(left, right);
+    case operations::ComparisonOp::LTE:
+        return evaluateLTE(left, right);
+    case operations::ComparisonOp::GTE:
+        return evaluateGTE(left, right);
+    default:
+        throw std::runtime_error("Unknown comparison operator");
     }
 }
 
 execution::EncryptedMask ComparisonEvaluator::evaluateEQ(
     crypto::OpenFHECiphertext const& left,
-    crypto::OpenFHECiphertext const& right) {
+    crypto::OpenFHECiphertext const& right)
+{
 
     auto ctx = (left.getSchemeType() == crypto::SchemeType::BFV)
         ? crypto_context_.getBFVContext()
@@ -40,7 +50,8 @@ execution::EncryptedMask ComparisonEvaluator::evaluateEQ(
 
 execution::EncryptedMask ComparisonEvaluator::evaluateNEQ(
     crypto::OpenFHECiphertext const& left,
-    crypto::OpenFHECiphertext const& right) {
+    crypto::OpenFHECiphertext const& right)
+{
 
     auto ctx = (left.getSchemeType() == crypto::SchemeType::BFV)
         ? crypto_context_.getBFVContext()
@@ -55,7 +66,8 @@ execution::EncryptedMask ComparisonEvaluator::evaluateNEQ(
 
 execution::EncryptedMask ComparisonEvaluator::evaluateLT(
     crypto::OpenFHECiphertext const& left,
-    crypto::OpenFHECiphertext const& right) {
+    crypto::OpenFHECiphertext const& right)
+{
 
     auto ctx = (left.getSchemeType() == crypto::SchemeType::BFV)
         ? crypto_context_.getBFVContext()
@@ -70,7 +82,8 @@ execution::EncryptedMask ComparisonEvaluator::evaluateLT(
 
 execution::EncryptedMask ComparisonEvaluator::evaluateGT(
     crypto::OpenFHECiphertext const& left,
-    crypto::OpenFHECiphertext const& right) {
+    crypto::OpenFHECiphertext const& right)
+{
 
     auto ctx = (left.getSchemeType() == crypto::SchemeType::BFV)
         ? crypto_context_.getBFVContext()
@@ -85,7 +98,8 @@ execution::EncryptedMask ComparisonEvaluator::evaluateGT(
 
 execution::EncryptedMask ComparisonEvaluator::evaluateLTE(
     crypto::OpenFHECiphertext const& left,
-    crypto::OpenFHECiphertext const& right) {
+    crypto::OpenFHECiphertext const& right)
+{
 
     auto ctx = (left.getSchemeType() == crypto::SchemeType::BFV)
         ? crypto_context_.getBFVContext()
@@ -100,7 +114,8 @@ execution::EncryptedMask ComparisonEvaluator::evaluateLTE(
 
 execution::EncryptedMask ComparisonEvaluator::evaluateGTE(
     crypto::OpenFHECiphertext const& left,
-    crypto::OpenFHECiphertext const& right) {
+    crypto::OpenFHECiphertext const& right)
+{
 
     auto ctx = (left.getSchemeType() == crypto::SchemeType::BFV)
         ? crypto_context_.getBFVContext()

@@ -49,34 +49,34 @@ ExprPtr ExpressionPlanner::plan(protocol::Expression const& proto_expr)
     }
 }
 
-ComparisonOp ExpressionPlanner::convertComparisonOp(protocol::ComparisonOp op)
+operations::ComparisonOp ExpressionPlanner::convertComparisonOp(protocol::ComparisonOp op)
 {
     switch (op) {
     case hegadb::protocol::COMPARISON_OP_EQ:
-        return ComparisonOp::EQ;
+        return operations::ComparisonOp::EQ;
     case hegadb::protocol::COMPARISON_OP_NEQ:
-        return ComparisonOp::NEQ;
+        return operations::ComparisonOp::NEQ;
     case hegadb::protocol::COMPARISON_OP_LT:
-        return ComparisonOp::LT;
+        return operations::ComparisonOp::LT;
     case hegadb::protocol::COMPARISON_OP_LTE:
-        return ComparisonOp::LTE;
+        return operations::ComparisonOp::LTE;
     case hegadb::protocol::COMPARISON_OP_GT:
-        return ComparisonOp::GT;
+        return operations::ComparisonOp::GT;
     case hegadb::protocol::COMPARISON_OP_GTE:
-        return ComparisonOp::GTE;
+        return operations::ComparisonOp::GTE;
 
     default:
         throw std::runtime_error("Unknown comparison operator");
     }
 }
 
-LogicalOp ExpressionPlanner::convertLogicalOp(protocol::LogicalOp op)
+operations::LogicalOp ExpressionPlanner::convertLogicalOp(protocol::LogicalOp op)
 {
     switch (op) {
     case protocol::LOGICAL_OP_AND:
-        return LogicalOp::AND;
+        return operations::LogicalOp::AND;
     case protocol::LOGICAL_OP_OR:
-        return LogicalOp::OR;
+        return operations::LogicalOp::OR;
     default:
         throw std::runtime_error("Unknown logical operator");
     }

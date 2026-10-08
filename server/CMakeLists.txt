@@ -105,13 +105,13 @@ target_link_libraries(hegadb_server
         hegadb_protocol
         hegadb_types
         hegadb_logging
+        hegadb_operations
 
     PRIVATE
         # Transport layer (for gRPC service integration)
         hegadb_server_transport
 
         # Operations (FHE operations if needed)
-        hegadb_operations
 
         # Warnings
         hegadb_warnings
