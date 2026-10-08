@@ -1,4 +1,4 @@
-#include "hegadb/catalog/InMemoryCatalog.h"
+#include "hegadb/catalog/db-client/InMemoryCatalog.h"
 
 #include <stdexcept>
 #include <utility>

@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <string>
 
-#include "hegadb/types/DataType.h"
+#include <hegadb/types/DataType.h>
 
 namespace hegadb::catalog {
 

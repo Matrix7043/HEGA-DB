@@ -71,11 +71,11 @@ target_link_libraries(hegadb_client_core
         hegadb_operations
         hegadb_types
         hegadb_crypto
-        hegadb_catalog
+        hegadb_catalog_client
         hegadb_protocol
     PRIVATE
         antlr4_shared
-        hegadb_warnings
+        # hegadb_warnings
 )
 
 # ============================================================
@@ -121,7 +121,7 @@ target_link_libraries(
         hegadb_logging
         ${READLINE_LIBRARY}
     PRIVATE
-        hegadb_warnings
+        # hegadb_warnings
 )
 
 

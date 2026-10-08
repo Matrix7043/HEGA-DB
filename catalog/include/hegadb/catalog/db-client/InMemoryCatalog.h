@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include "Catalog.h"
+#include "hegadb/catalog/Catalog.h"
 
 namespace hegadb::catalog {
 

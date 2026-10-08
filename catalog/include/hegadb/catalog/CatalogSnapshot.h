@@ -1,7 +1,7 @@
 #ifndef CATALOG_SNAPSHOT_H
 #define CATALOG_SNAPSHOT_H
 
-#include "TableSchema.h"
+#include "hegadb/catalog/TableSchema.h"
 
 #include <cstdint>
 #include <string>

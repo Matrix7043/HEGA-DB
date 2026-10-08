@@ -10,7 +10,7 @@ add_library(hegadb_server
 )
 
 if(HEGADB_ENABLE_CUDA)
-    target_compile_definitions(hegadb_server PUBLIC HEGADB_ENABLE_CUDA)
+  target_compile_definitions(hegadb_server PUBLIC HEGADB_ENABLE_CUDA)
 endif()
 
 target_include_directories(hegadb_server
@@ -22,7 +22,7 @@ target_link_libraries(hegadb_server
     PUBLIC
         hegadb_protocol
         hegadb_server_transport
-        hegadb_catalog
+        hegadb_catalog_server
         hegadb_operations
         hegadb_types
         hegadb_crypto

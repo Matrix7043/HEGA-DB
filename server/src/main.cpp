@@ -1,5 +1,4 @@
 #include "hegadb/transport/ServerTransportFactory.h"
-#include <hegadb/catalog/InMemoryCatalog.h>
 #include <hegadb/server/ExecuteQueryReceiver.h>
 #include <hegadb/server/QueryExecutor.h>
 #include <hegadb/transport/ServerTransport.h>

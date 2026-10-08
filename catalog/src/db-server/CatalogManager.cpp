@@ -1,4 +1,4 @@
-#include "hegadb/catalog/CatalogManager.h"
+#include "hegadb/catalog/db-server/CatalogManager.h"
 #include "hegadb/catalog/CatalogSnapshot.h"
 #include "hegadb/catalog/TableSchema.h"
 #include <memory>

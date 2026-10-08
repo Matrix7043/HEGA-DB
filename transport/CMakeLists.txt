@@ -78,6 +78,17 @@ target_link_libraries(hegadb_catalog_client_transport
         hegadb_warnings
 )
 
+# ============================================================
+# Catalog Transport Types
+# ============================================================
+
+
+add_library(hegadb_catalog_transport_types INTERFACE)
+target_include_directories(hegadb_catalog_transport_types
+    INTERFACE
+      ${CMAKE_CURRENT_SOURCE_DIR}/include/hegadb/transport/types
+)
+
 
 # ============================================================
 # Catalog Server Transport

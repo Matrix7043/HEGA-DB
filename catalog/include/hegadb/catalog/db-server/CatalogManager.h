@@ -4,9 +4,9 @@
 #include <memory>
 #include <string>
 
-#include "Catalog.h"
-#include "CatalogSnapshot.h"
-#include "TableSchema.h"
+#include "hegadb/catalog/Catalog.h"
+#include "hegadb/catalog/CatalogSnapshot.h"
+#include "hegadb/catalog/TableSchema.h"
 
 namespace hegadb::catalog {
 

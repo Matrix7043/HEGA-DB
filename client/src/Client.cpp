@@ -6,8 +6,8 @@
 
 #include <hegadb/catalog/CatalogSnapshot.h>
 #include <hegadb/catalog/ColumnSchema.h>
-#include <hegadb/catalog/InMemoryCatalog.h>
 #include <hegadb/catalog/TableSchema.h>
+#include <hegadb/catalog/db-client/InMemoryCatalog.h>
 #include <hegadb/client/SQLParser.h>
 #include <hegadb/client/ast/ASTPrinter.h>
 #include <hegadb/client/preparation/QueryPreparer.h>

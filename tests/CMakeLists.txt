@@ -129,18 +129,32 @@ add_test(
 # Catalog Tests
 # ============================================================
 
-add_executable(catalog_tests
-    catalog/catalog_tests.cpp
+add_executable(server_db_catalog_tests
+    catalog/server_db_catalog_tests.cpp
 )
 
-target_link_libraries(catalog_tests
+target_link_libraries(server_db_catalog_tests
     PRIVATE
-        hegadb_catalog
+        hegadb_catalog_server
 )
 
 add_test(
-    NAME catalog_tests
-    COMMAND catalog_tests
+    NAME server_db_catalog_tests
+    COMMAND server_db_catalog_tests
+)
+
+add_executable(hegadb_catalog_adapter_tests
+    catalog/catalog_adapter_tests.cpp
+)
+
+target_link_libraries(hegadb_catalog_adapter_tests
+    PRIVATE
+        hegadb_catalog_client
+)
+
+add_test(
+    NAME hegadb_catalog_adapter_tests
+    COMMAND hegadb_catalog_adapter_tests
 )
 
 # ============================================================
