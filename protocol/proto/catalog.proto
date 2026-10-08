@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package hegadb.protocol.catalog;
+
+message GetCatalogVersionRequest {}
+
+message GetCatalogVersionResponse {
+  uint64 version = 1;
+}
+
+message GetTableRequest {
+  string table_name = 1;
+}
+
+message ColumnSchema {
+  string name = 1;
+  string data_type = 2;
+  bool nullable = 3;
+  uint64 ordinal = 4;
+}
+
+message TableSchema {
+  string name = 1;
+  repeated ColumnSchema columns = 2;
+}
+
+message GetTableResponse {
+  bool found = 1;
+  TableSchema table = 2;
+}
+
+message GetCatalogRequest{}
+
+message GetCatalogResponse {
+  uint64 version = 1;
+  repeated TableSchema tables = 2;
+}
+

@@ -13,6 +13,7 @@ find_package(gRPC CONFIG REQUIRED)
 
 set(HEGADB_GRPC_PROTO_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/grpc/proto/service.proto
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/grpc/proto/catalog_service.proto
 )
 
 protobuf_generate(
@@ -26,7 +27,7 @@ protobuf_generate(
 
 set(HEGADB_GRPC_GRPC_SRCS
     ${CMAKE_CURRENT_BINARY_DIR}/service.grpc.pb.cc
-    ${CMAKE_CURRENT_BINARY_DIR}/service.grpc.pb.h
+    ${CMAKE_CURRENT_BINARY_DIR}/catalog_service.grpc.pb.cc
 )
 
 add_custom_command(
@@ -37,8 +38,10 @@ add_custom_command(
         "-I${CMAKE_CURRENT_SOURCE_DIR}/src/grpc/proto"
         "-I${CMAKE_SOURCE_DIR}/protocol/proto"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/grpc/proto/service.proto"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/grpc/proto/catalog_service.proto"
     DEPENDS
         "${CMAKE_CURRENT_SOURCE_DIR}/src/grpc/proto/service.proto"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/grpc/proto/catalog_service.proto"
         gRPC::grpc_cpp_plugin
 )
 
@@ -55,6 +58,47 @@ target_link_libraries(hegadb_grpc_stub
         gRPC::grpc++
 )
 
+# ============================================================
+# Catalog Client Transport
+# ============================================================
+
+add_library(hegadb_catalog_client_transport
+    src/grpc/GrpcCatalogClient.cpp
+)
+
+target_include_directories(hegadb_catalog_client_transport
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_link_libraries(hegadb_catalog_client_transport
+    PUBLIC
+        hegadb_grpc_stub
+    PRIVATE
+        hegadb_warnings
+)
+
+
+# ============================================================
+# Catalog Server Transport
+# ============================================================
+
+add_library(hegadb_catalog_server_transport
+    src/grpc/CatalogServiceImpl.cpp
+    src/grpc/GrpcCatalogServer.cpp
+)
+
+target_include_directories(hegadb_catalog_server_transport
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_link_libraries(hegadb_catalog_server_transport
+    PUBLIC
+        hegadb_grpc_stub
+    PRIVATE
+        hegadb_warnings
+)
 
 # ============================================================
 # 2. Client Transport Library

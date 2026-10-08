@@ -300,6 +300,21 @@ target_link_libraries(hegadb_grpc_tests
   GTest::gtest_main
 )
 
+add_executable(hegadb_catalog_transport_tests
+  grpc/catalog_transport_tests.cpp
+)
+
+target_link_libraries(hegadb_catalog_transport_tests
+  PRIVATE
+    hegadb_catalog_server_transport
+    hegadb_catalog_client_transport
+)
+
+add_test(
+    NAME hegadb_catalog_transport_tests
+    COMMAND hegadb_catalog_transport_tests
+)
+
 include(GoogleTest)
 
 gtest_discover_tests(hegadb_grpc_tests)
