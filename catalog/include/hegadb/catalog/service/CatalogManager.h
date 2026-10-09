@@ -23,6 +23,8 @@ public:
 
     void dropTable(std::string const& name);
 
+    CatalogSnapshot const& snapshot() const;
+
 private:
     std::shared_ptr<CatalogSnapshot const> snapshot_;
 };

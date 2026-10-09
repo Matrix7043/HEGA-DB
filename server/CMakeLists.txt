@@ -26,7 +26,8 @@ target_link_libraries(hegadb_server
         hegadb_logging
         hegadb_protocol
         hegadb_server_transport
-        hegadb_catalog_server
+        # TODO: CHANGE THIS TO SERVER, this is temprorary workaround
+        hegadb_catalog_client
         hegadb_operations
         hegadb_types
         hegadb_crypto

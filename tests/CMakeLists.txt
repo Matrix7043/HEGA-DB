@@ -129,19 +129,21 @@ add_test(
 # Catalog Tests
 # ============================================================
 
-add_executable(server_db_catalog_tests
-    catalog/server_db_catalog_tests.cpp
-)
+#TODO: Change Name of the test from server to service
 
-target_link_libraries(server_db_catalog_tests
-    PRIVATE
-        hegadb_catalog_server
-)
-
-add_test(
-    NAME server_db_catalog_tests
-    COMMAND server_db_catalog_tests
-)
+# add_executable(server_db_catalog_tests
+#     catalog/server_db_catalog_tests.cpp
+# )
+#
+# target_link_libraries(server_db_catalog_tests
+#     PRIVATE
+#         hegadb_catalog_service
+# )
+#
+# add_test(
+#     NAME server_db_catalog_tests
+#     COMMAND server_db_catalog_tests
+# )
 
 add_executable(catalog_adapter_tests
     catalog/catalog_adapter_tests.cpp
@@ -169,6 +171,20 @@ target_link_libraries(catalog_cache_tests
 add_test(
     NAME catalog_cache_tests
     COMMAND catalog_cache_tests
+)
+
+add_executable(catalog_service_tests
+    catalog/catalog_service_tests.cpp
+)
+
+target_link_libraries(catalog_service_tests
+    PRIVATE
+        hegadb_catalog_service
+)
+
+add_test(
+    NAME catalog_service_tests
+    COMMAND catalog_service_tests
 )
 
 # ============================================================

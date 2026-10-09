@@ -1,4 +1,4 @@
-#include "hegadb/catalog/db-server/CatalogManager.h"
+#include "hegadb/catalog/service/CatalogManager.h"
 #include "hegadb/catalog/CatalogSnapshot.h"
 #include "hegadb/catalog/TableSchema.h"
 #include <memory>
@@ -62,5 +62,7 @@ void CatalogManager::dropTable(std::string const& name)
 
     snapshot_ = std::move(new_snapshot);
 }
+
+CatalogSnapshot const& CatalogManager::snapshot() const { return *snapshot_; }
 
 }

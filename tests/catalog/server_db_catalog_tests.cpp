@@ -1,7 +1,7 @@
 #include <hegadb/catalog/CatalogSnapshot.h>
 #include <hegadb/catalog/ColumnSchema.h>
 #include <hegadb/catalog/TableSchema.h>
-#include <hegadb/catalog/db-server/CatalogManager.h>
+#include <hegadb/catalog/service/CatalogManager.h>
 
 #include <hegadb/types/DataType.h>
 
