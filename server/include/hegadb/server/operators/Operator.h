@@ -3,7 +3,6 @@
 
 #include <hegadb/server/execution/ExecutionBatch.h>
 #include <hegadb/server/execution/ExecutionContext.h>
-#include <memory>
 #include <optional>
 
 namespace hegadb::server::operators {
