@@ -27,6 +27,7 @@ target_link_libraries(hegadb_catalog_server
 
 add_library(hegadb_catalog_client
     src/db-client/InMemoryCatalog.cpp
+    src/db-client/CatalogCache.cpp
     src/CatalogAdapter.cpp
     src/CatalogSnapshot.cpp
     src/TableSchema.cpp

@@ -143,18 +143,32 @@ add_test(
     COMMAND server_db_catalog_tests
 )
 
-add_executable(hegadb_catalog_adapter_tests
+add_executable(catalog_adapter_tests
     catalog/catalog_adapter_tests.cpp
 )
 
-target_link_libraries(hegadb_catalog_adapter_tests
+target_link_libraries(catalog_adapter_tests
     PRIVATE
         hegadb_catalog_client
 )
 
 add_test(
-    NAME hegadb_catalog_adapter_tests
-    COMMAND hegadb_catalog_adapter_tests
+    NAME catalog_adapter_tests
+    COMMAND catalog_adapter_tests
+)
+
+add_executable(catalog_cache_tests
+    catalog/catalog_cache_tests.cpp
+)
+
+target_link_libraries(catalog_cache_tests
+    PRIVATE
+        hegadb_catalog_client
+)
+
+add_test(
+    NAME catalog_cache_tests
+    COMMAND catalog_cache_tests
 )
 
 # ============================================================
