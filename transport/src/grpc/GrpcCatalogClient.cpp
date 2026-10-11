@@ -1,8 +1,9 @@
 #include "hegadb/transport/grpc/GrpcCatalogClient.h"
 #include "hegadb/transport/types/CatalogTypes.h"
 
+#include <grpcpp/create_channel.h>
+#include <grpcpp/grpcpp.h>
 #include <stdexcept>
-#include <utility>
 
 namespace hegadb::transport::grpc {
 
@@ -39,8 +40,9 @@ transport::CatalogTable toCatalogTable(
 } // namespace
 
 GrpcCatalogClient::GrpcCatalogClient(
-    std::shared_ptr<::grpc::Channel> channel)
-    : stub_(CatalogService::NewStub(std::move(channel)))
+    std::string const& address)
+    : stub_(CatalogService::NewStub(
+          ::grpc::CreateChannel(address, ::grpc::InsecureChannelCredentials())))
 {
     if (!stub_) {
         throw std::invalid_argument(

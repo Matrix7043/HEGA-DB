@@ -8,6 +8,7 @@ public:
     virtual ~CatalogServerTransport() = default;
     virtual void start() = 0;
     virtual void shutdown() = 0;
+    virtual void wait() = 0;
 };
 
 }

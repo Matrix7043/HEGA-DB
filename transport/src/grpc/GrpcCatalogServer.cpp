@@ -58,4 +58,13 @@ void GrpcCatalogServer::shutdown()
     server_.reset();
 }
 
+void GrpcCatalogServer::wait()
+{
+    if (!server_) {
+        return;
+    }
+
+    server_->Wait();
+}
+
 }

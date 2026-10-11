@@ -163,11 +163,7 @@ int main()
 
     server.start();
 
-    auto channel = grpc::CreateChannel(
-        address,
-        grpc::InsecureChannelCredentials());
-
-    GrpcCatalogClient client(channel);
+    GrpcCatalogClient client(address);
 
     // Give the server a moment to become ready.
     std::this_thread::sleep_for(

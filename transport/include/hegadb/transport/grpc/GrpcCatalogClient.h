@@ -1,5 +1,5 @@
-#ifndef HEGADB_GRPC_CATALOG_CLIENT_H
-#define HEGADB_GRPC_CATALOG_CLIENT_H
+#ifndef GRPC_CATALOG_CLIENT_H
+#define GRPC_CATALOG_CLIENT_H
 
 #include "catalog_service.grpc.pb.h"
 #include "hegadb/transport/CatalogClientTransport.h"
@@ -12,7 +12,7 @@ namespace hegadb::transport::grpc {
 
 class GrpcCatalogClient final : public transport::CatalogClientTransport {
 public:
-    explicit GrpcCatalogClient(std::shared_ptr<::grpc::Channel> channel);
+    explicit GrpcCatalogClient(std::string const& address);
 
     transport::CatalogVersion getCatalogVersion() override;
 
@@ -27,4 +27,4 @@ private:
 
 }
 
-#endif // !HEGADB_GRPC_CATALOG_CLIENT_H
+#endif // !GRPC_CATALOG_CLIENT_H

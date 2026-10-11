@@ -64,6 +64,7 @@ target_link_libraries(hegadb_grpc_stub
 
 add_library(hegadb_catalog_client_transport
     src/grpc/GrpcCatalogClient.cpp
+    src/CatalogClientTransportFactory.cpp
 )
 
 target_include_directories(hegadb_catalog_client_transport
@@ -97,6 +98,7 @@ target_include_directories(hegadb_catalog_transport_types
 add_library(hegadb_catalog_server_transport
     src/grpc/CatalogServiceImpl.cpp
     src/grpc/GrpcCatalogServer.cpp
+    src/CatalogServerTransportFactory.cpp
 )
 
 target_include_directories(hegadb_catalog_server_transport

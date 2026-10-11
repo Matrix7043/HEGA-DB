@@ -18,6 +18,7 @@ public:
 
     void start() override;
     void shutdown() override;
+    void wait() override;
 
 private:
     std::string address_;
