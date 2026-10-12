@@ -1,7 +1,9 @@
+#include "hegadb/catalog/db-client/CatalogCache.h"
 #include "hegadb/client/ast/SelectStmt.h"
 #include "hegadb/client/protocol/ExecuteQueryEncoder.h"
 #include "hegadb/crypto/CompositeEncryption.h"
 #include "hegadb/logging/Logger.h"
+#include "hegadb/transport/CatalogClientTransportFactory.h"
 #include <hegadb/client/Client.h>
 
 #include <hegadb/catalog/CatalogSnapshot.h>
@@ -23,7 +25,6 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace hegadb::client {
@@ -38,56 +39,24 @@ int Client::run()
     std::cout << "HEGADB Client v0.7\n";
     std::cout << "Type SQL queries. Type \\q to exit.\n\n";
 
-    // ==========================================================
-    // Client Catalog
-    // ==========================================================
-
-    std::vector<hegadb::catalog::ColumnSchema> studentColumns = {
-        { "NAME",
-            hegadb::types::DataType::String,
-            false,
-            0 },
-        { "CLASS",
-            hegadb::types::DataType::Integer,
-            false,
-            1 },
-        { "GRADE",
-            hegadb::types::DataType::Integer,
-            false,
-            2 },
-    };
-
-    hegadb::catalog::TableSchema students(
-        "STUDENTS",
-        std::move(studentColumns));
-
-    std::unordered_map<
-        std::string,
-        hegadb::catalog::TableSchema>
-        tables;
-
-    tables.emplace(
-        "STUDENTS",
-        std::move(students));
-
-    auto snapshot = std::make_shared<
-        hegadb::catalog::CatalogSnapshot const>(
-        1,
-        std::move(tables));
-
-    hegadb::catalog::InMemoryCatalog catalog(snapshot);
-
-    hegadb::client::semantic::SemanticValidator validator(
-        catalog);
-
-    // ==========================================================
-    // Query Preparation
-    // ==========================================================
-
     hegadb::crypto::CompositeEncryption encryption;
 
     hegadb::client::preparation::QueryPreparer preparer(
         encryption);
+
+    // ==========================================================
+    // Catalog Client Transport
+    // ==========================================================
+
+    logging::debug("Creating gRPC catalog client transport");
+    logging::debug("Connecting to catalogServiceAddress {}", config_.catalogServiceAddress());
+    auto catalog_transport = hegadb::transport::CatalogClientTransportFactory::createGrpc(config_.catalogServiceAddress());
+
+    logging::debug("Creating catalog cache");
+    auto catalog_cache = hegadb::catalog::CatalogCache(*catalog_transport);
+    catalog_cache.initialize();
+
+    hegadb::client::semantic::SemanticValidator validator(catalog_cache.catalog());
 
     // ==========================================================
     // Client Transport
@@ -151,6 +120,10 @@ int Client::run()
 
         logging::debug("Started semantic validation");
         try {
+            bool refresh_status = catalog_cache.refreshIfNeeded();
+
+            logging::debug("Catalog Refersh Check New version found: {}", refresh_status);
+
             validator.validate(*ast);
         } catch (
             hegadb::client::semantic::SemanticError const& error) {

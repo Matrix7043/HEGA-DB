@@ -10,9 +10,11 @@ namespace hegadb::client {
 
 ClientConfig::ClientConfig(
     std::string server_address,
+    std::string catalog_service_address,
     std::string log_file,
     std::string log_level)
     : server_address_(std::move(server_address))
+    , catalog_service_address_(std::move(catalog_service_address))
     , log_file_(std::move(log_file))
     , log_level_(std::move(log_level))
 {
@@ -23,6 +25,7 @@ ClientConfig ClientConfig::fromArguments(
     char** argv)
 {
     std::string server_address { "localhost:50051" };
+    std::string catalog_service_address { "localhost:50052" };
     std::string log_level { "info" };
     std::string log_file { "logs/hega-db.log" };
 
@@ -51,6 +54,17 @@ ClientConfig ClientConfig::fromArguments(
             continue;
         }
 
+        if (argument == "--catalog-service") {
+
+            if (i + 1 >= argc) {
+                throw std::invalid_argument(
+                    "--server requires an address");
+            }
+
+            catalog_service_address = argv[++i];
+            continue;
+        }
+
         if (argument == "--log-level") {
             if (i + 1 >= argc) {
                 throw std::invalid_argument(
@@ -73,7 +87,10 @@ ClientConfig ClientConfig::fromArguments(
             "Unknown argument: " + argument);
     }
 
-    return ClientConfig(std::move(server_address), std::move(log_file), std::move(log_level));
+    return ClientConfig(std::move(server_address),
+        std::move(catalog_service_address),
+        std::move(log_file),
+        std::move(log_level));
 }
 
 void ClientConfig::printHelp()
@@ -98,6 +115,11 @@ void ClientConfig::printVersion()
 std::string const& ClientConfig::serverAddress() const
 {
     return server_address_;
+}
+
+std::string const& ClientConfig::catalogServiceAddress() const
+{
+    return catalog_service_address_;
 }
 
 std::string const& ClientConfig::logFile() const

@@ -15,6 +15,8 @@ public:
 
     TableSchema const* findTable(std::string const& name) const override;
 
+    void replaceSnapshot(std::shared_ptr<CatalogSnapshot const> snapshot);
+
 private:
     std::shared_ptr<CatalogSnapshot const> snapshot_;
 };

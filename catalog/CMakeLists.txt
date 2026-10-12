@@ -68,3 +68,15 @@ target_link_libraries(hegadb_catalog_service
         hegadb_warnings
 )
 
+# ============================================================
+# Catalog Microservice Executable
+# ============================================================
+
+add_executable(catalog_microservice
+  src/service/main.cpp
+)
+
+target_link_libraries(catalog_microservice
+  PRIVATE
+    hegadb_catalog_service
+)

@@ -23,4 +23,9 @@ TableSchema const* InMemoryCatalog::findTable(std::string const& name) const
     return snapshot_->findTable(name);
 }
 
+void InMemoryCatalog::replaceSnapshot(std::shared_ptr<CatalogSnapshot const> snapshot)
+{
+    snapshot_ = std::move(snapshot);
+}
+
 } // namespace hegadb

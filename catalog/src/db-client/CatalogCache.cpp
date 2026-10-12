@@ -29,7 +29,7 @@ bool CatalogCache::refreshIfNeeded()
 
     auto snapshot = CatalogAdapter::fromTransport(description);
 
-    catalog_ = std::make_shared<InMemoryCatalog>(std::move(snapshot));
+    catalog_->replaceSnapshot(std::move(snapshot));
 
     return true;
 }
