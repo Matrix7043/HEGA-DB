@@ -37,7 +37,7 @@ message GetCatalogResponse {
 }
 
 message CreateTableRequest {
-  TableSchema = 1;
+  TableSchema table = 1;
 }
 
 message CreateTableResponse {
