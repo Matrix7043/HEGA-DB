@@ -19,6 +19,10 @@ public:
 
     CatalogManager const& catalog() const;
 
+    void createTable(TableSchema table);
+
+    void dropTable(std::string const& table_name);
+
 private:
     CatalogManager catalog_;
 };

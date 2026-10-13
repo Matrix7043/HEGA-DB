@@ -82,4 +82,8 @@ TableSchema const* CatalogService::getTable(std::string const& table_name) const
 
 CatalogManager const& CatalogService::catalog() const { return catalog_; }
 
+void CatalogService::createTable(TableSchema table) { catalog_.createTable(table); }
+
+void CatalogService::dropTable(std::string const& table_name) { catalog_.dropTable(table_name); }
+
 }

@@ -1,26 +1,3 @@
-# ============================================================
-# DB Server Catalog
-# ============================================================
-
-# add_library(hegadb_catalog_server INTERFACE) # TEMPRORARY TILL SERVER IMPL
-#
-# target_include_directories(hegadb_catalog_server
-#     PUBLIC
-#         ${CMAKE_CURRENT_SOURCE_DIR}/include
-# )
-#
-# target_link_libraries(hegadb_catalog_server
-#     PUBLIC
-#         hegadb_types
-#     PRIVATE
-#         hegadb_warnings
-# )
-
-
-# ============================================================
-# DB Client Catalog
-# ============================================================
-
 add_library(hegadb_catalog_client
     src/db-client/InMemoryCatalog.cpp
     src/db-client/CatalogCache.cpp
