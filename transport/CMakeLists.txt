@@ -80,6 +80,27 @@ target_link_libraries(hegadb_catalog_client_transport
 )
 
 # ============================================================
+# Catalog Mutation Client Transport
+# ============================================================
+
+add_library(hegadb_catalog_mutation_client_transport
+    src/grpc/GrpcCatalogMutationClient.cpp
+    src/CatalogMutationClientTransportFactory.cpp
+)
+
+target_include_directories(hegadb_catalog_mutation_client_transport
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_link_libraries(hegadb_catalog_mutation_client_transport
+    PUBLIC
+        hegadb_grpc_stub
+    PRIVATE
+        hegadb_warnings
+)
+
+# ============================================================
 # Catalog Transport Types
 # ============================================================
 
