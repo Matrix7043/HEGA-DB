@@ -15,4 +15,10 @@ service CatalogService {
   rpc GetCatalog(hegadb.protocol.catalog.GetCatalogRequest)
     returns (hegadb.protocol.catalog.GetCatalogResponse);
 
+  rpc CreateTable(hegadb.protocol.catalog.CreateTableRequest)
+    returns (hegadb.protocol.catalog.CreateTableResponse);
+
+  rpc DropTable(hegadb.protocol.catalog.DropTableRequest)
+    returns (hegadb.protocol.catalog.DropTableResponse);
+
 }

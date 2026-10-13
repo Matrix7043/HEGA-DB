@@ -36,3 +36,18 @@ message GetCatalogResponse {
   repeated TableSchema tables = 2;
 }
 
+message CreateTableRequest {
+  TableSchema = 1;
+}
+
+message CreateTableResponse {
+  uint64 version = 1;
+}
+
+message DropTableRequest {
+  string name = 1;
+}
+
+message DropTableResponse {
+  uint64 version = 1;
+}
