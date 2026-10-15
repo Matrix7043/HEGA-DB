@@ -73,9 +73,7 @@ void GrpcCatalogMutationClient::createTable(CatalogTable table)
     protocol::catalog::CreateTableRequest request;
     protocol::catalog::CreateTableResponse response;
 
-    auto converted_table = toProtoTable(table);
-
-    request.set_allocated_table(&converted_table);
+    *request.mutable_table() = toProtoTable(table);
 
     ::grpc::ClientContext context;
 

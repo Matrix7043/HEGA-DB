@@ -4,6 +4,7 @@
 #include "hegadb/transport/CatalogServerTransport.h"
 #include "hegadb/transport/CatalogServerTransportFactory.h"
 #include "hegadb/transport/grpc/CatalogServiceImpl.h"
+#include "hegadb/transport/types/CatalogTypes.h"
 
 #include <exception>
 #include <iostream>
@@ -43,6 +44,18 @@ int main()
             [&catalog_service] {
                 return hegadb::catalog::CatalogAdapter::
                     toTransport(catalog_service.getCatalog());
+            });
+
+        grpc_service->setCreateTableHandler(
+            [&catalog_service](hegadb::transport::CatalogTable table) {
+                auto version = catalog_service.createTable(hegadb::catalog::CatalogAdapter::fromTransport(table));
+                return version;
+            });
+
+        grpc_service->setDropTableHandler(
+            [&catalog_service](std::string const& table_name) {
+                auto version = catalog_service.dropTable(table_name);
+                return version;
             });
 
         auto server = hegadb::transport::CatalogServerTransportFactory::createGrpc(

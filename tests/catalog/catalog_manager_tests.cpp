@@ -8,6 +8,7 @@
 #include <cassert>
 #include <iostream>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -147,7 +148,7 @@ int main()
 
     try {
         manager.createTable(std::move(duplicateStudents));
-    } catch (std::runtime_error const&) {
+    } catch (std::logic_error const&) {
         duplicateCreateFailed = true;
     }
 
@@ -187,7 +188,7 @@ int main()
 
     try {
         manager.dropTable("DOES_NOT_EXIST");
-    } catch (std::runtime_error const&) {
+    } catch (std::logic_error const&) {
         missingDropFailed = true;
     }
 

@@ -1,5 +1,6 @@
 #include "hegadb/catalog/CatalogAdapter.h"
 
+#include "hegadb/catalog/TableSchema.h"
 #include "hegadb/types/DataType.h"
 
 #include <stdexcept>
@@ -128,6 +129,11 @@ transport::CatalogTable CatalogAdapter::toTransport(
     }
 
     return result;
+}
+
+TableSchema CatalogAdapter::fromTransport(transport::CatalogTable const& table)
+{
+    return convertTable(table);
 }
 
 transport::CatalogDescription CatalogAdapter::toTransport(

@@ -2,14 +2,17 @@
 #include "hegadb/catalog/service/CatalogService.h"
 
 #include "hegadb/transport/CatalogClientTransportFactory.h"
+#include "hegadb/transport/CatalogMutationClientTransportFactory.h"
 #include "hegadb/transport/CatalogServerTransport.h"
 #include "hegadb/transport/CatalogServerTransportFactory.h"
 #include "hegadb/transport/grpc/CatalogServiceImpl.h"
+#include "hegadb/transport/types/CatalogTypes.h"
 
 #include <cassert>
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
 
 int main()
@@ -53,8 +56,21 @@ int main()
                 catalog_service.getCatalog());
         });
 
+    grpc_service->setCreateTableHandler(
+        [&catalog_service](transport::CatalogTable table)
+            -> transport::CatalogVersion {
+            return catalog_service.createTable(
+                catalog::CatalogAdapter::fromTransport(table));
+        });
+
+    grpc_service->setDropTableHandler(
+        [&catalog_service](std::string const& table_name)
+            -> transport::CatalogVersion {
+            return catalog_service.dropTable(table_name);
+        });
+
     // --------------------------------------------------------
-    // 3. Create and start the server through its factory.
+    // 3. Start the server.
     // --------------------------------------------------------
 
     auto server = transport::CatalogServerTransportFactory::createGrpc(
@@ -65,19 +81,20 @@ int main()
 
     try {
         // ----------------------------------------------------
-        // 4. Create the client through its factory.
+        // 4. Create read and mutation clients.
         // ----------------------------------------------------
 
         auto client = transport::CatalogClientTransportFactory::createGrpc(
+            SERVER_ADDRESS);
+
+        auto mutation_client = transport::CatalogMutationClientTransportFactory::createGrpc(
             SERVER_ADDRESS);
 
         // ----------------------------------------------------
         // Test 1: Retrieve catalog version.
         // ----------------------------------------------------
 
-        auto version = client->getCatalogVersion();
-
-        assert(version == 1);
+        assert(client->getCatalogVersion() == 1);
 
         std::cout << "[PASS] Get catalog version\n";
 
@@ -117,7 +134,7 @@ int main()
 
         assert(!missing.has_value());
 
-        std::cout << "[PASS] Missing table handling\n";
+        std::cout << "[PASS] Missing table lookup\n";
 
         // ----------------------------------------------------
         // Test 5: Retrieve the complete catalog.
@@ -147,7 +164,99 @@ int main()
         std::cout << "[PASS] Get complete catalog\n";
 
         // ----------------------------------------------------
-        // 6. Shut down the server.
+        // Test 6: Create a table through gRPC.
+        // ----------------------------------------------------
+
+        transport::CatalogTable new_table;
+        new_table.name = "integration_mutation_test";
+
+        transport::CatalogColumn id_column;
+        id_column.name = "id";
+        id_column.data_type = "INTEGER";
+        id_column.nullable = false;
+        id_column.ordinal = 0;
+
+        transport::CatalogColumn label_column;
+        label_column.name = "label";
+        label_column.data_type = "STRING";
+        label_column.nullable = false;
+        label_column.ordinal = 1;
+
+        new_table.columns.push_back(id_column);
+        new_table.columns.push_back(label_column);
+
+        mutation_client->createTable(new_table);
+
+        // Verify through the independent read client.
+        assert(client->getCatalogVersion() == 2);
+
+        auto created = client->getTable("integration_mutation_test");
+
+        assert(created.has_value());
+        assert(created->name == "integration_mutation_test");
+        assert(created->columns.size() == 2);
+        assert(created->columns[0].name == "id");
+        assert(created->columns[1].name == "label");
+
+        std::cout << "[PASS] Create table through gRPC\n";
+
+        // ----------------------------------------------------
+        // Test 7: Duplicate table creation must fail.
+        // ----------------------------------------------------
+
+        bool duplicate_create_failed = false;
+
+        try {
+            mutation_client->createTable(new_table);
+        } catch (std::runtime_error const&) {
+            duplicate_create_failed = true;
+        }
+
+        assert(duplicate_create_failed);
+
+        // Failed mutation must not increment the version.
+        assert(client->getCatalogVersion() == 2);
+        assert(client->getTable("integration_mutation_test").has_value());
+
+        std::cout << "[PASS] Duplicate table creation rejected\n";
+
+        // ----------------------------------------------------
+        // Test 8: Drop the created table through gRPC.
+        // ----------------------------------------------------
+
+        mutation_client->dropTable("integration_mutation_test");
+
+        assert(client->getCatalogVersion() == 3);
+        assert(!client->getTable("integration_mutation_test").has_value());
+
+        // Original tables must still exist.
+        assert(client->getTable("users").has_value());
+        assert(client->getTable("orders").has_value());
+
+        std::cout << "[PASS] Drop table through gRPC\n";
+
+        // ----------------------------------------------------
+        // Test 9: Dropping a nonexistent table must fail.
+        // ----------------------------------------------------
+
+        bool missing_drop_failed = false;
+
+        try {
+            mutation_client->dropTable("integration_mutation_test");
+        } catch (std::runtime_error const&) {
+            missing_drop_failed = true;
+        }
+
+        assert(missing_drop_failed);
+
+        // Failed deletion must not increment the version.
+        assert(client->getCatalogVersion() == 3);
+        assert(!client->getTable("integration_mutation_test").has_value());
+
+        std::cout << "[PASS] Deletion of missing table rejected\n";
+
+        // ----------------------------------------------------
+        // Shut down the server.
         // ----------------------------------------------------
 
         server->shutdown();

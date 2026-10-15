@@ -19,9 +19,9 @@ public:
 
     TableSchema const* findTable(std::string const& name) const override;
 
-    void createTable(TableSchema table);
+    SchemaVersion createTable(TableSchema table);
 
-    void dropTable(std::string const& name);
+    SchemaVersion dropTable(std::string const& name);
 
     CatalogSnapshot const& snapshot() const;
 

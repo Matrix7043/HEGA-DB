@@ -26,12 +26,12 @@ TableSchema const* CatalogManager::findTable(std::string const& name) const
     return snapshot_->findTable(name);
 }
 
-void CatalogManager::createTable(TableSchema table)
+SchemaVersion CatalogManager::createTable(TableSchema table)
 {
     auto const& table_name = table.name();
 
     if (snapshot_->findTable(table_name) != nullptr) {
-        throw std::runtime_error("Table already exists: " + table_name);
+        throw std::logic_error("Table already exists: " + table_name);
     }
 
     auto tables = snapshot_->tables();
@@ -43,13 +43,15 @@ void CatalogManager::createTable(TableSchema table)
         std::move(tables));
 
     snapshot_ = std::move(new_snapshot);
+
+    return snapshot_->version();
 }
 
-void CatalogManager::dropTable(std::string const& name)
+SchemaVersion CatalogManager::dropTable(std::string const& name)
 {
     auto const& exisiting_tables = snapshot_->findTable(name);
     if (exisiting_tables == nullptr) {
-        throw std::runtime_error("Table does not exist: " + name);
+        throw std::logic_error("Table does not exist: " + name);
     }
 
     auto tables = snapshot_->tables();
@@ -61,6 +63,8 @@ void CatalogManager::dropTable(std::string const& name)
         std::move(tables));
 
     snapshot_ = std::move(new_snapshot);
+
+    return snapshot_->version();
 }
 
 CatalogSnapshot const& CatalogManager::snapshot() const { return *snapshot_; }

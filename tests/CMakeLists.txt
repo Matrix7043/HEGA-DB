@@ -194,6 +194,7 @@ target_link_libraries(catalog_service_integration_tests
     PRIVATE
         hegadb_catalog_service
         hegadb_catalog_client_transport
+        hegadb_catalog_mutation_client_transport
 )
 
 add_test(

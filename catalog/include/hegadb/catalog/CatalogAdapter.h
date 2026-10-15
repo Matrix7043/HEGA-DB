@@ -20,6 +20,8 @@ public:
 
     static transport::CatalogTable
     toTransport(TableSchema const& table);
+
+    static TableSchema fromTransport(transport::CatalogTable const& table);
 };
 
 }

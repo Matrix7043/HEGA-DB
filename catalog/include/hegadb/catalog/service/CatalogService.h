@@ -19,9 +19,9 @@ public:
 
     CatalogManager const& catalog() const;
 
-    void createTable(TableSchema table);
+    SchemaVersion createTable(TableSchema table);
 
-    void dropTable(std::string const& table_name);
+    SchemaVersion dropTable(std::string const& table_name);
 
 private:
     CatalogManager catalog_;
