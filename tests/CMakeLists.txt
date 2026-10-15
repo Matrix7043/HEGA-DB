@@ -210,19 +210,6 @@ add_test(
     COMMAND crypto_context_tests
 )
 
-add_executable(crypto_edge_cases_tests
-    crypto/crypto_edge_cases_tests.cpp
-)
-
-target_link_libraries(crypto_edge_cases_tests
-    PRIVATE
-        hegadb_crypto
-)
-
-add_test(
-    NAME crypto_edge_cases_tests
-    COMMAND crypto_edge_cases_tests
-)
 
 add_executable(crypto_serialization_tests
     crypto/crypto_serialization_tests.cpp

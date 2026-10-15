@@ -27,16 +27,16 @@ catalog::TableSchema EmployeeDataGenerator::getEmployeesSchema() {
 
 std::vector<EmployeeRecord> EmployeeDataGenerator::generateSampleEmployees() {
     return {
-        {1, 25, 75000, "Engineering"},
-        {2, 32, 62000, "Sales"},
-        {3, 30, 85000, "Engineering"},
-        {4, 45, 95000, "Management"},
-        {5, 28, 80000, "Engineering"},
-        {6, 35, 68000, "Sales"},
-        {7, 29, 72000, "Marketing"},
-        {8, 42, 90000, "Management"},
-        {9, 26, 65000, "Marketing"},
-        {10, 38, 78000, "Sales"}
+        {1, 25, 75, "Engineering"},
+        {2, 32, 62, "Sales"},
+        {3, 30, 85, "Engineering"},
+        {4, 45, 95, "Management"},
+        {5, 28, 80, "Engineering"},
+        {6, 35, 68, "Sales"},
+        {7, 29, 72, "Marketing"},
+        {8, 42, 90, "Management"},
+        {9, 26, 65, "Marketing"},
+        {10, 38, 78, "Sales"}
     };
 }
 

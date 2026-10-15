@@ -17,16 +17,16 @@
  *
  * Expected data (from hegadb_setup):
  *   id  age  salary  dept
- *   1   25   75000   Engineering
- *   2   32   62000   Sales
- *   3   30   85000   Engineering
- *   4   45   95000   Management
- *   5   28   80000   Engineering
- *   6   35   68000   Sales
- *   7   29   72000   Marketing
- *   8   42   90000   Management
- *   9   26   65000   Marketing
- *  10   38   78000   Sales
+ *   1   25   75   Engineering
+ *   2   32   62   Sales
+ *   3   30   85   Engineering
+ *   4   45   95   Management
+ *   5   28   80   Engineering
+ *   6   35   68   Sales
+ *   7   29   72   Marketing
+ *   8   42   90   Management
+ *   9   26   65   Marketing
+ *  10   38   78   Sales
  */
 
 // Client components
@@ -226,9 +226,18 @@ int main() {
     }
 
     int failed = 0;
-    auto run = [&](std::string sql, std::string name) {
+    auto run = [&](std::string sql, std::string name, size_t expected_matches) {
         try {
-            run_query(ctx, sql, name);
+            auto result = run_query(ctx, sql, name);
+            size_t actual_matches = 0;
+            for (auto const& row : result.rows) {
+                if (row.matches_filter) ++actual_matches;
+            }
+            if (actual_matches != expected_matches) {
+                throw std::runtime_error(
+                    "Expected " + std::to_string(expected_matches) +
+                    " matching row(s), got " + std::to_string(actual_matches));
+            }
         } catch (std::exception const& e) {
             std::cerr << "  ✗ EXCEPTION: " << e.what() << "\n";
             ++failed;
@@ -237,43 +246,49 @@ int main() {
 
     // ── Test 1: SELECT * ───────────────────────────────────────────
     run("SELECT * FROM EMPLOYEES",
-        "1_select_star");
+        "1_select_star",
+        10);
 
     // ── Test 2: Column projection ──────────────────────────────────
     run("SELECT id, salary FROM EMPLOYEES",
-        "2_column_projection");
+        "2_column_projection",
+        10);
 
     // ── Test 3: WHERE with integer equality ────────────────────────
     // Tests: parameter encryption, FilterOperator, ComparisonEvaluator (EQ),
     //        mask production and per-slot decryption.
     // Enc(id - param) → slot[0] = 1-1 = 0 (match), others non-zero (no match).
     run("SELECT * FROM EMPLOYEES WHERE id = 3",
-        "3_where_eq_integer");
+        "3_where_eq_integer",
+        1);
 
     // ── Test 4: WHERE with GT ──────────────────────────────────────
     // Enc(salary - param) in each slot. After client decryption,
     // positive diff → salary > threshold.
-    run("SELECT id, salary FROM EMPLOYEES WHERE salary > 80000",
-        "4_where_gt");
+    run("SELECT id, salary FROM EMPLOYEES WHERE salary > 80",
+        "4_where_gt",
+        3);
 
     // ── Test 5: WHERE with AND (range query) ──────────────────────
-    // age >= 28 AND age <= 35 → should match ids 2,5,6,7,10 (age 32,28,35,29,38)
-    // Actually: age 25,32,30,45,28,35,29,42,26,38 → >=28 AND <=35: 32,30,28,35,29,38? 
-    // 38 > 35, so matches: id=2(32),3(30),5(28),6(35),7(29)
+    // age >= 28 AND age <= 35 → ids 2,3,5,6,7 (5 matches)
     run("SELECT id, age FROM EMPLOYEES WHERE age >= 28 AND age <= 35",
-        "5_where_and_range");
+        "5_where_and_range",
+        5);
 
     // ── Test 6: WHERE with OR ──────────────────────────────────────
     run("SELECT id, dept FROM EMPLOYEES WHERE id = 1 OR id = 5",
-        "6_where_or");
+        "6_where_or",
+        2);
 
     // ── Test 7: WHERE with NOT ─────────────────────────────────────
     run("SELECT id, age FROM EMPLOYEES WHERE NOT age = 25",
-        "7_where_not");
+        "7_where_not",
+        9);
 
     // ── Test 8: Column projection + WHERE ─────────────────────────
-    run("SELECT id, dept FROM EMPLOYEES WHERE salary = 95000",
-        "8_projection_with_filter");
+    run("SELECT id, dept FROM EMPLOYEES WHERE salary = 95",
+        "8_projection_with_filter",
+        1);
 
     // ── Summary ───────────────────────────────────────────────────
     std::cout << "\n" << std::string(60, '═') << "\n";

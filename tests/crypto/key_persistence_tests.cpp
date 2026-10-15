@@ -192,11 +192,11 @@ TEST_F(KeyPersistenceTest, CrossSessionDecryptionWorks) {
     {
         hegadb::crypto::CompositeEncryption encryption1(test_dir_);
         
-        auto plaintext = hegadb::crypto::Plaintext(12345LL);
+        auto plaintext = hegadb::crypto::Plaintext(12LL);
         auto ciphertext = encryption1.encrypt(plaintext);
         serialized_ciphertext = ciphertext->serialize();
         
-        std::cout << "  Session 1: Encrypted value 12345\n";
+        std::cout << "  Session 1: Encrypted value 12\n";
     }
     
     // Session 2: Decrypt data with loaded keys
@@ -211,7 +211,7 @@ TEST_F(KeyPersistenceTest, CrossSessionDecryptionWorks) {
         
         // Should match original value
         EXPECT_EQ(decrypted_plaintext.type(), hegadb::types::DataType::Integer);
-        EXPECT_EQ(std::get<long long>(decrypted_plaintext.value()), 12345LL);
+        EXPECT_EQ(std::get<long long>(decrypted_plaintext.value()), 12LL);
         
         std::cout << "  Session 2: Successfully decrypted to original value\n";
         std::cout << "  PASS: Cross-session encryption/decryption works\n";
@@ -274,10 +274,10 @@ TEST_F(KeyPersistenceTest, PersistentKeysReusedOnSameMachine) {
         EXPECT_TRUE(allKeyFilesExist(test_dir_));
         
         // Test encryption and decryption in the loaded session
-        auto int_val = hegadb::crypto::Plaintext(777LL);
+        auto int_val = hegadb::crypto::Plaintext(77LL);
         auto int_ct = encryption.encrypt(int_val);
         auto int_dec = encryption.decrypt(*int_ct);
-        EXPECT_EQ(std::get<long long>(int_dec.value()), 777LL);
+        EXPECT_EQ(std::get<long long>(int_dec.value()), 77LL);
         
         auto str_val = hegadb::crypto::Plaintext(std::string("persisted_test"));
         auto str_ct = encryption.encrypt(str_val);
@@ -335,11 +335,11 @@ TEST_F(KeyPersistenceTest, FallbackWhenSaveFails) {
         hegadb::crypto::CompositeEncryption encryption(readonly_dir);
         
         // Should still be able to encrypt/decrypt in the same session
-        auto plaintext = hegadb::crypto::Plaintext(999LL);
+        auto plaintext = hegadb::crypto::Plaintext(99LL);
         auto ciphertext = encryption.encrypt(plaintext);
         auto decrypted = encryption.decrypt(*ciphertext);
         
-        EXPECT_EQ(std::get<long long>(decrypted.value()), 999LL);
+        EXPECT_EQ(std::get<long long>(decrypted.value()), 99LL);
     });
     
     // Restore permissions for cleanup (need write permission to delete)

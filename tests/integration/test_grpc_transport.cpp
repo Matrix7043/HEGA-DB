@@ -29,7 +29,7 @@
  *   T1  SELECT * FROM EMPLOYEES                                (baseline)
  *   T2  SELECT id, salary FROM EMPLOYEES                       (projection)
  *   T3  SELECT * FROM EMPLOYEES WHERE id = 3                   (eq filter)
- *   T4  SELECT id, salary FROM EMPLOYEES WHERE salary > 80000  (gt filter)
+ *   T4  SELECT id, salary FROM EMPLOYEES WHERE salary > 80     (gt filter)
  *   T5  SELECT id, age FROM EMPLOYEES WHERE age >= 28 AND age <= 35  (range/AND)
  *   T6  SELECT id, dept FROM EMPLOYEES WHERE id = 1 OR id = 5  (OR)
  *   T7  SELECT id, age FROM EMPLOYEES WHERE NOT age = 25        (NOT)
@@ -239,12 +239,14 @@ static QueryRunResult runOverGrpc(
     if (select_stmt->where()) {
         if (auto const* comp = dynamic_cast<client::ast::ComparisonExpr const*>(select_stmt->where())) {
             switch (comp->op()) {
-                case operations::ComparisonOp::EQ:  mask_kind = server::execution::MaskKind::DIFF_ZERO; break;
+                // ComparisonEvaluator returns 0/1 indicator masks for every
+                // comparison operator, so matching slots are non-zero.
+                case operations::ComparisonOp::EQ:  mask_kind = server::execution::MaskKind::DIFF_NONZERO; break;
                 case operations::ComparisonOp::NEQ: mask_kind = server::execution::MaskKind::DIFF_NONZERO; break;
-                case operations::ComparisonOp::LT:  mask_kind = server::execution::MaskKind::DIFF_NEGATIVE; break;
-                case operations::ComparisonOp::GT:  mask_kind = server::execution::MaskKind::DIFF_POSITIVE; break;
-                case operations::ComparisonOp::LTE: mask_kind = server::execution::MaskKind::DIFF_NONPOS; break;
-                case operations::ComparisonOp::GTE: mask_kind = server::execution::MaskKind::DIFF_NONNEG; break;
+                case operations::ComparisonOp::LT:  mask_kind = server::execution::MaskKind::DIFF_NONZERO; break;
+                case operations::ComparisonOp::GT:  mask_kind = server::execution::MaskKind::DIFF_NONZERO; break;
+                case operations::ComparisonOp::LTE: mask_kind = server::execution::MaskKind::DIFF_NONZERO; break;
+                case operations::ComparisonOp::GTE: mask_kind = server::execution::MaskKind::DIFF_NONZERO; break;
             }
         }
     }
@@ -403,55 +405,54 @@ int main()
                     std::to_string(r.matched));
         });
 
-    // T4 – WHERE salary > 80000
-    // Salaries: 75k,62k,85k,95k,80k,68k,72k,90k,65k,78k
-    // > 80000: 85k(id=3), 95k(id=4), 90k(id=8) → 3 matches
-    run("SELECT id, salary FROM EMPLOYEES WHERE salary > 80000",
+    // T4 – WHERE salary > 80
+    // Salaries: 75,62,85,95,80,68,72,90,65,78
+    // > 80: 85(id=3), 95(id=4), 90(id=8) → 3 matches
+    run("SELECT id, salary FROM EMPLOYEES WHERE salary > 80",
         "T4_where_gt",
         [](QueryRunResult const& r) {
             if (r.matched != 3)
                 throw std::runtime_error(
-                    "WHERE salary>80000: expected 3 matches, got " +
+                    "WHERE salary>80: expected 3 matches, got " +
                     std::to_string(r.matched));
         });
 
     // T5 – WHERE age >= 28 AND age <= 35 (range / AND)
-    // In HEGA-DB, composed filters apply BFV arithmetic on raw diff slots;
-    // this matches the reference behavior tested in test_query_types (2 matches).
+    // The range includes ages 32, 30, 28, 35, and 29: 5 matches.
     run("SELECT id, age FROM EMPLOYEES WHERE age >= 28 AND age <= 35",
         "T5_where_and_range",
         [](QueryRunResult const& r) {
             if (r.decrypted.rows.size() != 10)
                 throw std::runtime_error("Expected 10 rows");
-            if (r.matched != 2)
+            if (r.matched != 5)
                 throw std::runtime_error(
-                    "WHERE age>=28 AND age<=35: expected 2 matches (matching test_query_types), got " +
+                    "WHERE age>=28 AND age<=35: expected 5 matches, got " +
                     std::to_string(r.matched));
         });
 
     // T6 – WHERE id = 1 OR id = 5 (OR)
-    // Matches the reference behavior tested in test_query_types (0 matches).
+    // Rows with id 1 and id 5 match: 2 matches.
     run("SELECT id, dept FROM EMPLOYEES WHERE id = 1 OR id = 5",
         "T6_where_or",
         [](QueryRunResult const& r) {
             if (r.decrypted.rows.size() != 10)
                 throw std::runtime_error("Expected 10 rows");
-            if (r.matched != 0)
+            if (r.matched != 2)
                 throw std::runtime_error(
-                    "WHERE id=1 OR id=5: expected 0 matches (matching test_query_types), got " +
+                    "WHERE id=1 OR id=5: expected 2 matches, got " +
                     std::to_string(r.matched));
         });
 
     // T7 – WHERE NOT age = 25 (NOT)
-    // Matches the reference behavior tested in test_query_types (1 match).
+    // Only age 25 is excluded, so 9 rows match.
     run("SELECT id, age FROM EMPLOYEES WHERE NOT age = 25",
         "T7_where_not",
         [](QueryRunResult const& r) {
             if (r.decrypted.rows.size() != 10)
                 throw std::runtime_error("Expected 10 rows");
-            if (r.matched != 1)
+            if (r.matched != 9)
                 throw std::runtime_error(
-                    "WHERE NOT age=25: expected 1 match (matching test_query_types), got " +
+                    "WHERE NOT age=25: expected 9 matches, got " +
                     std::to_string(r.matched));
         });
 
