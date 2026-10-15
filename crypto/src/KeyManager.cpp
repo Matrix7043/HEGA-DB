@@ -362,6 +362,16 @@ void KeyManager::loadContext(std::string const& directory_path)
         if (!loaded_bfv_context) {
             throw std::runtime_error("Failed to deserialize BFV context");
         }
+
+        if (context_.getBFVContext() && context_.getBFVContext()->GetCryptoParameters()) {
+            auto loaded_modulus = loaded_bfv_context->GetCryptoParameters()->GetPlaintextModulus();
+            auto expected_modulus = context_.getBFVContext()->GetCryptoParameters()->GetPlaintextModulus();
+            if (loaded_modulus != expected_modulus) {
+                throw std::runtime_error("Stored BFV context has plaintext modulus " + std::to_string(loaded_modulus) +
+                                         " but current configuration requires " + std::to_string(expected_modulus) +
+                                         ". Stored keys are incompatible.");
+            }
+        }
         
         // Enable features on the loaded context (serialization doesn't preserve enabled features)
         loaded_bfv_context->Enable(lbcrypto::PKE);

@@ -1,4 +1,5 @@
 #include <hegadb/server/evaluator/ComparisonEvaluator.h>
+#include <hegadb/server/evaluator/ComparisonPolynomial.h>
 #include <hegadb/logging/Logger.h>
 #include <stdexcept>
 #include <vector>
@@ -179,41 +180,12 @@ lbcrypto::Ciphertext<lbcrypto::DCRTPoly> ComparisonEvaluator::evaluateLTOnDiff(
     lbcrypto::Ciphertext<lbcrypto::DCRTPoly> const& diff,
     lbcrypto::CryptoContext<lbcrypto::DCRTPoly> ctx)
 {
-    int64_t p = static_cast<int64_t>(ctx->GetCryptoParameters()->GetPlaintextModulus());
-
-    // Negative residue interval in Z_p for bounded differences [-K, -1]:
-    // LT(x, y) = sum_{a in S_neg} EQ(diff, a) mod p
-    int64_t max_bound = 16;
-    int64_t start_neg = std::max(static_cast<int64_t>((p + 1) / 2), p - max_bound);
-    int64_t end_neg = p - 1;
-
-    // Disjoint indicator summation over negative interval:
-    // LT(x, y) = sum_{a in S_neg} EQ(diff, a) mod p
-    lbcrypto::Ciphertext<lbcrypto::DCRTPoly> lt_sum = nullptr;
-
-    for (int64_t a = start_neg; a <= end_neg; ++a) {
-        std::vector<int64_t> vec_a(ctx->GetRingDimension(), a);
-        auto pt_a = ctx->MakePackedPlaintext(vec_a);
-
-        // diff_a = diff - a
-        auto diff_a = ctx->EvalSub(diff, pt_a);
-
-        // eq_a = 1 - (diff - a)^(p - 1)
-        auto eq_a = evaluateEQOnDiff(diff_a, ctx);
-
-        if (!lt_sum) {
-            lt_sum = eq_a;
-        } else {
-            lt_sum = ctx->EvalAdd(lt_sum, eq_a);
-        }
-    }
-
-    if (!lt_sum) {
-        // Fallback: Enc(0)
-        lt_sum = ctx->EvalSub(diff, diff);
-    }
-
-    return lt_sum;
+    // Evaluates indicator polynomial P(diff) using Paterson-Stockmeyer.
+    // For 8-bit signed differences in [-255, 255] (with p = 65537):
+    //   P(diff) = 1 if diff < 0
+    //   P(diff) = 0 if diff >= 0
+    auto const& coeffs = getLessThanPolynomialCoeffs();
+    return evalPatersonStockmeyer(diff, coeffs, ctx);
 }
 
 lbcrypto::Ciphertext<lbcrypto::DCRTPoly> ComparisonEvaluator::evaluateGTOnDiff(
@@ -258,25 +230,42 @@ lbcrypto::Ciphertext<lbcrypto::DCRTPoly> ComparisonEvaluator::evalPatersonStockm
     }
 
     size_t d = coeffs.size() - 1; // degree
-    size_t k = 1;
-    while (k * k < d) {
-        ++k;
+    if (d == 0) {
+        std::vector<int64_t> vec_c(ctx->GetRingDimension(), coeffs[0]);
+        auto pt_c = ctx->MakePackedPlaintext(vec_c);
+        return ctx->EvalAdd(ctx->EvalSub(x, x), pt_c);
     }
 
-    // 1. Powers x^1, ..., x^k
+    // Determine baby-step parameter k as power of 2 for minimal tree depth
+    size_t k = 1;
+    while (k * k < d) {
+        k *= 2;
+    }
+    if (k * k > 2 * d && k > 2) {
+        k /= 2;
+    }
+    k = std::max<size_t>(1, std::min(k, d));
+    size_t m = (d + k) / k;
+
+    // 1. Powers x^1, ..., x^k computed in a balanced binary tree to minimize multiplicative depth
     std::vector<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>> baby_steps(k + 1);
     baby_steps[1] = x;
-    for (size_t i = 2; i <= k; ++i) {
-        baby_steps[i] = ctx->EvalMult(baby_steps[i - 1], x);
+    if (k >= 2) {
+        baby_steps[2] = ctx->EvalMult(x, x);
+        ctx->RelinearizeInPlace(baby_steps[2]);
+    }
+    for (size_t i = 3; i <= k; ++i) {
+        size_t half = i / 2;
+        baby_steps[i] = ctx->EvalMult(baby_steps[half], baby_steps[i - half]);
         ctx->RelinearizeInPlace(baby_steps[i]);
     }
 
-    // 2. Giant steps w_j = x^(j*k)
-    size_t m = (d + k) / k;
+    // 2. Giant steps w_j = x^(j*k) computed in a balanced binary tree
     std::vector<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>> giant_steps(m);
     giant_steps[1] = baby_steps[k];
     for (size_t j = 2; j < m; ++j) {
-        giant_steps[j] = ctx->EvalMult(giant_steps[j - 1], baby_steps[k]);
+        size_t half = j / 2;
+        giant_steps[j] = ctx->EvalMult(giant_steps[half], giant_steps[j - half]);
         ctx->RelinearizeInPlace(giant_steps[j]);
     }
 

@@ -93,9 +93,18 @@ std::unique_ptr<Ciphertext> BFVEncryption::encryptStringVector(
 
 std::unique_ptr<Ciphertext> BFVEncryption::encryptInteger(long long value)
 {
+    // Validate 8-bit signed range: values must be in [-128, 127].
+    // The plaintext modulus is 65537 which fits 8-bit values naturally in Z_p,
+    // with negatives stored as their p-complement (e.g. -1 -> 65536).
+    if (value < -128 || value > 127) {
+        throw std::out_of_range(
+            "BFVEncryption: Integer value " + std::to_string(value) +
+            " is out of the permitted 8-bit signed range [-128, 127].");
+    }
+
     // Broadcast the scalar into all BFV slots so that per-slot subtraction
     // with a column ciphertext (which packs one row per slot) works correctly.
-    // N/2 slots available in BFV packed encoding; fill them all with the same value.
+    // Negative values are automatically reduced mod p by MakePackedPlaintext.
     uint32_t ring_dim = context_->GetRingDimension();
     uint32_t num_slots = ring_dim;  // BFV uses all N slots
     std::vector<int64_t> slots(num_slots, value);
@@ -187,13 +196,19 @@ Plaintext BFVEncryption::decryptInteger(OpenFHECiphertext const& ciphertext)
     lbcrypto::Plaintext plaintext;
     context_->Decrypt(privateKey_, ciphertext.getCiphertext(), &plaintext);
 
-    // Extract the integer value
     auto values = plaintext->GetPackedValue();
     if (values.empty()) {
         throw std::runtime_error("Decrypted plaintext is empty");
     }
 
-    long long value = values[0];
+    // BFV stores values in Z_p = [0, p-1].  Map back to signed 8-bit range
+    // [-128, 127] by treating values > p/2 as their negative p-complement.
+    int64_t p     = static_cast<int64_t>(
+        context_->GetCryptoParameters()->GetPlaintextModulus());
+    int64_t half_p = p / 2;
+    int64_t raw    = values[0];
+    long long value = (raw > half_p) ? static_cast<long long>(raw - p)
+                                     : static_cast<long long>(raw);
     return Plaintext(value);
 }
 

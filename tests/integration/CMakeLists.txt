@@ -134,6 +134,32 @@ add_test(
 )
 
 # ============================================================
+# Integration Test: Logical operations (AND, OR, nested expressions)
+# ============================================================
+add_executable(test_logical_operations
+    test_logical_operations.cpp
+    InMemoryStorageManager.cpp
+)
+target_link_libraries(test_logical_operations
+    PRIVATE
+        hegadb_catalog
+        hegadb_crypto
+        hegadb_types
+        hegadb_logging
+        hegadb_protocol
+        hegadb_client_core
+        hegadb_server
+        hegadb_execution
+        hegadb_warnings
+)
+target_compile_features(test_logical_operations PRIVATE cxx_std_20)
+
+add_test(
+    NAME LogicalOperationsTest
+    COMMAND test_logical_operations
+)
+
+# ============================================================
 # Integration Test: Full gRPC transport end-to-end
 # (GrpcClient → wire → GrpcServer → QueryExecutor → ResultEncoder
 #  → wire → ResultDecryptor)

@@ -37,7 +37,7 @@ int main() {
             hegadb::crypto::CompositeEncryption encryption(key_dir);
             
             // Simulate encrypting a dataset
-            std::vector<int64_t> dataset = {100, 250, 75, 300, 180};
+            std::vector<int64_t> dataset = {100, 50, 75, 120, 180};
             
             std::cout << "Encrypting dataset: ";
             for (size_t i = 0; i < dataset.size(); ++i) {

@@ -19,6 +19,7 @@ execution::EncryptedMask LogicalEvaluator::evaluateAND(
 
     // AND: multiply the masks (assuming 0/1 encoding)
     auto result = ctx->EvalMult(left_ct.getCiphertext(), right_ct.getCiphertext());
+    ctx->RelinearizeInPlace(result);
 
     return execution::EncryptedMask(crypto::OpenFHECiphertext(
         result, left_ct.getSchemeType(), left_ct.getOriginalType()),
@@ -39,6 +40,7 @@ execution::EncryptedMask LogicalEvaluator::evaluateOR(
     // OR: left + right - (left * right)
     auto sum = ctx->EvalAdd(left_ct.getCiphertext(), right_ct.getCiphertext());
     auto product = ctx->EvalMult(left_ct.getCiphertext(), right_ct.getCiphertext());
+    ctx->RelinearizeInPlace(product);
     auto result = ctx->EvalSub(sum, product);
 
     return execution::EncryptedMask(crypto::OpenFHECiphertext(

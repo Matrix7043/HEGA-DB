@@ -237,7 +237,9 @@ std::vector<bool> ResultDecryptor::decryptMask(
                      mask.getCiphertext().getCiphertext(), &pt);
     auto packed = pt->GetPackedValue();
 
-    // BFV stores values mod p in [0, p-1].  Values > p/2 represent negatives.
+    // BFV stores values mod p in [0, p-1].  The Fermat-residue evaluator
+    // produces exact 0 or 1 in each slot.  Map any raw value > p/2 to its
+    // signed representative (needed for legacy DIFF_* code paths).
     int64_t p      = static_cast<int64_t>(
         bfv_ctx->GetCryptoParameters()->GetPlaintextModulus());
     int64_t half_p = p / 2;
@@ -254,24 +256,35 @@ std::vector<bool> ResultDecryptor::decryptMask(
         int64_t v   = to_signed(raw);
 
         switch (kind) {
-            // Single-comparison masks: Enc(left - right) per slot
-            case MK::DIFF_ZERO:     result[i] = (v == 0);  break;  // EQ
-            case MK::DIFF_NONZERO:  result[i] = (v != 0);  break;  // NEQ
-            case MK::DIFF_POSITIVE: result[i] = (v >  0);  break;  // GT
-            case MK::DIFF_NONNEG:   result[i] = (v >= 0);  break;  // GTE
-            case MK::DIFF_NEGATIVE: result[i] = (v <  0);  break;  // LT
-            case MK::DIFF_NONPOS:   result[i] = (v <= 0);  break;  // LTE
+            // ---------------------------------------------------------------
+            // Fermat-indicator masks (ComparisonEvaluator):
+            //   slot == 1  => row matched
+            //   slot == 0  => row did not match
+            // All comparison ops (EQ, NEQ, LT, GT, LE, GE) are tagged
+            // DIFF_NONZERO because v != 0 <=> v == 1 for a 0/1 mask.
+            // ---------------------------------------------------------------
+            case MK::DIFF_NONZERO:  result[i] = (v != 0);  break;
 
-            // After AND/OR/NOT the server applied BFV arithmetic on top of
-            // raw diffs — the result is no longer a clean difference.
-            // Best we can do: treat slot == 0 as "not matched" (identity for
-            // AND-of-differences where both args were 0; product stays 0).
-            case MK::COMPOSED:      result[i] = (v == 0);  break;
+            // ---------------------------------------------------------------
+            // Legacy raw-difference masks (kept for back-compat):
+            // ---------------------------------------------------------------
+            case MK::DIFF_ZERO:     result[i] = (v == 0);  break;
+            case MK::DIFF_POSITIVE: result[i] = (v >  0);  break;
+            case MK::DIFF_NONNEG:   result[i] = (v >= 0);  break;
+            case MK::DIFF_NEGATIVE: result[i] = (v <  0);  break;
+            case MK::DIFF_NONPOS:   result[i] = (v <= 0);  break;
+
+            // ---------------------------------------------------------------
+            // COMPOSED: result of AND/OR/NOT on 0/1 indicator masks.
+            // slot == 1 => matched; slot == 0 => not matched.
+            // ---------------------------------------------------------------
+            case MK::COMPOSED:      result[i] = (v != 0);  break;
 
             case MK::ALL_MATCH:     result[i] = true;       break;
             default:                result[i] = true;       break;
         }
     }
+
 
     logging::info("ResultDecryptor: mask kind={} decoded — {} / {} rows matched",
         static_cast<int>(kind),

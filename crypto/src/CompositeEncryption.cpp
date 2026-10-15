@@ -51,9 +51,15 @@ void CompositeEncryption::initializeKeys(std::string const& key_directory)
         }
     } catch (std::exception const& e) {
         std::cerr << "Error with persistent keys: " << e.what() << "\n";
-        std::cerr << "Falling back to temporary key generation...\n";
+        std::cerr << "Regenerating keys with current parameters...\n";
         keyManager_.generateKeys();
         keyManager_.generateEvaluationKeys();
+        try {
+            keyManager_.saveKeys(key_directory);
+            std::cout << "Updated persistent keys in: " << key_directory << "\n";
+        } catch (std::exception const& save_err) {
+            std::cerr << "Warning: Could not save regenerated keys to disk: " << save_err.what() << "\n";
+        }
     }
 }
 

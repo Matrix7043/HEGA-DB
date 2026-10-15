@@ -7,31 +7,32 @@
 namespace hegadb::server::execution {
 
 /**
- * @brief How to interpret the per-slot values in the mask ciphertext.
+ * @brief Semantic tag describing how per-slot values in the mask ciphertext
+ *        should be interpreted by the client-side ResultDecryptor.
  *
- * ComparisonEvaluator does not produce a proper 0/1 indicator bit — it
- * returns Enc(left - right) or Enc(right - left) depending on the operator.
- * This tag lets the client-side ResultDecryptor apply the correct check per
- * slot when decoding which rows matched the filter.
+ * ComparisonEvaluator uses the Fermat-residue method to produce an exact
+ * boolean indicator in each slot:
  *
- *  DIFF_ZERO     (EQ)  : slot[i] == 0 → row matched
- *  DIFF_NONZERO  (NEQ) : slot[i] != 0 → row matched
- *  DIFF_POSITIVE (GT)  : slot[i] >  0 → row matched  (left - right > 0)
- *  DIFF_NONNEG   (GTE) : slot[i] >= 0 → row matched
- *  DIFF_NEGATIVE (LT)  : slot[i] <  0 → row matched  (right - left stored, so slot > 0)
- *  DIFF_NONPOS   (LTE) : slot[i] <= 0 → row matched
- *  COMPOSED            : mask went through AND/OR/NOT; treat slot[i] == 0 as matched
- *                        (best-effort: proper boolean algebra requires 0/1 bits)
- *  ALL_MATCH           : no filter, every row matches
+ *   EQ(a, b)  = 1 - (a-b)^(p-1)  mod p  \u2208 {0, 1}
+ *   NEQ(a, b) = (a-b)^(p-1)       mod p  \u2208 {0, 1}
+ *   LT/GT/LE/GE  built from sums of EQ indicators  \u2208 {0, 1}
+ *
+ * The resulting slot value is always exactly 0 (no match) or 1 (match).
+ * All comparison masks are tagged DIFF_NONZERO: the decryptor checks slot != 0.
+ *
+ * DIFF_ZERO – DIFF_NONPOS are kept for back-compat with any callers that
+ * produce raw Enc(left-right) differences directly (e.g. legacy code paths).
+ * COMPOSED applies after AND/OR/NOT on 0/1 masks: slot != 0 still means match.
+ * ALL_MATCH : no WHERE clause, every row matches unconditionally.
  */
 enum class MaskKind {
-    DIFF_ZERO,      // EQ
-    DIFF_NONZERO,   // NEQ
-    DIFF_POSITIVE,  // GT  (slot = left - right)
-    DIFF_NONNEG,    // GTE (slot = right - left, match when >= 0 → slot <= 0 … see note)
-    DIFF_NEGATIVE,  // LT  (slot = right - left, positive when right > left)
-    DIFF_NONPOS,    // LTE
-    COMPOSED,       // Result of AND / OR / NOT applied to sub-masks
+    DIFF_ZERO,      // legacy: slot = left-right, match when == 0  (EQ)
+    DIFF_NONZERO,   // Fermat 0/1 indicator OR legacy != 0          (NEQ / all ops)
+    DIFF_POSITIVE,  // legacy: slot = left-right, match when >  0  (GT)
+    DIFF_NONNEG,    // legacy: slot = left-right, match when >= 0  (GTE)
+    DIFF_NEGATIVE,  // legacy: slot = right-left, match when >  0  (LT)
+    DIFF_NONPOS,    // legacy: slot = left-right, match when <= 0  (LTE)
+    COMPOSED,       // Result of AND / OR / NOT on boolean 0/1 masks
     ALL_MATCH,      // No WHERE clause
 };
 
