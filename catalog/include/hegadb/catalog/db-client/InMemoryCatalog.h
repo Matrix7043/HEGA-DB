@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include "Catalog.h"
+#include "hegadb/catalog/Catalog.h"
 
 namespace hegadb::catalog {
 
@@ -14,6 +14,8 @@ public:
     SchemaVersion version() const override;
 
     TableSchema const* findTable(std::string const& name) const override;
+
+    void replaceSnapshot(std::shared_ptr<CatalogSnapshot const> snapshot);
 
 private:
     std::shared_ptr<CatalogSnapshot const> snapshot_;

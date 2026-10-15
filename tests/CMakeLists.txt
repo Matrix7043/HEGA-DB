@@ -129,18 +129,77 @@ add_test(
 # Catalog Tests
 # ============================================================
 
-add_executable(catalog_tests
-    catalog/catalog_tests.cpp
+add_executable(catalog_manager_tests
+    catalog/catalog_manager_tests.cpp
 )
 
-target_link_libraries(catalog_tests
+target_link_libraries(catalog_manager_tests
     PRIVATE
-        hegadb_catalog
+        hegadb_catalog_service
 )
 
 add_test(
-    NAME catalog_tests
-    COMMAND catalog_tests
+    NAME catalog_manager_tests
+    COMMAND catalog_manager_tests
+)
+
+add_executable(catalog_adapter_tests
+    catalog/catalog_adapter_tests.cpp
+)
+
+target_link_libraries(catalog_adapter_tests
+    PRIVATE
+        hegadb_catalog_client
+)
+
+add_test(
+    NAME catalog_adapter_tests
+    COMMAND catalog_adapter_tests
+)
+
+add_executable(catalog_cache_tests
+    catalog/catalog_cache_tests.cpp
+)
+
+target_link_libraries(catalog_cache_tests
+    PRIVATE
+        hegadb_catalog_client
+)
+
+add_test(
+    NAME catalog_cache_tests
+    COMMAND catalog_cache_tests
+)
+
+add_executable(catalog_service_tests
+    catalog/catalog_service_tests.cpp
+)
+
+target_link_libraries(catalog_service_tests
+    PRIVATE
+        hegadb_catalog_service
+)
+
+add_test(
+    NAME catalog_service_tests
+    COMMAND catalog_service_tests
+)
+
+
+add_executable(catalog_service_integration_tests
+    catalog/catalog_service_integration_tests.cpp
+)
+
+target_link_libraries(catalog_service_integration_tests
+    PRIVATE
+        hegadb_catalog_service
+        hegadb_catalog_client_transport
+        hegadb_catalog_mutation_client_transport
+)
+
+add_test(
+    NAME catalog_service_integration_tests
+    COMMAND catalog_service_integration_tests
 )
 
 # ============================================================
@@ -298,6 +357,21 @@ target_link_libraries(hegadb_grpc_tests
   hegadb_server_transport
   hegadb_client_transport
   GTest::gtest_main
+)
+
+add_executable(hegadb_catalog_transport_tests
+  grpc/catalog_transport_tests.cpp
+)
+
+target_link_libraries(hegadb_catalog_transport_tests
+  PRIVATE
+    hegadb_catalog_server_transport
+    hegadb_catalog_client_transport
+)
+
+add_test(
+    NAME hegadb_catalog_transport_tests
+    COMMAND hegadb_catalog_transport_tests
 )
 
 include(GoogleTest)

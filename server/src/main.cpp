@@ -1,5 +1,4 @@
 #include "hegadb/transport/ServerTransportFactory.h"
-#include <hegadb/catalog/InMemoryCatalog.h>
 #include <hegadb/logging/Logger.h>
 #include <hegadb/logging/LoggingConfig.h>
 #include <hegadb/server/ExecuteQueryReceiver.h>

@@ -1,7 +1,7 @@
 #ifndef CATALOG_SNAPSHOT_H
 #define CATALOG_SNAPSHOT_H
 
-#include "TableSchema.h"
+#include "hegadb/catalog/TableSchema.h"
 
 #include <cstdint>
 #include <string>
@@ -20,6 +20,8 @@ public:
     SchemaVersion version() const;
 
     TableSchema const* findTable(std::string const& name) const;
+
+    std::unordered_map<std::string, TableSchema> const& tables() const;
 
 private:
     SchemaVersion version_;

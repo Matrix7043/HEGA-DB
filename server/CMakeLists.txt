@@ -10,10 +10,10 @@ add_library(hegadb_server
 )
 
 if(HEGADB_ENABLE_CUDA)
-    find_package(CUDAToolkit REQUIRED)
-    target_compile_definitions(hegadb_server PUBLIC HEGADB_ENABLE_CUDA)
-    target_include_directories(hegadb_server PUBLIC ${CUDAToolkit_INCLUDE_DIRS})
-    target_link_libraries(hegadb_server PUBLIC CUDA::cudart)
+  find_package(CUDAToolkit REQUIRED)
+  target_compile_definitions(hegadb_server PUBLIC HEGADB_ENABLE_CUDA)
+  target_include_directories(hegadb_server PUBLIC ${CUDAToolkit_INCLUDE_DIRS})
+  target_link_libraries(hegadb_server PUBLIC CUDA::cudart)
 endif()
 
 target_include_directories(hegadb_server
@@ -26,7 +26,8 @@ target_link_libraries(hegadb_server
         hegadb_logging
         hegadb_protocol
         hegadb_server_transport
-        hegadb_catalog
+        # TODO: CHANGE THIS TO SERVER, this is temprorary workaround
+        hegadb_catalog_client
         hegadb_operations
         hegadb_types
         hegadb_crypto

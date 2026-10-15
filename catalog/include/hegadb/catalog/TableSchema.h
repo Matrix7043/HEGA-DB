@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "ColumnSchema.h"
+#include "hegadb/catalog/ColumnSchema.h"
 
 namespace hegadb::catalog {
 

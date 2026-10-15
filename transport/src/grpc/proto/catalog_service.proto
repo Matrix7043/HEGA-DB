@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package hegadb.transport.grpc;
+
+import "catalog.proto";
+
+service CatalogService {
+
+  rpc GetCatalogVersion(hegadb.protocol.catalog.GetCatalogVersionRequest)
+    returns (hegadb.protocol.catalog.GetCatalogVersionResponse);
+
+  rpc GetTable(hegadb.protocol.catalog.GetTableRequest)
+    returns (hegadb.protocol.catalog.GetTableResponse);
+
+  rpc GetCatalog(hegadb.protocol.catalog.GetCatalogRequest)
+    returns (hegadb.protocol.catalog.GetCatalogResponse);
+
+  rpc CreateTable(hegadb.protocol.catalog.CreateTableRequest)
+    returns (hegadb.protocol.catalog.CreateTableResponse);
+
+  rpc DropTable(hegadb.protocol.catalog.DropTableRequest)
+    returns (hegadb.protocol.catalog.DropTableResponse);
+
+}
