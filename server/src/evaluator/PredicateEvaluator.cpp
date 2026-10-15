@@ -49,6 +49,9 @@ crypto::OpenFHECiphertext PredicateEvaluator::evaluateValueExpr(
         using T = std::decay_t<decltype(arg)>;
 
         if constexpr (std::is_same_v<T, planner::ColumnRefExpr>) {
+            if (!arg.table.empty() && batch.hasColumn(arg.table + "." + arg.column)) {
+                return batch.getColumn(arg.table + "." + arg.column);
+            }
             return batch.getColumn(arg.column);
         }
         else if constexpr (std::is_same_v<T, planner::ParameterRefExpr>) {

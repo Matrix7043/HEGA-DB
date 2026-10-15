@@ -37,6 +37,11 @@ public:
      */
     execution::EncryptedMask getAccumulatedMask() const;
 
+    /**
+     * @brief Get the child operator
+     */
+    Operator* getChild() const { return child_.get(); }
+
 private:
     std::unique_ptr<Operator> child_;
     planner::ExprPtr predicate_;

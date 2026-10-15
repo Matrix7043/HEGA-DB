@@ -32,6 +32,7 @@ add_library(hegadb_server
     # Operators
     src/operators/TableScanOperator.cpp
     src/operators/FilterOperator.cpp
+    src/operators/JoinOperator.cpp
     src/operators/ProjectionOperator.cpp
 
     # Evaluators

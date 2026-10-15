@@ -1,5 +1,6 @@
 #include <hegadb/server/operators/ProjectionOperator.h>
 #include <hegadb/server/operators/FilterOperator.h>
+#include <hegadb/server/operators/JoinOperator.h>
 
 namespace hegadb::server::operators {
 
@@ -33,6 +34,15 @@ std::optional<execution::ExecutionBatch> ProjectionOperator::next() {
     for (auto const& col_name : column_names_) {
         if (batch->hasColumn(col_name)) {
             projected_batch.addColumn(col_name, batch->getColumn(col_name));
+        } else {
+            // Fallback: match without table qualifier if available
+            auto dot_pos = col_name.find('.');
+            if (dot_pos != std::string::npos) {
+                auto bare_name = col_name.substr(dot_pos + 1);
+                if (batch->hasColumn(bare_name)) {
+                    projected_batch.addColumn(col_name, batch->getColumn(bare_name));
+                }
+            }
         }
     }
 
@@ -48,5 +58,10 @@ void ProjectionOperator::close() {
 FilterOperator* ProjectionOperator::getFilterChild() {
     return dynamic_cast<FilterOperator*>(child_.get());
 }
+
+JoinOperator* ProjectionOperator::getJoinChild() {
+    return dynamic_cast<JoinOperator*>(child_.get());
+}
+
 
 } // namespace hegadb::server::operators

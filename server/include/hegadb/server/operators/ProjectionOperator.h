@@ -9,6 +9,7 @@ namespace hegadb::server::operators {
 
 // Forward declaration
 class FilterOperator;
+class JoinOperator;
 
 /**
  * @brief Operator that projects selected columns
@@ -36,6 +37,13 @@ public:
      * @return Pointer to FilterOperator child, or nullptr if child is not a filter
      */
     FilterOperator* getFilterChild();
+
+    /**
+    * @brief Get the child operator as a JoinOperator if it is one
+    */
+    JoinOperator* getJoinChild();
+
+    Operator* getChild() { return child_.get(); }
 
 private:
     std::unique_ptr<Operator> child_;

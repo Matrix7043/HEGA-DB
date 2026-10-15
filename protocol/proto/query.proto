@@ -67,10 +67,22 @@ message TableRef {
   string table = 1;
 }
 
+enum JoinType {
+  JOIN_TYPE_UNSPECIFIED = 0;
+  JOIN_TYPE_INNER = 1;
+}
+
+message JoinClause {
+  JoinType type = 1;
+  TableRef table = 2;
+  Expression condition = 3;
+}
+
 message SelectStatement {
   repeated Expression projections = 1;
   TableRef from_table = 2;
   Expression where = 3;
+  repeated JoinClause joins = 4;
 }
 
 message Statement {

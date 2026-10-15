@@ -1,11 +1,14 @@
 #include <hegadb/server/execution/ExecutionEngine.h>
 #include <hegadb/server/operators/FilterOperator.h>
+#include <hegadb/server/operators/JoinOperator.h>
 #include <hegadb/server/operators/ProjectionOperator.h>
+#include <hegadb/server/evaluator/LogicalEvaluator.h>
 #include <hegadb/server/result/MaskedRowsResultStrategy.h>
 #include <hegadb/server/result/RowsAndMaskResultStrategy.h>
 #include <hegadb/crypto/OpenFHECiphertext.h>
 #include <hegadb/types/DataType.h>
 #include <stdexcept>
+#include <optional>
 
 namespace hegadb::server::execution {
 
@@ -20,17 +23,20 @@ ExecutionResult ExecutionEngine::execute(
 
     auto& root = plan.getRoot();
     
-    // Try to identify if we have a FilterOperator in the plan
-    // The typical structure is: ProjectionOperator -> FilterOperator -> TableScanOperator
+    // Identify operators in the plan
     operators::FilterOperator* filter_op = nullptr;
-    
-    // Check if root is a ProjectionOperator (most common case)
-    if (auto* proj_op = dynamic_cast<operators::ProjectionOperator*>(&root)) {
-        // ProjectionOperator has a child - check if it's a FilterOperator
-        filter_op = proj_op->getFilterChild();
-    } else {
-        // Root might be FilterOperator directly (less common)
-        filter_op = dynamic_cast<operators::FilterOperator*>(&root);
+    operators::JoinOperator* join_op = nullptr;
+
+    operators::Operator* current = &root;
+    if (auto* proj_op = dynamic_cast<operators::ProjectionOperator*>(current)) {
+        current = proj_op->getChild();
+    }
+    if (auto* f_op = dynamic_cast<operators::FilterOperator*>(current)) {
+        filter_op = f_op;
+        current = f_op->getChild();
+    }
+    if (auto* j_op = dynamic_cast<operators::JoinOperator*>(current)) {
+        join_op = j_op;
     }
     
     // Execute the plan
@@ -52,18 +58,34 @@ ExecutionResult ExecutionEngine::execute(
         result.addBatch(std::move(batch));
     }
     
-    // Extract mask from FilterOperator if present
-    if (filter_op != nullptr) {
+    // Extract and combine masks if present
+    std::optional<EncryptedMask> final_mask;
+
+    if (join_op != nullptr) {
         try {
-            auto mask = filter_op->getAccumulatedMask();
-            result.setEncryptedMask(std::move(mask));
+            final_mask = join_op->getAccumulatedMask();
         } catch (std::exception const& e) {
-            // FilterOperator may not have a mask if no data was processed
-            // This is fine - proceed without mask
+            // JoinOperator may not have a mask if no data was processed
         }
     }
-    
-    // If no filter exists, we don't set a mask (all rows implicitly pass)
+
+    if (filter_op != nullptr) {
+        try {
+            auto f_mask = filter_op->getAccumulatedMask();
+            if (final_mask.has_value()) {
+                evaluator::LogicalEvaluator logical_eval(context.getCryptoContext());
+                final_mask = logical_eval.evaluateAND(*final_mask, f_mask);
+            } else {
+                final_mask = std::move(f_mask);
+            }
+        } catch (std::exception const& e) {
+            // FilterOperator may not have a mask if no data was processed
+        }
+    }
+
+    if (final_mask.has_value()) {
+        result.setEncryptedMask(std::move(*final_mask));
+    }
 
     return result;
 }

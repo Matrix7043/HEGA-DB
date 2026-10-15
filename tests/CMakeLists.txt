@@ -413,6 +413,21 @@ target_link_libraries(end_to_end_execution_tests
 
 gtest_discover_tests(end_to_end_execution_tests)
 
+add_executable(join_query_tests
+    server/join_query_tests.cpp
+)
+
+target_link_libraries(join_query_tests
+    PRIVATE
+        hegadb_server
+        hegadb_catalog
+        hegadb_crypto
+        hegadb_protocol
+        GTest::gtest_main
+)
+
+gtest_discover_tests(join_query_tests)
+
 # ============================================================
 # Integration Tests
 # ============================================================
