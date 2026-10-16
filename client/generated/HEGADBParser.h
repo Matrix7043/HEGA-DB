@@ -15,15 +15,18 @@ public:
     SELECT = 1, FROM = 2, WHERE = 3, AND = 4, OR = 5, NOT = 6, TRUE = 7, 
     FALSE = 8, EQ = 9, NEQ = 10, LTE = 11, GTE = 12, LT = 13, GT = 14, STAR = 15, 
     COMMA = 16, LPAREN = 17, RPAREN = 18, SEMICOLON = 19, INTEGER_LITERAL = 20, 
-    STRING_LITERAL = 21, IDENTIFIER = 22, WS = 23, LINE_COMMENT = 24, BLOCK_COMMENT = 25
+    STRING_LITERAL = 21, IDENTIFIER = 22, WS = 23, LINE_COMMENT = 24, BLOCK_COMMENT = 25, 
+    CREATE = 26, TABLE = 27, NULL_ = 28, INTEGER = 29, FLOAT = 30, STRING = 31, 
+    BOOLEAN = 32, DROP = 33
   };
 
   enum {
-    RuleQuery = 0, RuleSelectStatement = 1, RuleSelectList = 2, RuleTableName = 3, 
-    RuleWhereClause = 4, RuleBooleanExpression = 5, RuleOrExpression = 6, 
-    RuleAndExpression = 7, RuleNotExpression = 8, RuleComparisonExpression = 9, 
-    RuleComparisonOperator = 10, RuleOperand = 11, RuleColumnName = 12, 
-    RuleLiteral = 13
+    RuleQuery = 0, RuleStatement = 1, RuleSelectStatement = 2, RuleCreateTableStatement = 3, 
+    RuleColumnDefinition = 4, RuleNullability = 5, RuleDataType = 6, RuleDropTableStatement = 7, 
+    RuleSelectList = 8, RuleTableName = 9, RuleWhereClause = 10, RuleBooleanExpression = 11, 
+    RuleOrExpression = 12, RuleAndExpression = 13, RuleNotExpression = 14, 
+    RuleComparisonExpression = 15, RuleComparisonOperator = 16, RuleOperand = 17, 
+    RuleColumnName = 18, RuleLiteral = 19
   };
 
   explicit HEGADBParser(antlr4::TokenStream *input);
@@ -44,7 +47,13 @@ public:
 
 
   class QueryContext;
+  class StatementContext;
   class SelectStatementContext;
+  class CreateTableStatementContext;
+  class ColumnDefinitionContext;
+  class NullabilityContext;
+  class DataTypeContext;
+  class DropTableStatementContext;
   class SelectListContext;
   class TableNameContext;
   class WhereClauseContext;
@@ -62,7 +71,7 @@ public:
   public:
     QueryContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
-    SelectStatementContext *selectStatement();
+    StatementContext *statement();
     antlr4::tree::TerminalNode *EOF();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -73,6 +82,23 @@ public:
   };
 
   QueryContext* query();
+
+  class  StatementContext : public antlr4::ParserRuleContext {
+  public:
+    StatementContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    SelectStatementContext *selectStatement();
+    CreateTableStatementContext *createTableStatement();
+    DropTableStatementContext *dropTableStatement();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  StatementContext* statement();
 
   class  SelectStatementContext : public antlr4::ParserRuleContext {
   public:
@@ -93,6 +119,99 @@ public:
   };
 
   SelectStatementContext* selectStatement();
+
+  class  CreateTableStatementContext : public antlr4::ParserRuleContext {
+  public:
+    CreateTableStatementContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *CREATE();
+    antlr4::tree::TerminalNode *TABLE();
+    TableNameContext *tableName();
+    antlr4::tree::TerminalNode *LPAREN();
+    std::vector<ColumnDefinitionContext *> columnDefinition();
+    ColumnDefinitionContext* columnDefinition(size_t i);
+    antlr4::tree::TerminalNode *RPAREN();
+    std::vector<antlr4::tree::TerminalNode *> COMMA();
+    antlr4::tree::TerminalNode* COMMA(size_t i);
+    antlr4::tree::TerminalNode *SEMICOLON();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  CreateTableStatementContext* createTableStatement();
+
+  class  ColumnDefinitionContext : public antlr4::ParserRuleContext {
+  public:
+    ColumnDefinitionContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    ColumnNameContext *columnName();
+    DataTypeContext *dataType();
+    NullabilityContext *nullability();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  ColumnDefinitionContext* columnDefinition();
+
+  class  NullabilityContext : public antlr4::ParserRuleContext {
+  public:
+    NullabilityContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *NOT();
+    antlr4::tree::TerminalNode *NULL_();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  NullabilityContext* nullability();
+
+  class  DataTypeContext : public antlr4::ParserRuleContext {
+  public:
+    DataTypeContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *INTEGER();
+    antlr4::tree::TerminalNode *FLOAT();
+    antlr4::tree::TerminalNode *STRING();
+    antlr4::tree::TerminalNode *BOOLEAN();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  DataTypeContext* dataType();
+
+  class  DropTableStatementContext : public antlr4::ParserRuleContext {
+  public:
+    DropTableStatementContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *DROP();
+    antlr4::tree::TerminalNode *TABLE();
+    TableNameContext *tableName();
+    antlr4::tree::TerminalNode *SEMICOLON();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  DropTableStatementContext* dropTableStatement();
 
   class  SelectListContext : public antlr4::ParserRuleContext {
   public:

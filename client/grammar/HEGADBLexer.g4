@@ -36,6 +36,51 @@ FALSE
     : F A L S E
     ;
 
+NULL
+    : N U L L
+    ;
+
+
+// ============================================================
+// DDL keywords
+// ============================================================
+
+CREATE
+    : C R E A T E
+    ;
+
+DROP
+    : D R O P
+    ;
+
+TABLE
+    : T A B L E
+    ;
+
+
+// ============================================================
+// Data type keywords
+//
+// Mirrors hegadb::types::DataType. No new types are
+// introduced here.
+// ============================================================
+
+INTEGER
+    : I N T E G E R
+    ;
+
+FLOAT
+    : F L O A T
+    ;
+
+STRING
+    : S T R I N G
+    ;
+
+BOOLEAN
+    : B O O L E A N
+    ;
+
 
 // ============================================================
 // Comparison operators

@@ -10,7 +10,13 @@ options {
 // ============================================================
 
 query
-    : selectStatement EOF
+    : statement EOF
+    ;
+
+statement
+    : selectStatement
+    | createTableStatement
+    | dropTableStatement
     ;
 
 
@@ -24,6 +30,52 @@ selectStatement
       FROM
       tableName
       whereClause?
+      SEMICOLON?
+    ;
+
+
+// ============================================================
+// CREATE TABLE statement
+//
+// CREATE TABLE users (id INTEGER NOT NULL, name STRING);
+//
+// Columns are nullable unless NOT NULL is given.
+// ============================================================
+
+createTableStatement
+    : CREATE TABLE
+      tableName
+      LPAREN
+      columnDefinition (COMMA columnDefinition)*
+      RPAREN
+      SEMICOLON?
+    ;
+
+columnDefinition
+    : columnName dataType nullability?
+    ;
+
+nullability
+    : NOT NULL
+    ;
+
+dataType
+    : INTEGER
+    | FLOAT
+    | STRING
+    | BOOLEAN
+    ;
+
+
+// ============================================================
+// DROP TABLE statement
+//
+// DROP TABLE users;
+// ============================================================
+
+dropTableStatement
+    : DROP TABLE
+      tableName
       SEMICOLON?
     ;
 

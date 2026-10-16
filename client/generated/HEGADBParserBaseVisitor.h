@@ -19,7 +19,31 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitStatement(HEGADBParser::StatementContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitSelectStatement(HEGADBParser::SelectStatementContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitCreateTableStatement(HEGADBParser::CreateTableStatementContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitColumnDefinition(HEGADBParser::ColumnDefinitionContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitNullability(HEGADBParser::NullabilityContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitDataType(HEGADBParser::DataTypeContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitDropTableStatement(HEGADBParser::DropTableStatementContext *ctx) override {
     return visitChildren(ctx);
   }
 
