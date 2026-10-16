@@ -28,6 +28,26 @@ protocol::QueryResponse ExecuteQueryReceiver::executeQuery(
             "Protocol version mismatch: " + error_message);
     }
 
+    // CREATE TABLE / DROP TABLE reach the server but are not implemented yet.
+    switch (request.statement().statement_case()) {
+    case protocol::Statement::kCreateTableStatement:
+        return createResponse(
+            request.protocol_version(),
+            request.request_id(),
+            protocol::STATUS_ERROR,
+            "CREATE TABLE '" + request.statement().create_table_statement().table() + "' is not implemented yet");
+
+    case protocol::Statement::kDropTableStatement:
+        return createResponse(
+            request.protocol_version(),
+            request.request_id(),
+            protocol::STATUS_ERROR,
+            "DROP TABLE '" + request.statement().drop_table_statement().table() + "' is not implemented yet");
+
+    default:
+        break;
+    }
+
     // Execute
     try {
         auto const& select = request.statement().select_statement();

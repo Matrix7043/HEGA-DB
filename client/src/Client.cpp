@@ -145,12 +145,53 @@ int Client::run()
         logging::debug(
             "Semantic validation completed successfully");
 
-        // CREATE TABLE / DROP TABLE are validated but not executed yet.
+        // SELECT continues below; CREATE TABLE / DROP TABLE take the DDL path.
         auto const* select_stmt = dynamic_cast<ast::SelectStmt const*>(ast.get());
 
         if (select_stmt == nullptr) {
-            std::cout << "Statement is valid, but CREATE TABLE / DROP TABLE "
-                         "execution is not supported yet.\n";
+            // CREATE TABLE / DROP TABLE: no encryption or query preparation,
+            // the validated statement is sent to the server as it is.
+            try {
+                logging::debug(
+                    "Encoding DDL request: query_id={}",
+                    queryId);
+
+                auto request = hegadb::client::protocol::ExecuteQueryEncoder::encodeDdl(
+                    *ast, queryId);
+
+                std::cout << "Sending statement to server...\n";
+
+                auto response = transport->execute(request);
+
+                logging::debug(
+                    "Received DDL response: query_id={} status={}",
+                    queryId,
+                    static_cast<int>(response.status().code()));
+
+                std::cout
+                    << "Server response:\n"
+                    << "  Request ID: "
+                    << response.request_id().value()
+                    << '\n'
+                    << "  Status: "
+                    << response.status().code()
+                    << '\n'
+                    << "  Message: "
+                    << response.status().message()
+                    << "\n\n";
+
+            } catch (std::exception const& error) {
+                std::cout
+                    << "Statement execution failed: "
+                    << error.what()
+                    << '\n';
+
+                logging::error(
+                    "DDL execution failed: query_id={} error={}",
+                    queryId,
+                    error.what());
+            }
+
             continue;
         }
 

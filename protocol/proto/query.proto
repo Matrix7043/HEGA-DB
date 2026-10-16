@@ -73,9 +73,37 @@ message SelectStatement {
   Expression where = 3;
 }
 
+// Mirrors hegadb::types::DataType.
+enum DataType {
+  DATA_TYPE_UNSPECIFIED = 0;
+  DATA_TYPE_INTEGER = 1;
+  DATA_TYPE_FLOAT = 2;
+  DATA_TYPE_STRING = 3;
+  DATA_TYPE_BOOLEAN = 4;
+}
+
+// A column in a CREATE TABLE statement. The column's ordinal is its
+// position in CreateTableStatement.columns.
+message ColumnDefinition {
+  string name = 1;
+  DataType data_type = 2;
+  bool nullable = 3;
+}
+
+message CreateTableStatement {
+  string table = 1;
+  repeated ColumnDefinition columns = 2;
+}
+
+message DropTableStatement {
+  string table = 1;
+}
+
 message Statement {
   oneof statement {
     SelectStatement select_statement = 1;
+    CreateTableStatement create_table_statement = 2;
+    DropTableStatement drop_table_statement = 3;
   }
 }
 

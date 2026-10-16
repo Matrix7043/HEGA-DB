@@ -427,6 +427,26 @@ gtest_discover_tests(server_receiver_tests)
 
 
 # ============================================================
+# DDL protocol tests (encoder + client -> gRPC -> server)
+# ============================================================
+
+add_executable(ddl_protocol_tests
+    client/ddl_protocol_tests.cpp
+)
+
+target_link_libraries(ddl_protocol_tests
+    PRIVATE
+        hegadb_client_core
+        hegadb_server
+        hegadb_server_transport
+        hegadb_client_transport
+        GTest::gtest_main
+)
+
+gtest_discover_tests(ddl_protocol_tests)
+
+
+# ============================================================
 # Server Storage Tests
 # ============================================================
 
@@ -444,5 +464,6 @@ target_link_libraries(storage_tests
 )
 
 gtest_discover_tests(storage_tests)
+
 
 
