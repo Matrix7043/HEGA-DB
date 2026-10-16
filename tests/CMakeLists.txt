@@ -52,6 +52,20 @@ add_test(
     COMMAND ast_builder_tests
 )
 
+add_executable(ast_builder_ddl_tests
+    client/ast_builder_ddl_tests.cpp
+)
+
+target_link_libraries(ast_builder_ddl_tests
+    PRIVATE
+        hegadb_client_core
+)
+
+add_test(
+    NAME ast_builder_ddl_tests
+    COMMAND ast_builder_ddl_tests
+)
+
 add_executable(ast_parameterizer_tests
     client/ast_parameterizer_tests.cpp
 )
@@ -79,6 +93,20 @@ target_link_libraries(semantic_validator_tests
 add_test(
     NAME semantic_validator_tests
     COMMAND semantic_validator_tests
+)
+
+add_executable(semantic_validator_ddl_tests
+    client/semantic_validator_ddl_tests.cpp
+)
+
+target_link_libraries(semantic_validator_ddl_tests
+    PRIVATE
+        hegadb_client_core
+)
+
+add_test(
+    NAME semantic_validator_ddl_tests
+    COMMAND semantic_validator_ddl_tests
 )
 
 

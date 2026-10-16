@@ -4,8 +4,11 @@
 #include "hegadb/catalog/Catalog.h"
 #include "hegadb/catalog/TableSchema.h"
 #include "hegadb/client/ast/ComparisonExpr.h"
+#include "hegadb/client/ast/CreateTableStmt.h"
+#include "hegadb/client/ast/DropTableStmt.h"
 #include "hegadb/client/ast/Expr.h"
 #include "hegadb/client/ast/SelectStmt.h"
+#include "hegadb/client/ast/Statement.h"
 #include "hegadb/types/DataType.h"
 
 namespace hegadb::client::semantic {
@@ -14,7 +17,19 @@ class SemanticValidator {
 
 public:
     SemanticValidator(catalog::Catalog const& catalog);
+
+    // Dispatches on stmt.kind() to one of the overloads below.
+    // Throws std::invalid_argument for an unsupported statement kind.
+    void validate(ast::Statement const& stmt) const;
+
     void validate(ast::SelectStmt const& stmt) const;
+
+    // The table must not already exist, must have at least one column,
+    // column names must be unique, and every type must be supported.
+    void validate(ast::CreateTableStmt const& stmt) const;
+
+    // The table must exist.
+    void validate(ast::DropTableStmt const& stmt) const;
 
 private:
     catalog::Catalog const& catalog_;

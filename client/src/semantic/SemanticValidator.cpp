@@ -11,12 +11,90 @@
 
 #include <stdexcept>
 #include <string>
+#include <unordered_set>
 
 namespace hegadb::client::semantic {
 
 SemanticValidator::SemanticValidator(catalog::Catalog const& catalog)
     : catalog_(catalog)
 {
+}
+
+void SemanticValidator::validate(ast::Statement const& stmt) const
+{
+    switch (stmt.kind()) {
+
+    case ast::ASTNodeKind::SelectStmt:
+        validate(static_cast<ast::SelectStmt const&>(stmt));
+        return;
+
+    case ast::ASTNodeKind::CreateTableStmt:
+        validate(static_cast<ast::CreateTableStmt const&>(stmt));
+        return;
+
+    case ast::ASTNodeKind::DropTableStmt:
+        validate(static_cast<ast::DropTableStmt const&>(stmt));
+        return;
+
+    default:
+        throw std::invalid_argument(
+            "SemanticValidator: unsupported statement kind");
+    }
+}
+
+void SemanticValidator::validate(ast::CreateTableStmt const& stmt) const
+{
+    std::string const& table_name = stmt.tableName();
+
+    if (table_name.empty()) {
+        throw SemanticError(SemanticErrorKind::InvalidTableDefinition,
+            "table name must not be empty");
+    }
+
+    if (catalog_.findTable(table_name) != nullptr) {
+        throw SemanticError(SemanticErrorKind::TableAlreadyExists,
+            "table '" + table_name + "' already exists");
+    }
+
+    if (stmt.columns().empty()) {
+        throw SemanticError(SemanticErrorKind::InvalidTableDefinition,
+            "table '" + table_name + "' must have at least one column");
+    }
+
+    std::unordered_set<std::string> seen;
+
+    for (auto const& column : stmt.columns()) {
+
+        if (column.name.empty()) {
+            throw SemanticError(SemanticErrorKind::InvalidTableDefinition,
+                "column name must not be empty in table '" + table_name + "'");
+        }
+
+        if (!seen.insert(column.name).second) {
+            throw SemanticError(SemanticErrorKind::DuplicateColumn,
+                "duplicate column '" + column.name + "' in table '" + table_name + "'");
+        }
+
+        switch (column.type) {
+        case types::DataType::Integer:
+        case types::DataType::Float:
+        case types::DataType::String:
+        case types::DataType::Boolean:
+            break;
+
+        default:
+            throw SemanticError(SemanticErrorKind::InvalidTableDefinition,
+                "column '" + column.name + "' has an unsupported data type");
+        }
+    }
+}
+
+void SemanticValidator::validate(ast::DropTableStmt const& stmt) const
+{
+    if (catalog_.findTable(stmt.tableName()) == nullptr) {
+        throw SemanticError(SemanticErrorKind::TableNotFound,
+            "table '" + stmt.tableName() + "' does not exist");
+    }
 }
 
 void SemanticValidator::validate(ast::SelectStmt const& stmt) const
