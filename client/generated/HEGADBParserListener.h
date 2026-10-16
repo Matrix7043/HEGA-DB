@@ -41,6 +41,15 @@ public:
   virtual void enterSelectList(HEGADBParser::SelectListContext *ctx) = 0;
   virtual void exitSelectList(HEGADBParser::SelectListContext *ctx) = 0;
 
+  virtual void enterSelectItem(HEGADBParser::SelectItemContext *ctx) = 0;
+  virtual void exitSelectItem(HEGADBParser::SelectItemContext *ctx) = 0;
+
+  virtual void enterJoinClause(HEGADBParser::JoinClauseContext *ctx) = 0;
+  virtual void exitJoinClause(HEGADBParser::JoinClauseContext *ctx) = 0;
+
+  virtual void enterQualifiedColumn(HEGADBParser::QualifiedColumnContext *ctx) = 0;
+  virtual void exitQualifiedColumn(HEGADBParser::QualifiedColumnContext *ctx) = 0;
+
   virtual void enterTableName(HEGADBParser::TableNameContext *ctx) = 0;
   virtual void exitTableName(HEGADBParser::TableNameContext *ctx) = 0;
 

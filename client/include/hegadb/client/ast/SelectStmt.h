@@ -2,6 +2,7 @@
 #define SELECT_STMT_H
 
 #include "Expr.h"
+#include "JoinClause.h"
 #include "Statement.h"
 #include "TableRef.h"
 
@@ -23,6 +24,11 @@ public:
     }
     TableRef const* from() const { return from_.get(); }
 
+    // INNER JOIN clause. A SELECT has either a JOIN or a WHERE, never both.
+    void setJoin(std::unique_ptr<JoinClause> join) { join_ = std::move(join); }
+
+    JoinClause const* join() const { return join_.get(); }
+
     void setWhere(std::unique_ptr<Expr> expr) { where_ = std::move(expr); }
 
     Expr const* where() const { return where_.get(); }
@@ -32,6 +38,7 @@ public:
 private:
     std::vector<std::unique_ptr<Expr>> projections_;
     std::unique_ptr<TableRef> from_;
+    std::unique_ptr<JoinClause> join_;
     std::unique_ptr<Expr> where_;
 };
 

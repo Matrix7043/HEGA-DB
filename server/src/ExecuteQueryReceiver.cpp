@@ -28,8 +28,22 @@ protocol::QueryResponse ExecuteQueryReceiver::executeQuery(
             "Protocol version mismatch: " + error_message);
     }
 
-    // CREATE TABLE / DROP TABLE reach the server but are not implemented yet.
+    // CREATE TABLE / DROP TABLE / INNER JOIN reach the server but are not
+    // implemented yet.
     switch (request.statement().statement_case()) {
+    case protocol::Statement::kSelectStatement:
+        // INNER JOIN reaches the server but is not implemented yet.
+        if (request.statement().select_statement().has_join()) {
+            auto const& select_statement = request.statement().select_statement();
+
+            return createResponse(
+                request.protocol_version(),
+                request.request_id(),
+                protocol::STATUS_ERROR,
+                "INNER JOIN of '" + select_statement.from_table().table() + "' and '" + select_statement.join().right_table().table() + "' is not implemented yet");
+        }
+        break;
+
     case protocol::Statement::kCreateTableStatement:
         return createResponse(
             request.protocol_version(),

@@ -54,69 +54,77 @@ void hegadbparserParserInitialize() {
   auto staticData = std::make_unique<HEGADBParserStaticData>(
     std::vector<std::string>{
       "query", "statement", "selectStatement", "createTableStatement", "columnDefinition", 
-      "nullability", "dataType", "dropTableStatement", "selectList", "tableName", 
-      "whereClause", "booleanExpression", "orExpression", "andExpression", 
-      "notExpression", "comparisonExpression", "comparisonOperator", "operand", 
-      "columnName", "literal"
+      "nullability", "dataType", "dropTableStatement", "selectList", "selectItem", 
+      "joinClause", "qualifiedColumn", "tableName", "whereClause", "booleanExpression", 
+      "orExpression", "andExpression", "notExpression", "comparisonExpression", 
+      "comparisonOperator", "operand", "columnName", "literal"
     },
     std::vector<std::string>{
       "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", 
-      "'='", "'!='", "'<='", "'>='", "'<'", "'>'", "'*'", "','", "'('", 
-      "')'", "';'"
+      "", "", "", "'='", "'!='", "'<='", "'>='", "'<'", "'>'", "'*'", "','", 
+      "'.'", "'('", "')'", "';'"
     },
     std::vector<std::string>{
       "", "SELECT", "FROM", "WHERE", "AND", "OR", "NOT", "TRUE", "FALSE", 
-      "NULL_", "CREATE", "DROP", "TABLE", "INTEGER", "FLOAT", "STRING", 
-      "BOOLEAN", "EQ", "NEQ", "LTE", "GTE", "LT", "GT", "STAR", "COMMA", 
-      "LPAREN", "RPAREN", "SEMICOLON", "INTEGER_LITERAL", "STRING_LITERAL", 
-      "IDENTIFIER", "WS", "LINE_COMMENT", "BLOCK_COMMENT"
+      "NULL_", "CREATE", "DROP", "TABLE", "INNER", "JOIN", "ON", "INTEGER", 
+      "FLOAT", "STRING", "BOOLEAN", "EQ", "NEQ", "LTE", "GTE", "LT", "GT", 
+      "STAR", "COMMA", "DOT", "LPAREN", "RPAREN", "SEMICOLON", "INTEGER_LITERAL", 
+      "STRING_LITERAL", "IDENTIFIER", "WS", "LINE_COMMENT", "BLOCK_COMMENT"
     }
   );
   static const int32_t serializedATNSegment[] = {
-  	4,1,33,148,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,
+  	4,1,37,173,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,
   	7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,2,14,7,
-  	14,2,15,7,15,2,16,7,16,2,17,7,17,2,18,7,18,2,19,7,19,1,0,1,0,1,0,1,1,
-  	1,1,1,1,3,1,47,8,1,1,2,1,2,1,2,1,2,1,2,3,2,54,8,2,1,2,3,2,57,8,2,1,3,
-  	1,3,1,3,1,3,1,3,1,3,1,3,5,3,66,8,3,10,3,12,3,69,9,3,1,3,1,3,3,3,73,8,
-  	3,1,4,1,4,1,4,3,4,78,8,4,1,5,1,5,1,5,1,6,1,6,1,7,1,7,1,7,1,7,3,7,89,8,
-  	7,1,8,1,8,1,8,1,8,5,8,95,8,8,10,8,12,8,98,9,8,3,8,100,8,8,1,9,1,9,1,10,
-  	1,10,1,10,1,11,1,11,1,12,1,12,1,12,5,12,112,8,12,10,12,12,12,115,9,12,
-  	1,13,1,13,1,13,5,13,120,8,13,10,13,12,13,123,9,13,1,14,1,14,1,14,1,14,
-  	1,14,1,14,1,14,3,14,132,8,14,1,15,1,15,1,15,1,15,1,16,1,16,1,17,1,17,
-  	3,17,142,8,17,1,18,1,18,1,19,1,19,1,19,0,0,20,0,2,4,6,8,10,12,14,16,18,
-  	20,22,24,26,28,30,32,34,36,38,0,3,1,0,13,16,1,0,17,22,2,0,7,8,28,29,142,
-  	0,40,1,0,0,0,2,46,1,0,0,0,4,48,1,0,0,0,6,58,1,0,0,0,8,74,1,0,0,0,10,79,
-  	1,0,0,0,12,82,1,0,0,0,14,84,1,0,0,0,16,99,1,0,0,0,18,101,1,0,0,0,20,103,
-  	1,0,0,0,22,106,1,0,0,0,24,108,1,0,0,0,26,116,1,0,0,0,28,131,1,0,0,0,30,
-  	133,1,0,0,0,32,137,1,0,0,0,34,141,1,0,0,0,36,143,1,0,0,0,38,145,1,0,0,
-  	0,40,41,3,2,1,0,41,42,5,0,0,1,42,1,1,0,0,0,43,47,3,4,2,0,44,47,3,6,3,
-  	0,45,47,3,14,7,0,46,43,1,0,0,0,46,44,1,0,0,0,46,45,1,0,0,0,47,3,1,0,0,
-  	0,48,49,5,1,0,0,49,50,3,16,8,0,50,51,5,2,0,0,51,53,3,18,9,0,52,54,3,20,
-  	10,0,53,52,1,0,0,0,53,54,1,0,0,0,54,56,1,0,0,0,55,57,5,27,0,0,56,55,1,
-  	0,0,0,56,57,1,0,0,0,57,5,1,0,0,0,58,59,5,10,0,0,59,60,5,12,0,0,60,61,
-  	3,18,9,0,61,62,5,25,0,0,62,67,3,8,4,0,63,64,5,24,0,0,64,66,3,8,4,0,65,
-  	63,1,0,0,0,66,69,1,0,0,0,67,65,1,0,0,0,67,68,1,0,0,0,68,70,1,0,0,0,69,
-  	67,1,0,0,0,70,72,5,26,0,0,71,73,5,27,0,0,72,71,1,0,0,0,72,73,1,0,0,0,
-  	73,7,1,0,0,0,74,75,3,36,18,0,75,77,3,12,6,0,76,78,3,10,5,0,77,76,1,0,
-  	0,0,77,78,1,0,0,0,78,9,1,0,0,0,79,80,5,6,0,0,80,81,5,9,0,0,81,11,1,0,
-  	0,0,82,83,7,0,0,0,83,13,1,0,0,0,84,85,5,11,0,0,85,86,5,12,0,0,86,88,3,
-  	18,9,0,87,89,5,27,0,0,88,87,1,0,0,0,88,89,1,0,0,0,89,15,1,0,0,0,90,100,
-  	5,23,0,0,91,96,3,36,18,0,92,93,5,24,0,0,93,95,3,36,18,0,94,92,1,0,0,0,
-  	95,98,1,0,0,0,96,94,1,0,0,0,96,97,1,0,0,0,97,100,1,0,0,0,98,96,1,0,0,
-  	0,99,90,1,0,0,0,99,91,1,0,0,0,100,17,1,0,0,0,101,102,5,30,0,0,102,19,
-  	1,0,0,0,103,104,5,3,0,0,104,105,3,22,11,0,105,21,1,0,0,0,106,107,3,24,
-  	12,0,107,23,1,0,0,0,108,113,3,26,13,0,109,110,5,5,0,0,110,112,3,26,13,
-  	0,111,109,1,0,0,0,112,115,1,0,0,0,113,111,1,0,0,0,113,114,1,0,0,0,114,
-  	25,1,0,0,0,115,113,1,0,0,0,116,121,3,28,14,0,117,118,5,4,0,0,118,120,
-  	3,28,14,0,119,117,1,0,0,0,120,123,1,0,0,0,121,119,1,0,0,0,121,122,1,0,
-  	0,0,122,27,1,0,0,0,123,121,1,0,0,0,124,125,5,6,0,0,125,132,3,28,14,0,
-  	126,127,5,25,0,0,127,128,3,22,11,0,128,129,5,26,0,0,129,132,1,0,0,0,130,
-  	132,3,30,15,0,131,124,1,0,0,0,131,126,1,0,0,0,131,130,1,0,0,0,132,29,
-  	1,0,0,0,133,134,3,34,17,0,134,135,3,32,16,0,135,136,3,34,17,0,136,31,
-  	1,0,0,0,137,138,7,1,0,0,138,33,1,0,0,0,139,142,3,36,18,0,140,142,3,38,
-  	19,0,141,139,1,0,0,0,141,140,1,0,0,0,142,35,1,0,0,0,143,144,5,30,0,0,
-  	144,37,1,0,0,0,145,146,7,2,0,0,146,39,1,0,0,0,13,46,53,56,67,72,77,88,
-  	96,99,113,121,131,141
+  	14,2,15,7,15,2,16,7,16,2,17,7,17,2,18,7,18,2,19,7,19,2,20,7,20,2,21,7,
+  	21,2,22,7,22,1,0,1,0,1,0,1,1,1,1,1,1,3,1,53,8,1,1,2,1,2,1,2,1,2,1,2,1,
+  	2,3,2,61,8,2,1,2,3,2,64,8,2,1,3,1,3,1,3,1,3,1,3,1,3,1,3,5,3,73,8,3,10,
+  	3,12,3,76,9,3,1,3,1,3,3,3,80,8,3,1,4,1,4,1,4,3,4,85,8,4,1,5,1,5,1,5,1,
+  	6,1,6,1,7,1,7,1,7,1,7,3,7,96,8,7,1,8,1,8,1,8,1,8,5,8,102,8,8,10,8,12,
+  	8,105,9,8,3,8,107,8,8,1,9,1,9,3,9,111,8,9,1,10,3,10,114,8,10,1,10,1,10,
+  	1,10,1,10,1,10,1,10,1,10,1,11,1,11,1,11,1,11,1,12,1,12,1,13,1,13,1,13,
+  	1,14,1,14,1,15,1,15,1,15,5,15,137,8,15,10,15,12,15,140,9,15,1,16,1,16,
+  	1,16,5,16,145,8,16,10,16,12,16,148,9,16,1,17,1,17,1,17,1,17,1,17,1,17,
+  	1,17,3,17,157,8,17,1,18,1,18,1,18,1,18,1,19,1,19,1,20,1,20,3,20,167,8,
+  	20,1,21,1,21,1,22,1,22,1,22,0,0,23,0,2,4,6,8,10,12,14,16,18,20,22,24,
+  	26,28,30,32,34,36,38,40,42,44,0,3,1,0,16,19,1,0,20,25,2,0,7,8,32,33,167,
+  	0,46,1,0,0,0,2,52,1,0,0,0,4,54,1,0,0,0,6,65,1,0,0,0,8,81,1,0,0,0,10,86,
+  	1,0,0,0,12,89,1,0,0,0,14,91,1,0,0,0,16,106,1,0,0,0,18,110,1,0,0,0,20,
+  	113,1,0,0,0,22,122,1,0,0,0,24,126,1,0,0,0,26,128,1,0,0,0,28,131,1,0,0,
+  	0,30,133,1,0,0,0,32,141,1,0,0,0,34,156,1,0,0,0,36,158,1,0,0,0,38,162,
+  	1,0,0,0,40,166,1,0,0,0,42,168,1,0,0,0,44,170,1,0,0,0,46,47,3,2,1,0,47,
+  	48,5,0,0,1,48,1,1,0,0,0,49,53,3,4,2,0,50,53,3,6,3,0,51,53,3,14,7,0,52,
+  	49,1,0,0,0,52,50,1,0,0,0,52,51,1,0,0,0,53,3,1,0,0,0,54,55,5,1,0,0,55,
+  	56,3,16,8,0,56,57,5,2,0,0,57,60,3,24,12,0,58,61,3,20,10,0,59,61,3,26,
+  	13,0,60,58,1,0,0,0,60,59,1,0,0,0,60,61,1,0,0,0,61,63,1,0,0,0,62,64,5,
+  	31,0,0,63,62,1,0,0,0,63,64,1,0,0,0,64,5,1,0,0,0,65,66,5,10,0,0,66,67,
+  	5,12,0,0,67,68,3,24,12,0,68,69,5,29,0,0,69,74,3,8,4,0,70,71,5,27,0,0,
+  	71,73,3,8,4,0,72,70,1,0,0,0,73,76,1,0,0,0,74,72,1,0,0,0,74,75,1,0,0,0,
+  	75,77,1,0,0,0,76,74,1,0,0,0,77,79,5,30,0,0,78,80,5,31,0,0,79,78,1,0,0,
+  	0,79,80,1,0,0,0,80,7,1,0,0,0,81,82,3,42,21,0,82,84,3,12,6,0,83,85,3,10,
+  	5,0,84,83,1,0,0,0,84,85,1,0,0,0,85,9,1,0,0,0,86,87,5,6,0,0,87,88,5,9,
+  	0,0,88,11,1,0,0,0,89,90,7,0,0,0,90,13,1,0,0,0,91,92,5,11,0,0,92,93,5,
+  	12,0,0,93,95,3,24,12,0,94,96,5,31,0,0,95,94,1,0,0,0,95,96,1,0,0,0,96,
+  	15,1,0,0,0,97,107,5,26,0,0,98,103,3,18,9,0,99,100,5,27,0,0,100,102,3,
+  	18,9,0,101,99,1,0,0,0,102,105,1,0,0,0,103,101,1,0,0,0,103,104,1,0,0,0,
+  	104,107,1,0,0,0,105,103,1,0,0,0,106,97,1,0,0,0,106,98,1,0,0,0,107,17,
+  	1,0,0,0,108,111,3,22,11,0,109,111,3,42,21,0,110,108,1,0,0,0,110,109,1,
+  	0,0,0,111,19,1,0,0,0,112,114,5,13,0,0,113,112,1,0,0,0,113,114,1,0,0,0,
+  	114,115,1,0,0,0,115,116,5,14,0,0,116,117,3,24,12,0,117,118,5,15,0,0,118,
+  	119,3,22,11,0,119,120,5,20,0,0,120,121,3,22,11,0,121,21,1,0,0,0,122,123,
+  	3,24,12,0,123,124,5,28,0,0,124,125,3,42,21,0,125,23,1,0,0,0,126,127,5,
+  	34,0,0,127,25,1,0,0,0,128,129,5,3,0,0,129,130,3,28,14,0,130,27,1,0,0,
+  	0,131,132,3,30,15,0,132,29,1,0,0,0,133,138,3,32,16,0,134,135,5,5,0,0,
+  	135,137,3,32,16,0,136,134,1,0,0,0,137,140,1,0,0,0,138,136,1,0,0,0,138,
+  	139,1,0,0,0,139,31,1,0,0,0,140,138,1,0,0,0,141,146,3,34,17,0,142,143,
+  	5,4,0,0,143,145,3,34,17,0,144,142,1,0,0,0,145,148,1,0,0,0,146,144,1,0,
+  	0,0,146,147,1,0,0,0,147,33,1,0,0,0,148,146,1,0,0,0,149,150,5,6,0,0,150,
+  	157,3,34,17,0,151,152,5,29,0,0,152,153,3,28,14,0,153,154,5,30,0,0,154,
+  	157,1,0,0,0,155,157,3,36,18,0,156,149,1,0,0,0,156,151,1,0,0,0,156,155,
+  	1,0,0,0,157,35,1,0,0,0,158,159,3,40,20,0,159,160,3,38,19,0,160,161,3,
+  	40,20,0,161,37,1,0,0,0,162,163,7,1,0,0,163,39,1,0,0,0,164,167,3,42,21,
+  	0,165,167,3,44,22,0,166,164,1,0,0,0,166,165,1,0,0,0,167,41,1,0,0,0,168,
+  	169,5,34,0,0,169,43,1,0,0,0,170,171,7,2,0,0,171,45,1,0,0,0,15,52,60,63,
+  	74,79,84,95,103,106,110,113,138,146,156,166
   };
   staticData->serializedATN = antlr4::atn::SerializedATNView(serializedATNSegment, sizeof(serializedATNSegment) / sizeof(serializedATNSegment[0]));
 
@@ -217,9 +225,9 @@ HEGADBParser::QueryContext* HEGADBParser::query() {
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(40);
+    setState(46);
     statement();
-    setState(41);
+    setState(47);
     match(HEGADBParser::EOF);
    
   }
@@ -287,26 +295,26 @@ HEGADBParser::StatementContext* HEGADBParser::statement() {
     exitRule();
   });
   try {
-    setState(46);
+    setState(52);
     _errHandler->sync(this);
     switch (_input->LA(1)) {
       case HEGADBParser::SELECT: {
         enterOuterAlt(_localctx, 1);
-        setState(43);
+        setState(49);
         selectStatement();
         break;
       }
 
       case HEGADBParser::CREATE: {
         enterOuterAlt(_localctx, 2);
-        setState(44);
+        setState(50);
         createTableStatement();
         break;
       }
 
       case HEGADBParser::DROP: {
         enterOuterAlt(_localctx, 3);
-        setState(45);
+        setState(51);
         dropTableStatement();
         break;
       }
@@ -345,6 +353,10 @@ tree::TerminalNode* HEGADBParser::SelectStatementContext::FROM() {
 
 HEGADBParser::TableNameContext* HEGADBParser::SelectStatementContext::tableName() {
   return getRuleContext<HEGADBParser::TableNameContext>(0);
+}
+
+HEGADBParser::JoinClauseContext* HEGADBParser::SelectStatementContext::joinClause() {
+  return getRuleContext<HEGADBParser::JoinClauseContext>(0);
 }
 
 HEGADBParser::WhereClauseContext* HEGADBParser::SelectStatementContext::whereClause() {
@@ -394,28 +406,44 @@ HEGADBParser::SelectStatementContext* HEGADBParser::selectStatement() {
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(48);
+    setState(54);
     match(HEGADBParser::SELECT);
-    setState(49);
+    setState(55);
     selectList();
-    setState(50);
-    match(HEGADBParser::FROM);
-    setState(51);
-    tableName();
-    setState(53);
-    _errHandler->sync(this);
-
-    _la = _input->LA(1);
-    if (_la == HEGADBParser::WHERE) {
-      setState(52);
-      whereClause();
-    }
     setState(56);
+    match(HEGADBParser::FROM);
+    setState(57);
+    tableName();
+    setState(60);
+    _errHandler->sync(this);
+    switch (_input->LA(1)) {
+      case HEGADBParser::INNER:
+      case HEGADBParser::JOIN: {
+        setState(58);
+        joinClause();
+        break;
+      }
+
+      case HEGADBParser::WHERE: {
+        setState(59);
+        whereClause();
+        break;
+      }
+
+      case HEGADBParser::EOF:
+      case HEGADBParser::SEMICOLON: {
+        break;
+      }
+
+    default:
+      break;
+    }
+    setState(63);
     _errHandler->sync(this);
 
     _la = _input->LA(1);
     if (_la == HEGADBParser::SEMICOLON) {
-      setState(55);
+      setState(62);
       match(HEGADBParser::SEMICOLON);
     }
    
@@ -514,36 +542,36 @@ HEGADBParser::CreateTableStatementContext* HEGADBParser::createTableStatement() 
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(58);
+    setState(65);
     match(HEGADBParser::CREATE);
-    setState(59);
+    setState(66);
     match(HEGADBParser::TABLE);
-    setState(60);
-    tableName();
-    setState(61);
-    match(HEGADBParser::LPAREN);
-    setState(62);
-    columnDefinition();
     setState(67);
+    tableName();
+    setState(68);
+    match(HEGADBParser::LPAREN);
+    setState(69);
+    columnDefinition();
+    setState(74);
     _errHandler->sync(this);
     _la = _input->LA(1);
     while (_la == HEGADBParser::COMMA) {
-      setState(63);
+      setState(70);
       match(HEGADBParser::COMMA);
-      setState(64);
+      setState(71);
       columnDefinition();
-      setState(69);
+      setState(76);
       _errHandler->sync(this);
       _la = _input->LA(1);
     }
-    setState(70);
+    setState(77);
     match(HEGADBParser::RPAREN);
-    setState(72);
+    setState(79);
     _errHandler->sync(this);
 
     _la = _input->LA(1);
     if (_la == HEGADBParser::SEMICOLON) {
-      setState(71);
+      setState(78);
       match(HEGADBParser::SEMICOLON);
     }
    
@@ -614,16 +642,16 @@ HEGADBParser::ColumnDefinitionContext* HEGADBParser::columnDefinition() {
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(74);
+    setState(81);
     columnName();
-    setState(75);
+    setState(82);
     dataType();
-    setState(77);
+    setState(84);
     _errHandler->sync(this);
 
     _la = _input->LA(1);
     if (_la == HEGADBParser::NOT) {
-      setState(76);
+      setState(83);
       nullability();
     }
    
@@ -689,9 +717,9 @@ HEGADBParser::NullabilityContext* HEGADBParser::nullability() {
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(79);
+    setState(86);
     match(HEGADBParser::NOT);
-    setState(80);
+    setState(87);
     match(HEGADBParser::NULL_);
    
   }
@@ -765,10 +793,10 @@ HEGADBParser::DataTypeContext* HEGADBParser::dataType() {
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(82);
+    setState(89);
     _la = _input->LA(1);
     if (!((((_la & ~ 0x3fULL) == 0) &&
-      ((1ULL << _la) & 122880) != 0))) {
+      ((1ULL << _la) & 983040) != 0))) {
     _errHandler->recoverInline(this);
     }
     else {
@@ -847,18 +875,18 @@ HEGADBParser::DropTableStatementContext* HEGADBParser::dropTableStatement() {
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(84);
+    setState(91);
     match(HEGADBParser::DROP);
-    setState(85);
+    setState(92);
     match(HEGADBParser::TABLE);
-    setState(86);
+    setState(93);
     tableName();
-    setState(88);
+    setState(95);
     _errHandler->sync(this);
 
     _la = _input->LA(1);
     if (_la == HEGADBParser::SEMICOLON) {
-      setState(87);
+      setState(94);
       match(HEGADBParser::SEMICOLON);
     }
    
@@ -882,12 +910,12 @@ tree::TerminalNode* HEGADBParser::SelectListContext::STAR() {
   return getToken(HEGADBParser::STAR, 0);
 }
 
-std::vector<HEGADBParser::ColumnNameContext *> HEGADBParser::SelectListContext::columnName() {
-  return getRuleContexts<HEGADBParser::ColumnNameContext>();
+std::vector<HEGADBParser::SelectItemContext *> HEGADBParser::SelectListContext::selectItem() {
+  return getRuleContexts<HEGADBParser::SelectItemContext>();
 }
 
-HEGADBParser::ColumnNameContext* HEGADBParser::SelectListContext::columnName(size_t i) {
-  return getRuleContext<HEGADBParser::ColumnNameContext>(i);
+HEGADBParser::SelectItemContext* HEGADBParser::SelectListContext::selectItem(size_t i) {
+  return getRuleContext<HEGADBParser::SelectItemContext>(i);
 }
 
 std::vector<tree::TerminalNode *> HEGADBParser::SelectListContext::COMMA() {
@@ -936,29 +964,29 @@ HEGADBParser::SelectListContext* HEGADBParser::selectList() {
     exitRule();
   });
   try {
-    setState(99);
+    setState(106);
     _errHandler->sync(this);
     switch (_input->LA(1)) {
       case HEGADBParser::STAR: {
         enterOuterAlt(_localctx, 1);
-        setState(90);
+        setState(97);
         match(HEGADBParser::STAR);
         break;
       }
 
       case HEGADBParser::IDENTIFIER: {
         enterOuterAlt(_localctx, 2);
-        setState(91);
-        columnName();
-        setState(96);
+        setState(98);
+        selectItem();
+        setState(103);
         _errHandler->sync(this);
         _la = _input->LA(1);
         while (_la == HEGADBParser::COMMA) {
-          setState(92);
+          setState(99);
           match(HEGADBParser::COMMA);
-          setState(93);
-          columnName();
-          setState(98);
+          setState(100);
+          selectItem();
+          setState(105);
           _errHandler->sync(this);
           _la = _input->LA(1);
         }
@@ -968,6 +996,265 @@ HEGADBParser::SelectListContext* HEGADBParser::selectList() {
     default:
       throw NoViableAltException(this);
     }
+   
+  }
+  catch (RecognitionException &e) {
+    _errHandler->reportError(this, e);
+    _localctx->exception = std::current_exception();
+    _errHandler->recover(this, _localctx->exception);
+  }
+
+  return _localctx;
+}
+
+//----------------- SelectItemContext ------------------------------------------------------------------
+
+HEGADBParser::SelectItemContext::SelectItemContext(ParserRuleContext *parent, size_t invokingState)
+  : ParserRuleContext(parent, invokingState) {
+}
+
+HEGADBParser::QualifiedColumnContext* HEGADBParser::SelectItemContext::qualifiedColumn() {
+  return getRuleContext<HEGADBParser::QualifiedColumnContext>(0);
+}
+
+HEGADBParser::ColumnNameContext* HEGADBParser::SelectItemContext::columnName() {
+  return getRuleContext<HEGADBParser::ColumnNameContext>(0);
+}
+
+
+size_t HEGADBParser::SelectItemContext::getRuleIndex() const {
+  return HEGADBParser::RuleSelectItem;
+}
+
+void HEGADBParser::SelectItemContext::enterRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<HEGADBParserListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->enterSelectItem(this);
+}
+
+void HEGADBParser::SelectItemContext::exitRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<HEGADBParserListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->exitSelectItem(this);
+}
+
+
+std::any HEGADBParser::SelectItemContext::accept(tree::ParseTreeVisitor *visitor) {
+  if (auto parserVisitor = dynamic_cast<HEGADBParserVisitor*>(visitor))
+    return parserVisitor->visitSelectItem(this);
+  else
+    return visitor->visitChildren(this);
+}
+
+HEGADBParser::SelectItemContext* HEGADBParser::selectItem() {
+  SelectItemContext *_localctx = _tracker.createInstance<SelectItemContext>(_ctx, getState());
+  enterRule(_localctx, 18, HEGADBParser::RuleSelectItem);
+
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
+  auto onExit = finally([=] {
+#endif
+    exitRule();
+  });
+  try {
+    setState(110);
+    _errHandler->sync(this);
+    switch (getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 9, _ctx)) {
+    case 1: {
+      enterOuterAlt(_localctx, 1);
+      setState(108);
+      qualifiedColumn();
+      break;
+    }
+
+    case 2: {
+      enterOuterAlt(_localctx, 2);
+      setState(109);
+      columnName();
+      break;
+    }
+
+    default:
+      break;
+    }
+   
+  }
+  catch (RecognitionException &e) {
+    _errHandler->reportError(this, e);
+    _localctx->exception = std::current_exception();
+    _errHandler->recover(this, _localctx->exception);
+  }
+
+  return _localctx;
+}
+
+//----------------- JoinClauseContext ------------------------------------------------------------------
+
+HEGADBParser::JoinClauseContext::JoinClauseContext(ParserRuleContext *parent, size_t invokingState)
+  : ParserRuleContext(parent, invokingState) {
+}
+
+tree::TerminalNode* HEGADBParser::JoinClauseContext::JOIN() {
+  return getToken(HEGADBParser::JOIN, 0);
+}
+
+HEGADBParser::TableNameContext* HEGADBParser::JoinClauseContext::tableName() {
+  return getRuleContext<HEGADBParser::TableNameContext>(0);
+}
+
+tree::TerminalNode* HEGADBParser::JoinClauseContext::ON() {
+  return getToken(HEGADBParser::ON, 0);
+}
+
+std::vector<HEGADBParser::QualifiedColumnContext *> HEGADBParser::JoinClauseContext::qualifiedColumn() {
+  return getRuleContexts<HEGADBParser::QualifiedColumnContext>();
+}
+
+HEGADBParser::QualifiedColumnContext* HEGADBParser::JoinClauseContext::qualifiedColumn(size_t i) {
+  return getRuleContext<HEGADBParser::QualifiedColumnContext>(i);
+}
+
+tree::TerminalNode* HEGADBParser::JoinClauseContext::EQ() {
+  return getToken(HEGADBParser::EQ, 0);
+}
+
+tree::TerminalNode* HEGADBParser::JoinClauseContext::INNER() {
+  return getToken(HEGADBParser::INNER, 0);
+}
+
+
+size_t HEGADBParser::JoinClauseContext::getRuleIndex() const {
+  return HEGADBParser::RuleJoinClause;
+}
+
+void HEGADBParser::JoinClauseContext::enterRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<HEGADBParserListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->enterJoinClause(this);
+}
+
+void HEGADBParser::JoinClauseContext::exitRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<HEGADBParserListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->exitJoinClause(this);
+}
+
+
+std::any HEGADBParser::JoinClauseContext::accept(tree::ParseTreeVisitor *visitor) {
+  if (auto parserVisitor = dynamic_cast<HEGADBParserVisitor*>(visitor))
+    return parserVisitor->visitJoinClause(this);
+  else
+    return visitor->visitChildren(this);
+}
+
+HEGADBParser::JoinClauseContext* HEGADBParser::joinClause() {
+  JoinClauseContext *_localctx = _tracker.createInstance<JoinClauseContext>(_ctx, getState());
+  enterRule(_localctx, 20, HEGADBParser::RuleJoinClause);
+  size_t _la = 0;
+
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
+  auto onExit = finally([=] {
+#endif
+    exitRule();
+  });
+  try {
+    enterOuterAlt(_localctx, 1);
+    setState(113);
+    _errHandler->sync(this);
+
+    _la = _input->LA(1);
+    if (_la == HEGADBParser::INNER) {
+      setState(112);
+      match(HEGADBParser::INNER);
+    }
+    setState(115);
+    match(HEGADBParser::JOIN);
+    setState(116);
+    tableName();
+    setState(117);
+    match(HEGADBParser::ON);
+    setState(118);
+    qualifiedColumn();
+    setState(119);
+    match(HEGADBParser::EQ);
+    setState(120);
+    qualifiedColumn();
+   
+  }
+  catch (RecognitionException &e) {
+    _errHandler->reportError(this, e);
+    _localctx->exception = std::current_exception();
+    _errHandler->recover(this, _localctx->exception);
+  }
+
+  return _localctx;
+}
+
+//----------------- QualifiedColumnContext ------------------------------------------------------------------
+
+HEGADBParser::QualifiedColumnContext::QualifiedColumnContext(ParserRuleContext *parent, size_t invokingState)
+  : ParserRuleContext(parent, invokingState) {
+}
+
+HEGADBParser::TableNameContext* HEGADBParser::QualifiedColumnContext::tableName() {
+  return getRuleContext<HEGADBParser::TableNameContext>(0);
+}
+
+tree::TerminalNode* HEGADBParser::QualifiedColumnContext::DOT() {
+  return getToken(HEGADBParser::DOT, 0);
+}
+
+HEGADBParser::ColumnNameContext* HEGADBParser::QualifiedColumnContext::columnName() {
+  return getRuleContext<HEGADBParser::ColumnNameContext>(0);
+}
+
+
+size_t HEGADBParser::QualifiedColumnContext::getRuleIndex() const {
+  return HEGADBParser::RuleQualifiedColumn;
+}
+
+void HEGADBParser::QualifiedColumnContext::enterRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<HEGADBParserListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->enterQualifiedColumn(this);
+}
+
+void HEGADBParser::QualifiedColumnContext::exitRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<HEGADBParserListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->exitQualifiedColumn(this);
+}
+
+
+std::any HEGADBParser::QualifiedColumnContext::accept(tree::ParseTreeVisitor *visitor) {
+  if (auto parserVisitor = dynamic_cast<HEGADBParserVisitor*>(visitor))
+    return parserVisitor->visitQualifiedColumn(this);
+  else
+    return visitor->visitChildren(this);
+}
+
+HEGADBParser::QualifiedColumnContext* HEGADBParser::qualifiedColumn() {
+  QualifiedColumnContext *_localctx = _tracker.createInstance<QualifiedColumnContext>(_ctx, getState());
+  enterRule(_localctx, 22, HEGADBParser::RuleQualifiedColumn);
+
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
+  auto onExit = finally([=] {
+#endif
+    exitRule();
+  });
+  try {
+    enterOuterAlt(_localctx, 1);
+    setState(122);
+    tableName();
+    setState(123);
+    match(HEGADBParser::DOT);
+    setState(124);
+    columnName();
    
   }
   catch (RecognitionException &e) {
@@ -1016,7 +1303,7 @@ std::any HEGADBParser::TableNameContext::accept(tree::ParseTreeVisitor *visitor)
 
 HEGADBParser::TableNameContext* HEGADBParser::tableName() {
   TableNameContext *_localctx = _tracker.createInstance<TableNameContext>(_ctx, getState());
-  enterRule(_localctx, 18, HEGADBParser::RuleTableName);
+  enterRule(_localctx, 24, HEGADBParser::RuleTableName);
 
 #if __cplusplus > 201703L
   auto onExit = finally([=, this] {
@@ -1027,7 +1314,7 @@ HEGADBParser::TableNameContext* HEGADBParser::tableName() {
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(101);
+    setState(126);
     match(HEGADBParser::IDENTIFIER);
    
   }
@@ -1081,7 +1368,7 @@ std::any HEGADBParser::WhereClauseContext::accept(tree::ParseTreeVisitor *visito
 
 HEGADBParser::WhereClauseContext* HEGADBParser::whereClause() {
   WhereClauseContext *_localctx = _tracker.createInstance<WhereClauseContext>(_ctx, getState());
-  enterRule(_localctx, 20, HEGADBParser::RuleWhereClause);
+  enterRule(_localctx, 26, HEGADBParser::RuleWhereClause);
 
 #if __cplusplus > 201703L
   auto onExit = finally([=, this] {
@@ -1092,9 +1379,9 @@ HEGADBParser::WhereClauseContext* HEGADBParser::whereClause() {
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(103);
+    setState(128);
     match(HEGADBParser::WHERE);
-    setState(104);
+    setState(129);
     booleanExpression();
    
   }
@@ -1144,7 +1431,7 @@ std::any HEGADBParser::BooleanExpressionContext::accept(tree::ParseTreeVisitor *
 
 HEGADBParser::BooleanExpressionContext* HEGADBParser::booleanExpression() {
   BooleanExpressionContext *_localctx = _tracker.createInstance<BooleanExpressionContext>(_ctx, getState());
-  enterRule(_localctx, 22, HEGADBParser::RuleBooleanExpression);
+  enterRule(_localctx, 28, HEGADBParser::RuleBooleanExpression);
 
 #if __cplusplus > 201703L
   auto onExit = finally([=, this] {
@@ -1155,7 +1442,7 @@ HEGADBParser::BooleanExpressionContext* HEGADBParser::booleanExpression() {
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(106);
+    setState(131);
     orExpression();
    
   }
@@ -1217,7 +1504,7 @@ std::any HEGADBParser::OrExpressionContext::accept(tree::ParseTreeVisitor *visit
 
 HEGADBParser::OrExpressionContext* HEGADBParser::orExpression() {
   OrExpressionContext *_localctx = _tracker.createInstance<OrExpressionContext>(_ctx, getState());
-  enterRule(_localctx, 24, HEGADBParser::RuleOrExpression);
+  enterRule(_localctx, 30, HEGADBParser::RuleOrExpression);
   size_t _la = 0;
 
 #if __cplusplus > 201703L
@@ -1229,17 +1516,17 @@ HEGADBParser::OrExpressionContext* HEGADBParser::orExpression() {
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(108);
+    setState(133);
     andExpression();
-    setState(113);
+    setState(138);
     _errHandler->sync(this);
     _la = _input->LA(1);
     while (_la == HEGADBParser::OR) {
-      setState(109);
+      setState(134);
       match(HEGADBParser::OR);
-      setState(110);
+      setState(135);
       andExpression();
-      setState(115);
+      setState(140);
       _errHandler->sync(this);
       _la = _input->LA(1);
     }
@@ -1303,7 +1590,7 @@ std::any HEGADBParser::AndExpressionContext::accept(tree::ParseTreeVisitor *visi
 
 HEGADBParser::AndExpressionContext* HEGADBParser::andExpression() {
   AndExpressionContext *_localctx = _tracker.createInstance<AndExpressionContext>(_ctx, getState());
-  enterRule(_localctx, 26, HEGADBParser::RuleAndExpression);
+  enterRule(_localctx, 32, HEGADBParser::RuleAndExpression);
   size_t _la = 0;
 
 #if __cplusplus > 201703L
@@ -1315,17 +1602,17 @@ HEGADBParser::AndExpressionContext* HEGADBParser::andExpression() {
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(116);
+    setState(141);
     notExpression();
-    setState(121);
+    setState(146);
     _errHandler->sync(this);
     _la = _input->LA(1);
     while (_la == HEGADBParser::AND) {
-      setState(117);
+      setState(142);
       match(HEGADBParser::AND);
-      setState(118);
+      setState(143);
       notExpression();
-      setState(123);
+      setState(148);
       _errHandler->sync(this);
       _la = _input->LA(1);
     }
@@ -1397,7 +1684,7 @@ std::any HEGADBParser::NotExpressionContext::accept(tree::ParseTreeVisitor *visi
 
 HEGADBParser::NotExpressionContext* HEGADBParser::notExpression() {
   NotExpressionContext *_localctx = _tracker.createInstance<NotExpressionContext>(_ctx, getState());
-  enterRule(_localctx, 28, HEGADBParser::RuleNotExpression);
+  enterRule(_localctx, 34, HEGADBParser::RuleNotExpression);
 
 #if __cplusplus > 201703L
   auto onExit = finally([=, this] {
@@ -1407,25 +1694,25 @@ HEGADBParser::NotExpressionContext* HEGADBParser::notExpression() {
     exitRule();
   });
   try {
-    setState(131);
+    setState(156);
     _errHandler->sync(this);
     switch (_input->LA(1)) {
       case HEGADBParser::NOT: {
         enterOuterAlt(_localctx, 1);
-        setState(124);
+        setState(149);
         match(HEGADBParser::NOT);
-        setState(125);
+        setState(150);
         notExpression();
         break;
       }
 
       case HEGADBParser::LPAREN: {
         enterOuterAlt(_localctx, 2);
-        setState(126);
+        setState(151);
         match(HEGADBParser::LPAREN);
-        setState(127);
+        setState(152);
         booleanExpression();
-        setState(128);
+        setState(153);
         match(HEGADBParser::RPAREN);
         break;
       }
@@ -1436,7 +1723,7 @@ HEGADBParser::NotExpressionContext* HEGADBParser::notExpression() {
       case HEGADBParser::STRING_LITERAL:
       case HEGADBParser::IDENTIFIER: {
         enterOuterAlt(_localctx, 3);
-        setState(130);
+        setState(155);
         comparisonExpression();
         break;
       }
@@ -1500,7 +1787,7 @@ std::any HEGADBParser::ComparisonExpressionContext::accept(tree::ParseTreeVisito
 
 HEGADBParser::ComparisonExpressionContext* HEGADBParser::comparisonExpression() {
   ComparisonExpressionContext *_localctx = _tracker.createInstance<ComparisonExpressionContext>(_ctx, getState());
-  enterRule(_localctx, 30, HEGADBParser::RuleComparisonExpression);
+  enterRule(_localctx, 36, HEGADBParser::RuleComparisonExpression);
 
 #if __cplusplus > 201703L
   auto onExit = finally([=, this] {
@@ -1511,11 +1798,11 @@ HEGADBParser::ComparisonExpressionContext* HEGADBParser::comparisonExpression() 
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(133);
+    setState(158);
     operand();
-    setState(134);
+    setState(159);
     comparisonOperator();
-    setState(135);
+    setState(160);
     operand();
    
   }
@@ -1585,7 +1872,7 @@ std::any HEGADBParser::ComparisonOperatorContext::accept(tree::ParseTreeVisitor 
 
 HEGADBParser::ComparisonOperatorContext* HEGADBParser::comparisonOperator() {
   ComparisonOperatorContext *_localctx = _tracker.createInstance<ComparisonOperatorContext>(_ctx, getState());
-  enterRule(_localctx, 32, HEGADBParser::RuleComparisonOperator);
+  enterRule(_localctx, 38, HEGADBParser::RuleComparisonOperator);
   size_t _la = 0;
 
 #if __cplusplus > 201703L
@@ -1597,10 +1884,10 @@ HEGADBParser::ComparisonOperatorContext* HEGADBParser::comparisonOperator() {
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(137);
+    setState(162);
     _la = _input->LA(1);
     if (!((((_la & ~ 0x3fULL) == 0) &&
-      ((1ULL << _la) & 8257536) != 0))) {
+      ((1ULL << _la) & 66060288) != 0))) {
     _errHandler->recoverInline(this);
     }
     else {
@@ -1659,7 +1946,7 @@ std::any HEGADBParser::OperandContext::accept(tree::ParseTreeVisitor *visitor) {
 
 HEGADBParser::OperandContext* HEGADBParser::operand() {
   OperandContext *_localctx = _tracker.createInstance<OperandContext>(_ctx, getState());
-  enterRule(_localctx, 34, HEGADBParser::RuleOperand);
+  enterRule(_localctx, 40, HEGADBParser::RuleOperand);
 
 #if __cplusplus > 201703L
   auto onExit = finally([=, this] {
@@ -1669,12 +1956,12 @@ HEGADBParser::OperandContext* HEGADBParser::operand() {
     exitRule();
   });
   try {
-    setState(141);
+    setState(166);
     _errHandler->sync(this);
     switch (_input->LA(1)) {
       case HEGADBParser::IDENTIFIER: {
         enterOuterAlt(_localctx, 1);
-        setState(139);
+        setState(164);
         columnName();
         break;
       }
@@ -1684,7 +1971,7 @@ HEGADBParser::OperandContext* HEGADBParser::operand() {
       case HEGADBParser::INTEGER_LITERAL:
       case HEGADBParser::STRING_LITERAL: {
         enterOuterAlt(_localctx, 2);
-        setState(140);
+        setState(165);
         literal();
         break;
       }
@@ -1740,7 +2027,7 @@ std::any HEGADBParser::ColumnNameContext::accept(tree::ParseTreeVisitor *visitor
 
 HEGADBParser::ColumnNameContext* HEGADBParser::columnName() {
   ColumnNameContext *_localctx = _tracker.createInstance<ColumnNameContext>(_ctx, getState());
-  enterRule(_localctx, 36, HEGADBParser::RuleColumnName);
+  enterRule(_localctx, 42, HEGADBParser::RuleColumnName);
 
 #if __cplusplus > 201703L
   auto onExit = finally([=, this] {
@@ -1751,7 +2038,7 @@ HEGADBParser::ColumnNameContext* HEGADBParser::columnName() {
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(143);
+    setState(168);
     match(HEGADBParser::IDENTIFIER);
    
   }
@@ -1813,7 +2100,7 @@ std::any HEGADBParser::LiteralContext::accept(tree::ParseTreeVisitor *visitor) {
 
 HEGADBParser::LiteralContext* HEGADBParser::literal() {
   LiteralContext *_localctx = _tracker.createInstance<LiteralContext>(_ctx, getState());
-  enterRule(_localctx, 38, HEGADBParser::RuleLiteral);
+  enterRule(_localctx, 44, HEGADBParser::RuleLiteral);
   size_t _la = 0;
 
 #if __cplusplus > 201703L
@@ -1825,10 +2112,10 @@ HEGADBParser::LiteralContext* HEGADBParser::literal() {
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(145);
+    setState(170);
     _la = _input->LA(1);
     if (!((((_la & ~ 0x3fULL) == 0) &&
-      ((1ULL << _la) & 805306752) != 0))) {
+      ((1ULL << _la) & 12884902272) != 0))) {
     _errHandler->recoverInline(this);
     }
     else {

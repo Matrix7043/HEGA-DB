@@ -15,6 +15,51 @@
 
 namespace hegadb::client::semantic {
 
+namespace {
+
+struct ResolvedColumn {
+    catalog::TableSchema const* table;
+    catalog::ColumnSchema const* column;
+};
+
+std::string describeTables(catalog::TableSchema const& left,
+    catalog::TableSchema const& right)
+{
+    return "'" + left.name() + "' or '" + right.name() + "'";
+}
+
+// Resolves a table-qualified column (table.column) against the two tables
+// of a join.
+ResolvedColumn resolveQualified(ast::ColumnRef const& column,
+    catalog::TableSchema const& left,
+    catalog::TableSchema const& right)
+{
+    std::string const& qualifier = *column.table();
+
+    catalog::TableSchema const* table = nullptr;
+
+    if (qualifier == left.name()) {
+        table = &left;
+    } else if (qualifier == right.name()) {
+        table = &right;
+    } else {
+        throw SemanticError(SemanticErrorKind::TableNotFound,
+            "table '" + qualifier + "' is not part of this query (expected "
+                + describeTables(left, right) + ")");
+    }
+
+    catalog::ColumnSchema const* found = table->findColumn(column.name());
+
+    if (found == nullptr) {
+        throw SemanticError(SemanticErrorKind::ColumnNotFound,
+            "column '" + column.name() + "' does not exist in table '" + table->name() + "'");
+    }
+
+    return { table, found };
+}
+
+} // namespace
+
 SemanticValidator::SemanticValidator(catalog::Catalog const& catalog)
     : catalog_(catalog)
 {
@@ -114,6 +159,11 @@ void SemanticValidator::validate(ast::SelectStmt const& stmt) const
             "table '" + from->name() + "' does not exist");
     }
 
+    if (stmt.join() != nullptr) {
+        validateJoin(stmt, *table);
+        return;
+    }
+
     for (auto const& projection : stmt.projections()) {
         validateProjection(projection.get(), *table);
     }
@@ -147,6 +197,11 @@ void SemanticValidator::validateProjection(ast::Expr const* expr,
 
         auto const* column = static_cast<ast::ColumnRef const*>(expr);
 
+        if (column->table() && *column->table() != table.name()) {
+            throw SemanticError(SemanticErrorKind::TableNotFound,
+                "table '" + *column->table() + "' is not part of this query (expected '" + table.name() + "')");
+        }
+
         if (table.findColumn(column->name()) == nullptr) {
             throw SemanticError(SemanticErrorKind::ColumnNotFound,
                 "column '" + column->name() + "' does not exist in table '" + table.name() + "'");
@@ -157,6 +212,93 @@ void SemanticValidator::validateProjection(ast::Expr const* expr,
 
     throw SemanticError(SemanticErrorKind::TypeMismatch,
         "invalid expression in SELECT projection");
+}
+
+void SemanticValidator::validateJoin(ast::SelectStmt const& stmt,
+    catalog::TableSchema const& left_table) const
+{
+    ast::JoinClause const* join = stmt.join();
+
+    if (stmt.where() != nullptr) {
+        throw SemanticError(SemanticErrorKind::InvalidJoin,
+            "WHERE cannot be combined with JOIN");
+    }
+
+    if (join->table() == nullptr || join->left() == nullptr || join->right() == nullptr) {
+        throw SemanticError(SemanticErrorKind::InvalidJoin,
+            "incomplete JOIN clause");
+    }
+
+    // ---- Tables ----
+
+    catalog::TableSchema const* right_table = catalog_.findTable(join->table()->name());
+
+    if (right_table == nullptr) {
+        throw SemanticError(SemanticErrorKind::TableNotFound,
+            "table '" + join->table()->name() + "' does not exist");
+    }
+
+    // Without table aliases a table cannot be told apart from itself.
+    if (right_table->name() == left_table.name()) {
+        throw SemanticError(SemanticErrorKind::InvalidJoin,
+            "cannot join table '" + left_table.name() + "' with itself (table aliases are not supported)");
+    }
+
+    // ---- ON <left> = <right> ----
+
+    for (ast::ColumnRef const* on_column : { join->left(), join->right() }) {
+        if (!on_column->table()) {
+            throw SemanticError(SemanticErrorKind::InvalidJoin,
+                "join column '" + on_column->name() + "' must be qualified with a table name");
+        }
+    }
+
+    ResolvedColumn const left = resolveQualified(*join->left(), left_table, *right_table);
+    ResolvedColumn const right = resolveQualified(*join->right(), left_table, *right_table);
+
+    if (left.table == right.table) {
+        throw SemanticError(SemanticErrorKind::InvalidJoin,
+            "JOIN condition must compare a column of '" + left_table.name() + "' with a column of '" + right_table->name() + "'");
+    }
+
+    if (left.column->type != right.column->type) {
+        throw SemanticError(SemanticErrorKind::TypeMismatch,
+            "join columns '" + left.table->name() + "." + left.column->name + "' and '" + right.table->name() + "." + right.column->name + "' must have the same type");
+    }
+
+    // ---- Projections ----
+
+    for (auto const& projection : stmt.projections()) {
+
+        if (projection == nullptr || projection->kind() == ast::ASTNodeKind::Wildcard) {
+            continue;
+        }
+
+        if (projection->kind() != ast::ASTNodeKind::ColumnRef) {
+            throw SemanticError(SemanticErrorKind::TypeMismatch,
+                "invalid expression in SELECT projection");
+        }
+
+        auto const& column = static_cast<ast::ColumnRef const&>(*projection);
+
+        if (column.table()) {
+            resolveQualified(column, left_table, *right_table);
+            continue;
+        }
+
+        bool const in_left = left_table.findColumn(column.name()) != nullptr;
+        bool const in_right = right_table->findColumn(column.name()) != nullptr;
+
+        if (in_left && in_right) {
+            throw SemanticError(SemanticErrorKind::AmbigousColumn,
+                "column '" + column.name() + "' is ambiguous: it exists in both '" + left_table.name() + "' and '" + right_table->name() + "' (qualify it, e.g. '" + left_table.name() + "." + column.name() + "')");
+        }
+
+        if (!in_left && !in_right) {
+            throw SemanticError(SemanticErrorKind::ColumnNotFound,
+                "column '" + column.name() + "' does not exist in table " + describeTables(left_table, *right_table));
+        }
+    }
 }
 
 void SemanticValidator::validateExpression(ast::Expr const* expr,

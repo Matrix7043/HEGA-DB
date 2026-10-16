@@ -37,6 +37,12 @@ public:
 
     virtual std::any visitSelectList(HEGADBParser::SelectListContext *context) = 0;
 
+    virtual std::any visitSelectItem(HEGADBParser::SelectItemContext *context) = 0;
+
+    virtual std::any visitJoinClause(HEGADBParser::JoinClauseContext *context) = 0;
+
+    virtual std::any visitQualifiedColumn(HEGADBParser::QualifiedColumnContext *context) = 0;
+
     virtual std::any visitTableName(HEGADBParser::TableNameContext *context) = 0;
 
     virtual std::any visitWhereClause(HEGADBParser::WhereClauseContext *context) = 0;

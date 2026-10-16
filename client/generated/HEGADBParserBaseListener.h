@@ -43,6 +43,15 @@ public:
   virtual void enterSelectList(HEGADBParser::SelectListContext * /*ctx*/) override { }
   virtual void exitSelectList(HEGADBParser::SelectListContext * /*ctx*/) override { }
 
+  virtual void enterSelectItem(HEGADBParser::SelectItemContext * /*ctx*/) override { }
+  virtual void exitSelectItem(HEGADBParser::SelectItemContext * /*ctx*/) override { }
+
+  virtual void enterJoinClause(HEGADBParser::JoinClauseContext * /*ctx*/) override { }
+  virtual void exitJoinClause(HEGADBParser::JoinClauseContext * /*ctx*/) override { }
+
+  virtual void enterQualifiedColumn(HEGADBParser::QualifiedColumnContext * /*ctx*/) override { }
+  virtual void exitQualifiedColumn(HEGADBParser::QualifiedColumnContext * /*ctx*/) override { }
+
   virtual void enterTableName(HEGADBParser::TableNameContext * /*ctx*/) override { }
   virtual void exitTableName(HEGADBParser::TableNameContext * /*ctx*/) override { }
 

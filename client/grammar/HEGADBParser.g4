@@ -24,12 +24,13 @@ statement
 // SELECT statement
 // ============================================================
 
+// A SELECT has either a JOIN or a WHERE clause, never both.
 selectStatement
     : SELECT
       selectList
       FROM
       tableName
-      whereClause?
+      (joinClause | whereClause)?
       SEMICOLON?
     ;
 
@@ -86,7 +87,32 @@ dropTableStatement
 
 selectList
     : STAR
-    | columnName (COMMA columnName)*
+    | selectItem (COMMA selectItem)*
+    ;
+
+selectItem
+    : qualifiedColumn
+    | columnName
+    ;
+
+
+// ============================================================
+// INNER JOIN (equi join on a single column pair, no aliases)
+//
+// SELECT * FROM users INNER JOIN orders ON users.id = orders.user_id;
+//
+// INNER is optional: JOIN means INNER JOIN.
+// ============================================================
+
+joinClause
+    : INNER? JOIN
+      tableName
+      ON
+      qualifiedColumn EQ qualifiedColumn
+    ;
+
+qualifiedColumn
+    : tableName DOT columnName
     ;
 
 

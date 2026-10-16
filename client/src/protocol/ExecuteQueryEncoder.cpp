@@ -4,6 +4,7 @@
 #include <hegadb/client/ast/ComparisonExpr.h>
 #include <hegadb/client/ast/CreateTableStmt.h>
 #include <hegadb/client/ast/DropTableStmt.h>
+#include <hegadb/client/ast/JoinClause.h>
 #include <hegadb/client/ast/LogicalExpr.h>
 #include <hegadb/client/ast/NotExpr.h>
 #include <hegadb/client/ast/ParameterRef.h>
@@ -105,6 +106,17 @@ proto::LogicalOp mapLogicalOp(
     return proto::LOGICAL_OP_UNSPECIFIED;
 }
 
+void convertColumn(
+    ast::ColumnRef const& column,
+    proto::ColumnRef* proto_column)
+{
+    if (column.table()) {
+        proto_column->set_table(*column.table());
+    }
+
+    proto_column->set_column(column.name());
+}
+
 void convertExpression(
     ast::Expr const* node,
     proto::Expression* proto_expr)
@@ -117,8 +129,7 @@ void convertExpression(
 
     if (auto const* column = dynamic_cast<ast::ColumnRef const*>(node)) {
 
-        proto_expr->mutable_column_ref()->set_column(
-            column->name());
+        convertColumn(*column, proto_expr->mutable_column_ref());
 
     } else if (auto const* parameter = dynamic_cast<ast::ParameterRef const*>(node)) {
 
@@ -208,6 +219,23 @@ proto::ExecuteQuery ExecuteQueryEncoder::encode(
     if (select_ast->from()) {
         select->mutable_from_table()->set_table(
             select_ast->from()->name());
+    }
+
+    /*
+     * -----------------------------------------------------
+     * INNER JOIN
+     * -----------------------------------------------------
+     */
+
+    if (select_ast->join()) {
+        auto const* join = select_ast->join();
+        auto* proto_join = select->mutable_join();
+
+        proto_join->mutable_right_table()->set_table(
+            join->table()->name());
+
+        convertColumn(*join->left(), proto_join->mutable_left_column());
+        convertColumn(*join->right(), proto_join->mutable_right_column());
     }
 
     /*

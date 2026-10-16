@@ -447,6 +447,54 @@ gtest_discover_tests(ddl_protocol_tests)
 
 
 # ============================================================
+# JOIN tests (AST, semantic validation, protocol + gRPC)
+# ============================================================
+
+add_executable(ast_builder_join_tests
+    client/ast_builder_join_tests.cpp
+)
+
+target_link_libraries(ast_builder_join_tests
+    PRIVATE
+        hegadb_client_core
+)
+
+add_test(
+    NAME ast_builder_join_tests
+    COMMAND ast_builder_join_tests
+)
+
+add_executable(semantic_validator_join_tests
+    client/semantic_validator_join_tests.cpp
+)
+
+target_link_libraries(semantic_validator_join_tests
+    PRIVATE
+        hegadb_client_core
+)
+
+add_test(
+    NAME semantic_validator_join_tests
+    COMMAND semantic_validator_join_tests
+)
+
+add_executable(join_protocol_tests
+    client/join_protocol_tests.cpp
+)
+
+target_link_libraries(join_protocol_tests
+    PRIVATE
+        hegadb_client_core
+        hegadb_server
+        hegadb_server_transport
+        hegadb_client_transport
+        GTest::gtest_main
+)
+
+gtest_discover_tests(join_protocol_tests)
+
+
+# ============================================================
 # Server Storage Tests
 # ============================================================
 

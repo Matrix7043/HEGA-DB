@@ -8,6 +8,7 @@ enum class ASTNodeKind {
     CreateTableStmt,
     DropTableStmt,
     TableRef,
+    JoinClause,
     ColumnRef,
     Wildcard,
     Literal,

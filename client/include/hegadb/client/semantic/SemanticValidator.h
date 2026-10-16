@@ -34,6 +34,12 @@ public:
 private:
     catalog::Catalog const& catalog_;
 
+    // INNER JOIN: both tables must exist and differ, the ON columns must
+    // come one from each table and have the same type, every projection
+    // must resolve to exactly one column, and WHERE is not allowed.
+    void validateJoin(ast::SelectStmt const& stmt,
+        catalog::TableSchema const& left_table) const;
+
     void validateProjection(ast::Expr const* expr,
         catalog::TableSchema const& tableSchema) const;
     void validateExpression(ast::Expr const* expr,

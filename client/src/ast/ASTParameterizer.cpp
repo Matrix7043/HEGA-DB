@@ -1,6 +1,7 @@
 #include "hegadb/client/ast/ASTParameterizer.h"
 #include "hegadb/client/ast/ColumnRef.h"
 #include "hegadb/client/ast/ComparisonExpr.h"
+#include "hegadb/client/ast/JoinClause.h"
 #include "hegadb/client/ast/Literal.h"
 #include "hegadb/client/ast/LogicalExpr.h"
 #include "hegadb/client/ast/NotExpr.h"
@@ -14,6 +15,19 @@
 
 namespace hegadb::client::ast {
 
+namespace {
+
+std::unique_ptr<ColumnRef> cloneColumn(ColumnRef const& column)
+{
+    if (column.table()) {
+        return std::make_unique<ColumnRef>(*column.table(), column.name());
+    }
+
+    return std::make_unique<ColumnRef>(column.name());
+}
+
+} // namespace
+
 std::unique_ptr<Expr>
 ASTParameterizer::transform(
     Expr const& node,
@@ -26,8 +40,7 @@ ASTParameterizer::transform(
 
     if (auto const* column = dynamic_cast<ColumnRef const*>(&node)) {
 
-        return std::make_unique<ColumnRef>(
-            column->name());
+        return cloneColumn(*column);
     }
 
     if (dynamic_cast<Wildcard const*>(&node)) {
@@ -108,6 +121,17 @@ ASTParameterizer::parameterize(
         result->setFrom(
             std::make_unique<TableRef>(
                 select->from()->name()));
+    }
+
+    // The JOIN clause has no literals, so it is copied as it is.
+    if (select->join()) {
+        auto const* join = select->join();
+
+        result->setJoin(
+            std::make_unique<JoinClause>(
+                std::make_unique<TableRef>(join->table()->name()),
+                cloneColumn(*join->left()),
+                cloneColumn(*join->right())));
     }
 
     if (select->where()) {

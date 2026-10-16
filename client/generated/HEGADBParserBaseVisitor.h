@@ -51,6 +51,18 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitSelectItem(HEGADBParser::SelectItemContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitJoinClause(HEGADBParser::JoinClauseContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitQualifiedColumn(HEGADBParser::QualifiedColumnContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitTableName(HEGADBParser::TableNameContext *ctx) override {
     return visitChildren(ctx);
   }

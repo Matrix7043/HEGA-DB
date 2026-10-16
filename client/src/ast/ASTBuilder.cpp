@@ -4,6 +4,7 @@
 #include "hegadb/client/ast/ComparisonExpr.h"
 #include "hegadb/client/ast/CreateTableStmt.h"
 #include "hegadb/client/ast/DropTableStmt.h"
+#include "hegadb/client/ast/JoinClause.h"
 #include "hegadb/client/ast/Literal.h"
 #include "hegadb/client/ast/LogicalExpr.h"
 #include "hegadb/client/ast/NotExpr.h"
@@ -53,9 +54,15 @@ ASTBuilder::visitSelectStatement(HEGADBParser::SelectStatementContext* ctx)
     if (selectList->STAR() != nullptr) {
         stmt->addProjection(std::make_unique<Wildcard>());
     } else {
-        for (auto* columnContext : selectList->columnName()) {
-            auto name = columnContext->IDENTIFIER()->getText();
-            stmt->addProjection(std::make_unique<ColumnRef>(name));
+        for (auto* item : selectList->selectItem()) {
+            if (item->qualifiedColumn() != nullptr) {
+                auto result = visit(item->qualifiedColumn());
+                std::unique_ptr<Expr> column(std::any_cast<ColumnRef*>(result));
+                stmt->addProjection(std::move(column));
+            } else {
+                auto name = item->columnName()->IDENTIFIER()->getText();
+                stmt->addProjection(std::make_unique<ColumnRef>(name));
+            }
         }
     }
 
@@ -64,6 +71,12 @@ ASTBuilder::visitSelectStatement(HEGADBParser::SelectStatementContext* ctx)
     auto table = std::any_cast<TableRef*>(tableResult);
 
     stmt->setFrom(std::unique_ptr<TableRef>(table));
+
+    if (ctx->joinClause() != nullptr) {
+        auto joinResult = visit(ctx->joinClause());
+        stmt->setJoin(std::unique_ptr<JoinClause>(
+            std::any_cast<JoinClause*>(joinResult)));
+    }
 
     if (ctx->whereClause() != nullptr) {
         auto whereResult = visit(ctx->whereClause());
@@ -139,6 +152,32 @@ std::any ASTBuilder::visitTableName(HEGADBParser::TableNameContext* ctx)
 {
     auto name = ctx->IDENTIFIER()->getText();
     return new TableRef(name);
+}
+
+std::any ASTBuilder::visitQualifiedColumn(
+    HEGADBParser::QualifiedColumnContext* ctx)
+{
+    auto table = ctx->tableName()->IDENTIFIER()->getText();
+    auto name = ctx->columnName()->IDENTIFIER()->getText();
+
+    ColumnRef* column = new ColumnRef(std::move(table), std::move(name));
+    return column;
+}
+
+std::any ASTBuilder::visitJoinClause(HEGADBParser::JoinClauseContext* ctx)
+{
+    auto tableResult = visit(ctx->tableName());
+    std::unique_ptr<TableRef> table(std::any_cast<TableRef*>(tableResult));
+
+    auto leftResult = visit(ctx->qualifiedColumn(0));
+    std::unique_ptr<ColumnRef> left(std::any_cast<ColumnRef*>(leftResult));
+
+    auto rightResult = visit(ctx->qualifiedColumn(1));
+    std::unique_ptr<ColumnRef> right(std::any_cast<ColumnRef*>(rightResult));
+
+    JoinClause* join = new JoinClause(
+        std::move(table), std::move(left), std::move(right));
+    return join;
 }
 
 std::any ASTBuilder::visitLiteral(HEGADBParser::LiteralContext* ctx)

@@ -67,10 +67,20 @@ message TableRef {
   string table = 1;
 }
 
+// INNER JOIN <right_table> ON <left_column> = <right_column>
+// Both columns are table-qualified (ColumnRef.table is set).
+message JoinClause {
+  TableRef right_table = 1;
+  ColumnRef left_column = 2;
+  ColumnRef right_column = 3;
+}
+
 message SelectStatement {
   repeated Expression projections = 1;
   TableRef from_table = 2;
   Expression where = 3;
+  // Absent for a plain SELECT. Never set together with where.
+  JoinClause join = 4;
 }
 
 // Mirrors hegadb::types::DataType.

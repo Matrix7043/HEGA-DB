@@ -13,7 +13,8 @@ enum class SemanticErrorKind {
     AmbigousColumn,
     DuplicateColumn,
     TableAlreadyExists,
-    InvalidTableDefinition
+    InvalidTableDefinition,
+    InvalidJoin
 };
 
 class SemanticError : public std::runtime_error {

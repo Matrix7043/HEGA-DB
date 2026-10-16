@@ -33,6 +33,13 @@ public:
 
     std::any visitTableName(HEGADBParser::TableNameContext* ctx) override;
 
+    // Returns a ColumnRef* (qualified: table.column)
+    std::any visitQualifiedColumn(
+        HEGADBParser::QualifiedColumnContext* ctx) override;
+
+    // Returns a JoinClause*
+    std::any visitJoinClause(HEGADBParser::JoinClauseContext* ctx) override;
+
     std::any visitLiteral(HEGADBParser::LiteralContext* ctx) override;
 
     std::any visitOperand(HEGADBParser::OperandContext* ctx) override;

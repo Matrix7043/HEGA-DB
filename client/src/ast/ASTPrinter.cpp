@@ -15,6 +15,19 @@
 
 namespace hegadb::client::ast {
 
+namespace {
+
+std::string columnText(ColumnRef const& column)
+{
+    if (column.table()) {
+        return *column.table() + "." + column.name();
+    }
+
+    return column.name();
+}
+
+} // namespace
+
 std::filesystem::path ASTPrinter::print(
     SelectStmt const* stmt,
     std::filesystem::path const& directory,
@@ -72,6 +85,20 @@ void ASTPrinter::print(
             << '\n';
     }
 
+    if (stmt->join() != nullptr) {
+        auto const* join = stmt->join();
+
+        output
+            << "├── Join\n"
+            << "│   └── InnerJoin: "
+            << join->table()->name()
+            << " ON "
+            << columnText(*join->left())
+            << " = "
+            << columnText(*join->right())
+            << '\n';
+    }
+
     output << "└── Where\n";
 
     if (stmt->where() != nullptr) {
@@ -106,7 +133,7 @@ void ASTPrinter::printExpr(
             << prefix
             << branch
             << "ColumnRef: "
-            << column->name()
+            << columnText(*column)
             << '\n';
 
         break;
