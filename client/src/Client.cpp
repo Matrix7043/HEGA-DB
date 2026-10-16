@@ -1,13 +1,15 @@
+#include "hegadb/catalog/db-client/CatalogCache.h"
 #include "hegadb/client/ast/SelectStmt.h"
 #include "hegadb/client/protocol/ExecuteQueryEncoder.h"
 #include "hegadb/crypto/CompositeEncryption.h"
 #include "hegadb/logging/Logger.h"
+#include "hegadb/transport/CatalogClientTransportFactory.h"
 #include <hegadb/client/Client.h>
 
 #include <hegadb/catalog/CatalogSnapshot.h>
 #include <hegadb/catalog/ColumnSchema.h>
-#include <hegadb/catalog/InMemoryCatalog.h>
 #include <hegadb/catalog/TableSchema.h>
+#include <hegadb/catalog/db-client/InMemoryCatalog.h>
 #include <hegadb/client/SQLParser.h>
 #include <hegadb/client/ast/ASTPrinter.h>
 #include <hegadb/client/preparation/QueryPreparer.h>
@@ -23,7 +25,6 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace hegadb::client {
@@ -38,56 +39,24 @@ int Client::run()
     std::cout << "HEGADB Client v0.7\n";
     std::cout << "Type SQL queries. Type \\q to exit.\n\n";
 
-    // ==========================================================
-    // Client Catalog
-    // ==========================================================
-
-    std::vector<hegadb::catalog::ColumnSchema> studentColumns = {
-        { "NAME",
-            hegadb::types::DataType::String,
-            false,
-            0 },
-        { "CLASS",
-            hegadb::types::DataType::Integer,
-            false,
-            1 },
-        { "GRADE",
-            hegadb::types::DataType::Integer,
-            false,
-            2 },
-    };
-
-    hegadb::catalog::TableSchema students(
-        "STUDENTS",
-        std::move(studentColumns));
-
-    std::unordered_map<
-        std::string,
-        hegadb::catalog::TableSchema>
-        tables;
-
-    tables.emplace(
-        "STUDENTS",
-        std::move(students));
-
-    auto snapshot = std::make_shared<
-        hegadb::catalog::CatalogSnapshot const>(
-        1,
-        std::move(tables));
-
-    hegadb::catalog::InMemoryCatalog catalog(snapshot);
-
-    hegadb::client::semantic::SemanticValidator validator(
-        catalog);
-
-    // ==========================================================
-    // Query Preparation
-    // ==========================================================
-
     hegadb::crypto::CompositeEncryption encryption;
 
     hegadb::client::preparation::QueryPreparer preparer(
         encryption);
+
+    // ==========================================================
+    // Catalog Client Transport
+    // ==========================================================
+
+    logging::debug("Creating gRPC catalog client transport");
+    logging::debug("Connecting to catalogServiceAddress {}", config_.catalogServiceAddress());
+    auto catalog_transport = hegadb::transport::CatalogClientTransportFactory::createGrpc(config_.catalogServiceAddress());
+
+    logging::debug("Creating catalog cache");
+    auto catalog_cache = hegadb::catalog::CatalogCache(*catalog_transport);
+    catalog_cache.initialize();
+
+    hegadb::client::semantic::SemanticValidator validator(catalog_cache.catalog());
 
     // ==========================================================
     // Client Transport
@@ -151,6 +120,10 @@ int Client::run()
 
         logging::debug("Started semantic validation");
         try {
+            bool refresh_status = catalog_cache.refreshIfNeeded();
+
+            logging::debug("Catalog Refersh Check New version found: {}", refresh_status);
+
             validator.validate(*ast);
         } catch (
             hegadb::client::semantic::SemanticError const& error) {
@@ -172,10 +145,60 @@ int Client::run()
         logging::debug(
             "Semantic validation completed successfully");
 
+        // SELECT continues below; CREATE TABLE / DROP TABLE take the DDL path.
+        auto const* select_stmt = dynamic_cast<ast::SelectStmt const*>(ast.get());
+
+        if (select_stmt == nullptr) {
+            // CREATE TABLE / DROP TABLE: no encryption or query preparation,
+            // the validated statement is sent to the server as it is.
+            try {
+                logging::debug(
+                    "Encoding DDL request: query_id={}",
+                    queryId);
+
+                auto request = hegadb::client::protocol::ExecuteQueryEncoder::encodeDdl(
+                    *ast, queryId);
+
+                std::cout << "Sending statement to server...\n";
+
+                auto response = transport->execute(request);
+
+                logging::debug(
+                    "Received DDL response: query_id={} status={}",
+                    queryId,
+                    static_cast<int>(response.status().code()));
+
+                std::cout
+                    << "Server response:\n"
+                    << "  Request ID: "
+                    << response.request_id().value()
+                    << '\n'
+                    << "  Status: "
+                    << response.status().code()
+                    << '\n'
+                    << "  Message: "
+                    << response.status().message()
+                    << "\n\n";
+
+            } catch (std::exception const& error) {
+                std::cout
+                    << "Statement execution failed: "
+                    << error.what()
+                    << '\n';
+
+                logging::error(
+                    "DDL execution failed: query_id={} error={}",
+                    queryId,
+                    error.what());
+            }
+
+            continue;
+        }
+
         std::cout << "Query accepted.\n";
 
         hegadb::client::ast::ASTPrinter printer;
-        auto const astPath = printer.print(dynamic_cast<ast::SelectStmt const*>(ast.get()),
+        auto const astPath = printer.print(select_stmt,
             "logs/ast", queryId);
         if (!astPath.empty()) {
             logging::debug(

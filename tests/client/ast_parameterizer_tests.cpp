@@ -169,7 +169,12 @@ int main()
 
         assert(ast != nullptr);
 
-        auto const* originalWhere = ast->where();
+        auto const* originalSelect = dynamic_cast<
+            hegadb::client::ast::SelectStmt const*>(ast.get());
+
+        assert(originalSelect != nullptr);
+
+        auto const* originalWhere = originalSelect->where();
 
         auto parameterized = parameterizer.parameterize(*ast);
 

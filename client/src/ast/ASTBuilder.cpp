@@ -2,13 +2,18 @@
 #include "HEGADBParser.h"
 #include "hegadb/client/ast/ColumnRef.h"
 #include "hegadb/client/ast/ComparisonExpr.h"
+#include "hegadb/client/ast/CreateTableStmt.h"
+#include "hegadb/client/ast/DropTableStmt.h"
+#include "hegadb/client/ast/JoinClause.h"
 #include "hegadb/client/ast/Literal.h"
 #include "hegadb/client/ast/LogicalExpr.h"
 #include "hegadb/client/ast/NotExpr.h"
 #include "hegadb/client/ast/SelectStmt.h"
+#include "hegadb/client/ast/Statement.h"
 #include "hegadb/client/ast/TableRef.h"
 #include "hegadb/client/ast/Wildcard.h"
 #include "hegadb/operations/ComparisonOp.h"
+#include "hegadb/types/DataType.h"
 
 #include <any>
 #include <memory>
@@ -19,7 +24,24 @@ namespace hegadb::client::ast {
 
 std::any ASTBuilder::visitQuery(HEGADBParser::QueryContext* ctx)
 {
-    return visit(ctx->selectStatement());
+    return visit(ctx->statement());
+}
+
+std::any ASTBuilder::visitStatement(HEGADBParser::StatementContext* ctx)
+{
+    if (ctx->selectStatement() != nullptr) {
+        return visit(ctx->selectStatement());
+    }
+
+    if (ctx->createTableStatement() != nullptr) {
+        return visit(ctx->createTableStatement());
+    }
+
+    if (ctx->dropTableStatement() != nullptr) {
+        return visit(ctx->dropTableStatement());
+    }
+
+    throw std::runtime_error("Unknown statement type");
 }
 
 std::any
@@ -32,9 +54,15 @@ ASTBuilder::visitSelectStatement(HEGADBParser::SelectStatementContext* ctx)
     if (selectList->STAR() != nullptr) {
         stmt->addProjection(std::make_unique<Wildcard>());
     } else {
-        for (auto* columnContext : selectList->columnName()) {
-            auto name = columnContext->IDENTIFIER()->getText();
-            stmt->addProjection(std::make_unique<ColumnRef>(name));
+        for (auto* item : selectList->selectItem()) {
+            if (item->qualifiedColumn() != nullptr) {
+                auto result = visit(item->qualifiedColumn());
+                std::unique_ptr<Expr> column(std::any_cast<ColumnRef*>(result));
+                stmt->addProjection(std::move(column));
+            } else {
+                auto name = item->columnName()->IDENTIFIER()->getText();
+                stmt->addProjection(std::make_unique<ColumnRef>(name));
+            }
         }
     }
 
@@ -44,19 +72,112 @@ ASTBuilder::visitSelectStatement(HEGADBParser::SelectStatementContext* ctx)
 
     stmt->setFrom(std::unique_ptr<TableRef>(table));
 
+    if (ctx->joinClause() != nullptr) {
+        auto joinResult = visit(ctx->joinClause());
+        stmt->setJoin(std::unique_ptr<JoinClause>(
+            std::any_cast<JoinClause*>(joinResult)));
+    }
+
     if (ctx->whereClause() != nullptr) {
         auto whereResult = visit(ctx->whereClause());
         auto* where = std::any_cast<Expr*>(whereResult);
         stmt->setWhere(std::unique_ptr<Expr>(where));
     }
 
-    return stmt.release();
+    Statement* result = stmt.release();
+    return result;
+}
+
+std::any ASTBuilder::visitCreateTableStatement(
+    HEGADBParser::CreateTableStatementContext* ctx)
+{
+    auto stmt = std::make_unique<CreateTableStmt>(
+        ctx->tableName()->IDENTIFIER()->getText());
+
+    for (auto* definition : ctx->columnDefinition()) {
+        auto result = visit(definition);
+        stmt->addColumn(std::any_cast<ColumnDef>(result));
+    }
+
+    Statement* result = stmt.release();
+    return result;
+}
+
+std::any ASTBuilder::visitColumnDefinition(
+    HEGADBParser::ColumnDefinitionContext* ctx)
+{
+    auto name = ctx->columnName()->IDENTIFIER()->getText();
+
+    auto typeResult = visit(ctx->dataType());
+    auto type = std::any_cast<types::DataType>(typeResult);
+
+    // Columns are nullable unless NOT NULL is given.
+    bool const nullable = (ctx->nullability() == nullptr);
+
+    return ColumnDef { std::move(name), type, nullable };
+}
+
+std::any ASTBuilder::visitDataType(HEGADBParser::DataTypeContext* ctx)
+{
+    if (ctx->INTEGER() != nullptr) {
+        return types::DataType::Integer;
+    }
+
+    if (ctx->FLOAT() != nullptr) {
+        return types::DataType::Float;
+    }
+
+    if (ctx->STRING() != nullptr) {
+        return types::DataType::String;
+    }
+
+    if (ctx->BOOLEAN() != nullptr) {
+        return types::DataType::Boolean;
+    }
+
+    throw std::runtime_error("Unknown data type");
+}
+
+std::any ASTBuilder::visitDropTableStatement(
+    HEGADBParser::DropTableStatementContext* ctx)
+{
+    auto stmt = std::make_unique<DropTableStmt>(
+        ctx->tableName()->IDENTIFIER()->getText());
+
+    Statement* result = stmt.release();
+    return result;
 }
 
 std::any ASTBuilder::visitTableName(HEGADBParser::TableNameContext* ctx)
 {
     auto name = ctx->IDENTIFIER()->getText();
     return new TableRef(name);
+}
+
+std::any ASTBuilder::visitQualifiedColumn(
+    HEGADBParser::QualifiedColumnContext* ctx)
+{
+    auto table = ctx->tableName()->IDENTIFIER()->getText();
+    auto name = ctx->columnName()->IDENTIFIER()->getText();
+
+    ColumnRef* column = new ColumnRef(std::move(table), std::move(name));
+    return column;
+}
+
+std::any ASTBuilder::visitJoinClause(HEGADBParser::JoinClauseContext* ctx)
+{
+    auto tableResult = visit(ctx->tableName());
+    std::unique_ptr<TableRef> table(std::any_cast<TableRef*>(tableResult));
+
+    auto leftResult = visit(ctx->qualifiedColumn(0));
+    std::unique_ptr<ColumnRef> left(std::any_cast<ColumnRef*>(leftResult));
+
+    auto rightResult = visit(ctx->qualifiedColumn(1));
+    std::unique_ptr<ColumnRef> right(std::any_cast<ColumnRef*>(rightResult));
+
+    JoinClause* join = new JoinClause(
+        std::move(table), std::move(left), std::move(right));
+    return join;
 }
 
 std::any ASTBuilder::visitLiteral(HEGADBParser::LiteralContext* ctx)

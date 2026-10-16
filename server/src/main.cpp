@@ -1,5 +1,4 @@
 #include <hegadb/catalog/CatalogSnapshot.h>
-#include <hegadb/catalog/InMemoryCatalog.h>
 #include <hegadb/catalog/TableSchema.h>
 #include <hegadb/crypto/OpenFHEContext.h>
 #include <hegadb/logging/Logger.h>

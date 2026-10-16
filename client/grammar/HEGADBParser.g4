@@ -10,7 +10,13 @@ options {
 // ============================================================
 
 query
-    : selectStatement EOF
+    : statement EOF
+    ;
+
+statement
+    : selectStatement
+    | createTableStatement
+    | dropTableStatement
     ;
 
 
@@ -18,12 +24,59 @@ query
 // SELECT statement
 // ============================================================
 
+// A SELECT has either a JOIN or a WHERE clause, never both.
 selectStatement
     : SELECT
       selectList
       FROM
       tableName
-      whereClause?
+      (joinClause | whereClause)?
+      SEMICOLON?
+    ;
+
+
+// ============================================================
+// CREATE TABLE statement
+//
+// CREATE TABLE users (id INTEGER NOT NULL, name STRING);
+//
+// Columns are nullable unless NOT NULL is given.
+// ============================================================
+
+createTableStatement
+    : CREATE TABLE
+      tableName
+      LPAREN
+      columnDefinition (COMMA columnDefinition)*
+      RPAREN
+      SEMICOLON?
+    ;
+
+columnDefinition
+    : columnName dataType nullability?
+    ;
+
+nullability
+    : NOT NULL_
+    ;
+
+dataType
+    : INTEGER
+    | FLOAT
+    | STRING
+    | BOOLEAN
+    ;
+
+
+// ============================================================
+// DROP TABLE statement
+//
+// DROP TABLE users;
+// ============================================================
+
+dropTableStatement
+    : DROP TABLE
+      tableName
       SEMICOLON?
     ;
 
@@ -34,7 +87,32 @@ selectStatement
 
 selectList
     : STAR
-    | columnName (COMMA columnName)*
+    | selectItem (COMMA selectItem)*
+    ;
+
+selectItem
+    : qualifiedColumn
+    | columnName
+    ;
+
+
+// ============================================================
+// INNER JOIN (equi join on a single column pair, no aliases)
+//
+// SELECT * FROM users INNER JOIN orders ON users.id = orders.user_id;
+//
+// INNER is optional: JOIN means INNER JOIN.
+// ============================================================
+
+joinClause
+    : INNER? JOIN
+      tableName
+      ON
+      qualifiedColumn EQ qualifiedColumn
+    ;
+
+qualifiedColumn
+    : tableName DOT columnName
     ;
 
 

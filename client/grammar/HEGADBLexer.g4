@@ -36,6 +36,70 @@ FALSE
     : F A L S E
     ;
 
+// Named NULL_ because NULL is a macro in C/C++ and would break
+// the generated lexer/parser enum.
+NULL_
+    : N U L L
+    ;
+
+
+// ============================================================
+// DDL keywords
+// ============================================================
+
+CREATE
+    : C R E A T E
+    ;
+
+DROP
+    : D R O P
+    ;
+
+TABLE
+    : T A B L E
+    ;
+
+
+// ============================================================
+// JOIN keywords
+// ============================================================
+
+INNER
+    : I N N E R
+    ;
+
+JOIN
+    : J O I N
+    ;
+
+ON
+    : O N
+    ;
+
+
+// ============================================================
+// Data type keywords
+//
+// Mirrors hegadb::types::DataType. No new types are
+// introduced here.
+// ============================================================
+
+INTEGER
+    : I N T E G E R
+    ;
+
+FLOAT
+    : F L O A T
+    ;
+
+STRING
+    : S T R I N G
+    ;
+
+BOOLEAN
+    : B O O L E A N
+    ;
+
 
 // ============================================================
 // Comparison operators
@@ -76,6 +140,10 @@ STAR
 
 COMMA
     : ','
+    ;
+
+DOT
+    : '.'
     ;
 
 LPAREN
@@ -165,3 +233,4 @@ fragment W : [wW];
 fragment X : [xX];
 fragment Y : [yY];
 fragment Z : [zZ];
+

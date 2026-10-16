@@ -2,6 +2,9 @@
 
 #include <hegadb/client/ast/ColumnRef.h>
 #include <hegadb/client/ast/ComparisonExpr.h>
+#include <hegadb/client/ast/CreateTableStmt.h>
+#include <hegadb/client/ast/DropTableStmt.h>
+#include <hegadb/client/ast/JoinClause.h>
 #include <hegadb/client/ast/LogicalExpr.h>
 #include <hegadb/client/ast/NotExpr.h>
 #include <hegadb/client/ast/ParameterRef.h>
@@ -10,8 +13,11 @@
 
 #include <hegadb/operations/ComparisonOp.h>
 #include <hegadb/operations/LogicalOp.h>
+#include <hegadb/types/DataType.h>
 
 #include <cassert>
+#include <stdexcept>
+#include <utility>
 
 namespace proto = hegadb::protocol;
 
@@ -21,6 +27,42 @@ namespace {
 
 constexpr uint32_t PROTOCOL_MAJOR_VERSION = 1;
 constexpr uint32_t PROTOCOL_MINOR_VERSION = 1;
+
+// Creates a request with the protocol version and request id filled in.
+proto::ExecuteQuery makeRequest(std::string request_id)
+{
+    proto::ExecuteQuery request;
+
+    request.mutable_protocol_version()->set_major(
+        PROTOCOL_MAJOR_VERSION);
+
+    request.mutable_protocol_version()->set_minor(
+        PROTOCOL_MINOR_VERSION);
+
+    request.mutable_request_id()->set_value(
+        std::move(request_id));
+
+    return request;
+}
+
+proto::DataType mapDataType(types::DataType type)
+{
+    switch (type) {
+    case types::DataType::Integer:
+        return proto::DATA_TYPE_INTEGER;
+
+    case types::DataType::Float:
+        return proto::DATA_TYPE_FLOAT;
+
+    case types::DataType::String:
+        return proto::DATA_TYPE_STRING;
+
+    case types::DataType::Boolean:
+        return proto::DATA_TYPE_BOOLEAN;
+    }
+
+    throw std::invalid_argument("Unknown DataType");
+}
 
 proto::ComparisonOp mapComparisonOp(
     operations::ComparisonOp op)
@@ -64,6 +106,17 @@ proto::LogicalOp mapLogicalOp(
     return proto::LOGICAL_OP_UNSPECIFIED;
 }
 
+void convertColumn(
+    ast::ColumnRef const& column,
+    proto::ColumnRef* proto_column)
+{
+    if (column.table()) {
+        proto_column->set_table(*column.table());
+    }
+
+    proto_column->set_column(column.name());
+}
+
 void convertExpression(
     ast::Expr const* node,
     proto::Expression* proto_expr)
@@ -76,8 +129,7 @@ void convertExpression(
 
     if (auto const* column = dynamic_cast<ast::ColumnRef const*>(node)) {
 
-        proto_expr->mutable_column_ref()->set_column(
-            column->name());
+        convertColumn(*column, proto_expr->mutable_column_ref());
 
     } else if (auto const* parameter = dynamic_cast<ast::ParameterRef const*>(node)) {
 
@@ -135,28 +187,13 @@ proto::ExecuteQuery ExecuteQueryEncoder::encode(
     preparation::PreparedQuery const& prepared,
     std::string request_id)
 {
-    proto::ExecuteQuery request;
-
     /*
      * -----------------------------------------------------
-     * Protocol version
+     * Protocol version and request ID
      * -----------------------------------------------------
      */
 
-    request.mutable_protocol_version()->set_major(
-        PROTOCOL_MAJOR_VERSION);
-
-    request.mutable_protocol_version()->set_minor(
-        PROTOCOL_MINOR_VERSION);
-
-    /*
-     * -----------------------------------------------------
-     * Request ID
-     * -----------------------------------------------------
-     */
-
-    request.mutable_request_id()->set_value(
-        request_id);
+    proto::ExecuteQuery request = makeRequest(std::move(request_id));
 
     /*
      * -----------------------------------------------------
@@ -182,6 +219,23 @@ proto::ExecuteQuery ExecuteQueryEncoder::encode(
     if (select_ast->from()) {
         select->mutable_from_table()->set_table(
             select_ast->from()->name());
+    }
+
+    /*
+     * -----------------------------------------------------
+     * INNER JOIN
+     * -----------------------------------------------------
+     */
+
+    if (select_ast->join()) {
+        auto const* join = select_ast->join();
+        auto* proto_join = select->mutable_join();
+
+        proto_join->mutable_right_table()->set_table(
+            join->table()->name());
+
+        convertColumn(*join->left(), proto_join->mutable_left_column());
+        convertColumn(*join->right(), proto_join->mutable_right_column());
     }
 
     /*
@@ -245,6 +299,64 @@ proto::ExecuteQuery ExecuteQueryEncoder::encode(
     }
 
     return request;
+}
+
+proto::ExecuteQuery ExecuteQueryEncoder::encode(
+    ast::CreateTableStmt const& stmt,
+    std::string request_id)
+{
+    proto::ExecuteQuery request = makeRequest(std::move(request_id));
+
+    auto* create = request.mutable_statement()
+                       ->mutable_create_table_statement();
+
+    create->set_table(stmt.tableName());
+
+    // Column order is preserved: it defines the column ordinals.
+    for (auto const& column : stmt.columns()) {
+        auto* proto_column = create->add_columns();
+
+        proto_column->set_name(column.name);
+        proto_column->set_data_type(mapDataType(column.type));
+        proto_column->set_nullable(column.nullable);
+    }
+
+    return request;
+}
+
+proto::ExecuteQuery ExecuteQueryEncoder::encode(
+    ast::DropTableStmt const& stmt,
+    std::string request_id)
+{
+    proto::ExecuteQuery request = makeRequest(std::move(request_id));
+
+    request.mutable_statement()
+        ->mutable_drop_table_statement()
+        ->set_table(stmt.tableName());
+
+    return request;
+}
+
+proto::ExecuteQuery ExecuteQueryEncoder::encodeDdl(
+    ast::Statement const& stmt,
+    std::string request_id)
+{
+    switch (stmt.kind()) {
+
+    case ast::ASTNodeKind::CreateTableStmt:
+        return encode(
+            static_cast<ast::CreateTableStmt const&>(stmt),
+            std::move(request_id));
+
+    case ast::ASTNodeKind::DropTableStmt:
+        return encode(
+            static_cast<ast::DropTableStmt const&>(stmt),
+            std::move(request_id));
+
+    default:
+        throw std::invalid_argument(
+            "ExecuteQueryEncoder::encodeDdl expects CREATE TABLE or DROP TABLE");
+    }
 }
 
 } // namespace hegadb::client::protocol

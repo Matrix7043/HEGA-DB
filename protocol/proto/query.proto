@@ -88,6 +88,8 @@ message SelectStatement {
 message Statement {
   oneof statement {
     SelectStatement select_statement = 1;
+    CreateTableStatement create_table_statement = 2;
+    DropTableStatement drop_table_statement = 3;
   }
 }
 

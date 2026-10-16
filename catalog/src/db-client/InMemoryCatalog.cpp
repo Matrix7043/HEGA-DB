@@ -1,4 +1,4 @@
-#include "hegadb/catalog/InMemoryCatalog.h"
+#include "hegadb/catalog/db-client/InMemoryCatalog.h"
 
 #include <stdexcept>
 #include <utility>
@@ -21,6 +21,11 @@ SchemaVersion InMemoryCatalog::version() const { return snapshot_->version(); }
 TableSchema const* InMemoryCatalog::findTable(std::string const& name) const
 {
     return snapshot_->findTable(name);
+}
+
+void InMemoryCatalog::replaceSnapshot(std::shared_ptr<CatalogSnapshot const> snapshot)
+{
+    snapshot_ = std::move(snapshot);
 }
 
 } // namespace hegadb

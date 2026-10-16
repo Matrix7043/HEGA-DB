@@ -17,11 +17,38 @@ public:
   virtual void enterQuery(HEGADBParser::QueryContext *ctx) = 0;
   virtual void exitQuery(HEGADBParser::QueryContext *ctx) = 0;
 
+  virtual void enterStatement(HEGADBParser::StatementContext *ctx) = 0;
+  virtual void exitStatement(HEGADBParser::StatementContext *ctx) = 0;
+
   virtual void enterSelectStatement(HEGADBParser::SelectStatementContext *ctx) = 0;
   virtual void exitSelectStatement(HEGADBParser::SelectStatementContext *ctx) = 0;
 
+  virtual void enterCreateTableStatement(HEGADBParser::CreateTableStatementContext *ctx) = 0;
+  virtual void exitCreateTableStatement(HEGADBParser::CreateTableStatementContext *ctx) = 0;
+
+  virtual void enterColumnDefinition(HEGADBParser::ColumnDefinitionContext *ctx) = 0;
+  virtual void exitColumnDefinition(HEGADBParser::ColumnDefinitionContext *ctx) = 0;
+
+  virtual void enterNullability(HEGADBParser::NullabilityContext *ctx) = 0;
+  virtual void exitNullability(HEGADBParser::NullabilityContext *ctx) = 0;
+
+  virtual void enterDataType(HEGADBParser::DataTypeContext *ctx) = 0;
+  virtual void exitDataType(HEGADBParser::DataTypeContext *ctx) = 0;
+
+  virtual void enterDropTableStatement(HEGADBParser::DropTableStatementContext *ctx) = 0;
+  virtual void exitDropTableStatement(HEGADBParser::DropTableStatementContext *ctx) = 0;
+
   virtual void enterSelectList(HEGADBParser::SelectListContext *ctx) = 0;
   virtual void exitSelectList(HEGADBParser::SelectListContext *ctx) = 0;
+
+  virtual void enterSelectItem(HEGADBParser::SelectItemContext *ctx) = 0;
+  virtual void exitSelectItem(HEGADBParser::SelectItemContext *ctx) = 0;
+
+  virtual void enterJoinClause(HEGADBParser::JoinClauseContext *ctx) = 0;
+  virtual void exitJoinClause(HEGADBParser::JoinClauseContext *ctx) = 0;
+
+  virtual void enterQualifiedColumn(HEGADBParser::QualifiedColumnContext *ctx) = 0;
+  virtual void exitQualifiedColumn(HEGADBParser::QualifiedColumnContext *ctx) = 0;
 
   virtual void enterTableName(HEGADBParser::TableNameContext *ctx) = 0;
   virtual void exitTableName(HEGADBParser::TableNameContext *ctx) = 0;

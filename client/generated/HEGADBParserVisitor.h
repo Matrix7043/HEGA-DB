@@ -21,9 +21,27 @@ public:
    */
     virtual std::any visitQuery(HEGADBParser::QueryContext *context) = 0;
 
+    virtual std::any visitStatement(HEGADBParser::StatementContext *context) = 0;
+
     virtual std::any visitSelectStatement(HEGADBParser::SelectStatementContext *context) = 0;
 
+    virtual std::any visitCreateTableStatement(HEGADBParser::CreateTableStatementContext *context) = 0;
+
+    virtual std::any visitColumnDefinition(HEGADBParser::ColumnDefinitionContext *context) = 0;
+
+    virtual std::any visitNullability(HEGADBParser::NullabilityContext *context) = 0;
+
+    virtual std::any visitDataType(HEGADBParser::DataTypeContext *context) = 0;
+
+    virtual std::any visitDropTableStatement(HEGADBParser::DropTableStatementContext *context) = 0;
+
     virtual std::any visitSelectList(HEGADBParser::SelectListContext *context) = 0;
+
+    virtual std::any visitSelectItem(HEGADBParser::SelectItemContext *context) = 0;
+
+    virtual std::any visitJoinClause(HEGADBParser::JoinClauseContext *context) = 0;
+
+    virtual std::any visitQualifiedColumn(HEGADBParser::QualifiedColumnContext *context) = 0;
 
     virtual std::any visitTableName(HEGADBParser::TableNameContext *context) = 0;
 

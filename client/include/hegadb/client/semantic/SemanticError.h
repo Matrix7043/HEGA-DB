@@ -11,7 +11,10 @@ enum class SemanticErrorKind {
     ColumnNotFound,
     TypeMismatch,
     AmbigousColumn,
-    DuplicateColumn
+    DuplicateColumn,
+    TableAlreadyExists,
+    InvalidTableDefinition,
+    InvalidJoin
 };
 
 class SemanticError : public std::runtime_error {

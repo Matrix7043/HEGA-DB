@@ -13,17 +13,21 @@ class  HEGADBParser : public antlr4::Parser {
 public:
   enum {
     SELECT = 1, FROM = 2, WHERE = 3, AND = 4, OR = 5, NOT = 6, TRUE = 7, 
-    FALSE = 8, EQ = 9, NEQ = 10, LTE = 11, GTE = 12, LT = 13, GT = 14, STAR = 15, 
-    COMMA = 16, LPAREN = 17, RPAREN = 18, SEMICOLON = 19, INTEGER_LITERAL = 20, 
-    STRING_LITERAL = 21, IDENTIFIER = 22, WS = 23, LINE_COMMENT = 24, BLOCK_COMMENT = 25
+    FALSE = 8, NULL_ = 9, CREATE = 10, DROP = 11, TABLE = 12, INNER = 13, 
+    JOIN = 14, ON = 15, INTEGER = 16, FLOAT = 17, STRING = 18, BOOLEAN = 19, 
+    EQ = 20, NEQ = 21, LTE = 22, GTE = 23, LT = 24, GT = 25, STAR = 26, 
+    COMMA = 27, DOT = 28, LPAREN = 29, RPAREN = 30, SEMICOLON = 31, INTEGER_LITERAL = 32, 
+    STRING_LITERAL = 33, IDENTIFIER = 34, WS = 35, LINE_COMMENT = 36, BLOCK_COMMENT = 37
   };
 
   enum {
-    RuleQuery = 0, RuleSelectStatement = 1, RuleSelectList = 2, RuleTableName = 3, 
-    RuleWhereClause = 4, RuleBooleanExpression = 5, RuleOrExpression = 6, 
-    RuleAndExpression = 7, RuleNotExpression = 8, RuleComparisonExpression = 9, 
-    RuleComparisonOperator = 10, RuleOperand = 11, RuleColumnName = 12, 
-    RuleLiteral = 13
+    RuleQuery = 0, RuleStatement = 1, RuleSelectStatement = 2, RuleCreateTableStatement = 3, 
+    RuleColumnDefinition = 4, RuleNullability = 5, RuleDataType = 6, RuleDropTableStatement = 7, 
+    RuleSelectList = 8, RuleSelectItem = 9, RuleJoinClause = 10, RuleQualifiedColumn = 11, 
+    RuleTableName = 12, RuleWhereClause = 13, RuleBooleanExpression = 14, 
+    RuleOrExpression = 15, RuleAndExpression = 16, RuleNotExpression = 17, 
+    RuleComparisonExpression = 18, RuleComparisonOperator = 19, RuleOperand = 20, 
+    RuleColumnName = 21, RuleLiteral = 22
   };
 
   explicit HEGADBParser(antlr4::TokenStream *input);
@@ -44,8 +48,17 @@ public:
 
 
   class QueryContext;
+  class StatementContext;
   class SelectStatementContext;
+  class CreateTableStatementContext;
+  class ColumnDefinitionContext;
+  class NullabilityContext;
+  class DataTypeContext;
+  class DropTableStatementContext;
   class SelectListContext;
+  class SelectItemContext;
+  class JoinClauseContext;
+  class QualifiedColumnContext;
   class TableNameContext;
   class WhereClauseContext;
   class BooleanExpressionContext;
@@ -62,7 +75,7 @@ public:
   public:
     QueryContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
-    SelectStatementContext *selectStatement();
+    StatementContext *statement();
     antlr4::tree::TerminalNode *EOF();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -74,6 +87,23 @@ public:
 
   QueryContext* query();
 
+  class  StatementContext : public antlr4::ParserRuleContext {
+  public:
+    StatementContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    SelectStatementContext *selectStatement();
+    CreateTableStatementContext *createTableStatement();
+    DropTableStatementContext *dropTableStatement();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  StatementContext* statement();
+
   class  SelectStatementContext : public antlr4::ParserRuleContext {
   public:
     SelectStatementContext(antlr4::ParserRuleContext *parent, size_t invokingState);
@@ -82,6 +112,7 @@ public:
     SelectListContext *selectList();
     antlr4::tree::TerminalNode *FROM();
     TableNameContext *tableName();
+    JoinClauseContext *joinClause();
     WhereClauseContext *whereClause();
     antlr4::tree::TerminalNode *SEMICOLON();
 
@@ -94,13 +125,106 @@ public:
 
   SelectStatementContext* selectStatement();
 
+  class  CreateTableStatementContext : public antlr4::ParserRuleContext {
+  public:
+    CreateTableStatementContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *CREATE();
+    antlr4::tree::TerminalNode *TABLE();
+    TableNameContext *tableName();
+    antlr4::tree::TerminalNode *LPAREN();
+    std::vector<ColumnDefinitionContext *> columnDefinition();
+    ColumnDefinitionContext* columnDefinition(size_t i);
+    antlr4::tree::TerminalNode *RPAREN();
+    std::vector<antlr4::tree::TerminalNode *> COMMA();
+    antlr4::tree::TerminalNode* COMMA(size_t i);
+    antlr4::tree::TerminalNode *SEMICOLON();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  CreateTableStatementContext* createTableStatement();
+
+  class  ColumnDefinitionContext : public antlr4::ParserRuleContext {
+  public:
+    ColumnDefinitionContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    ColumnNameContext *columnName();
+    DataTypeContext *dataType();
+    NullabilityContext *nullability();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  ColumnDefinitionContext* columnDefinition();
+
+  class  NullabilityContext : public antlr4::ParserRuleContext {
+  public:
+    NullabilityContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *NOT();
+    antlr4::tree::TerminalNode *NULL_();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  NullabilityContext* nullability();
+
+  class  DataTypeContext : public antlr4::ParserRuleContext {
+  public:
+    DataTypeContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *INTEGER();
+    antlr4::tree::TerminalNode *FLOAT();
+    antlr4::tree::TerminalNode *STRING();
+    antlr4::tree::TerminalNode *BOOLEAN();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  DataTypeContext* dataType();
+
+  class  DropTableStatementContext : public antlr4::ParserRuleContext {
+  public:
+    DropTableStatementContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *DROP();
+    antlr4::tree::TerminalNode *TABLE();
+    TableNameContext *tableName();
+    antlr4::tree::TerminalNode *SEMICOLON();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  DropTableStatementContext* dropTableStatement();
+
   class  SelectListContext : public antlr4::ParserRuleContext {
   public:
     SelectListContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *STAR();
-    std::vector<ColumnNameContext *> columnName();
-    ColumnNameContext* columnName(size_t i);
+    std::vector<SelectItemContext *> selectItem();
+    SelectItemContext* selectItem(size_t i);
     std::vector<antlr4::tree::TerminalNode *> COMMA();
     antlr4::tree::TerminalNode* COMMA(size_t i);
 
@@ -112,6 +236,60 @@ public:
   };
 
   SelectListContext* selectList();
+
+  class  SelectItemContext : public antlr4::ParserRuleContext {
+  public:
+    SelectItemContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    QualifiedColumnContext *qualifiedColumn();
+    ColumnNameContext *columnName();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  SelectItemContext* selectItem();
+
+  class  JoinClauseContext : public antlr4::ParserRuleContext {
+  public:
+    JoinClauseContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *JOIN();
+    TableNameContext *tableName();
+    antlr4::tree::TerminalNode *ON();
+    std::vector<QualifiedColumnContext *> qualifiedColumn();
+    QualifiedColumnContext* qualifiedColumn(size_t i);
+    antlr4::tree::TerminalNode *EQ();
+    antlr4::tree::TerminalNode *INNER();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  JoinClauseContext* joinClause();
+
+  class  QualifiedColumnContext : public antlr4::ParserRuleContext {
+  public:
+    QualifiedColumnContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    TableNameContext *tableName();
+    antlr4::tree::TerminalNode *DOT();
+    ColumnNameContext *columnName();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  QualifiedColumnContext* qualifiedColumn();
 
   class  TableNameContext : public antlr4::ParserRuleContext {
   public:

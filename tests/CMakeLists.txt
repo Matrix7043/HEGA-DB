@@ -52,6 +52,20 @@ add_test(
     COMMAND ast_builder_tests
 )
 
+add_executable(ast_builder_ddl_tests
+    client/ast_builder_ddl_tests.cpp
+)
+
+target_link_libraries(ast_builder_ddl_tests
+    PRIVATE
+        hegadb_client_core
+)
+
+add_test(
+    NAME ast_builder_ddl_tests
+    COMMAND ast_builder_ddl_tests
+)
+
 add_executable(ast_parameterizer_tests
     client/ast_parameterizer_tests.cpp
 )
@@ -79,6 +93,20 @@ target_link_libraries(semantic_validator_tests
 add_test(
     NAME semantic_validator_tests
     COMMAND semantic_validator_tests
+)
+
+add_executable(semantic_validator_ddl_tests
+    client/semantic_validator_ddl_tests.cpp
+)
+
+target_link_libraries(semantic_validator_ddl_tests
+    PRIVATE
+        hegadb_client_core
+)
+
+add_test(
+    NAME semantic_validator_ddl_tests
+    COMMAND semantic_validator_ddl_tests
 )
 
 
@@ -129,18 +157,77 @@ add_test(
 # Catalog Tests
 # ============================================================
 
-add_executable(catalog_tests
-    catalog/catalog_tests.cpp
+add_executable(catalog_manager_tests
+    catalog/catalog_manager_tests.cpp
 )
 
-target_link_libraries(catalog_tests
+target_link_libraries(catalog_manager_tests
     PRIVATE
-        hegadb_catalog
+        hegadb_catalog_service
 )
 
 add_test(
-    NAME catalog_tests
-    COMMAND catalog_tests
+    NAME catalog_manager_tests
+    COMMAND catalog_manager_tests
+)
+
+add_executable(catalog_adapter_tests
+    catalog/catalog_adapter_tests.cpp
+)
+
+target_link_libraries(catalog_adapter_tests
+    PRIVATE
+        hegadb_catalog_client
+)
+
+add_test(
+    NAME catalog_adapter_tests
+    COMMAND catalog_adapter_tests
+)
+
+add_executable(catalog_cache_tests
+    catalog/catalog_cache_tests.cpp
+)
+
+target_link_libraries(catalog_cache_tests
+    PRIVATE
+        hegadb_catalog_client
+)
+
+add_test(
+    NAME catalog_cache_tests
+    COMMAND catalog_cache_tests
+)
+
+add_executable(catalog_service_tests
+    catalog/catalog_service_tests.cpp
+)
+
+target_link_libraries(catalog_service_tests
+    PRIVATE
+        hegadb_catalog_service
+)
+
+add_test(
+    NAME catalog_service_tests
+    COMMAND catalog_service_tests
+)
+
+
+add_executable(catalog_service_integration_tests
+    catalog/catalog_service_integration_tests.cpp
+)
+
+target_link_libraries(catalog_service_integration_tests
+    PRIVATE
+        hegadb_catalog_service
+        hegadb_catalog_client_transport
+        hegadb_catalog_mutation_client_transport
+)
+
+add_test(
+    NAME catalog_service_integration_tests
+    COMMAND catalog_service_integration_tests
 )
 
 # ============================================================
@@ -287,6 +374,21 @@ target_link_libraries(hegadb_grpc_tests
   GTest::gtest_main
 )
 
+add_executable(hegadb_catalog_transport_tests
+  grpc/catalog_transport_tests.cpp
+)
+
+target_link_libraries(hegadb_catalog_transport_tests
+  PRIVATE
+    hegadb_catalog_server_transport
+    hegadb_catalog_client_transport
+)
+
+add_test(
+    NAME hegadb_catalog_transport_tests
+    COMMAND hegadb_catalog_transport_tests
+)
+
 include(GoogleTest)
 
 gtest_discover_tests(hegadb_grpc_tests)
@@ -309,6 +411,74 @@ target_link_libraries(server_receiver_tests
 )
 
 gtest_discover_tests(server_receiver_tests)
+
+
+# ============================================================
+# DDL protocol tests (encoder + client -> gRPC -> server)
+# ============================================================
+
+add_executable(ddl_protocol_tests
+    client/ddl_protocol_tests.cpp
+)
+
+target_link_libraries(ddl_protocol_tests
+    PRIVATE
+        hegadb_client_core
+        hegadb_server
+        hegadb_server_transport
+        hegadb_client_transport
+        GTest::gtest_main
+)
+
+gtest_discover_tests(ddl_protocol_tests)
+
+
+# ============================================================
+# JOIN tests (AST, semantic validation, protocol + gRPC)
+# ============================================================
+
+add_executable(ast_builder_join_tests
+    client/ast_builder_join_tests.cpp
+)
+
+target_link_libraries(ast_builder_join_tests
+    PRIVATE
+        hegadb_client_core
+)
+
+add_test(
+    NAME ast_builder_join_tests
+    COMMAND ast_builder_join_tests
+)
+
+add_executable(semantic_validator_join_tests
+    client/semantic_validator_join_tests.cpp
+)
+
+target_link_libraries(semantic_validator_join_tests
+    PRIVATE
+        hegadb_client_core
+)
+
+add_test(
+    NAME semantic_validator_join_tests
+    COMMAND semantic_validator_join_tests
+)
+
+add_executable(join_protocol_tests
+    client/join_protocol_tests.cpp
+)
+
+target_link_libraries(join_protocol_tests
+    PRIVATE
+        hegadb_client_core
+        hegadb_server
+        hegadb_server_transport
+        hegadb_client_transport
+        GTest::gtest_main
+)
+
+gtest_discover_tests(join_protocol_tests)
 
 
 # ============================================================

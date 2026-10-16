@@ -19,11 +19,38 @@ public:
   virtual void enterQuery(HEGADBParser::QueryContext * /*ctx*/) override { }
   virtual void exitQuery(HEGADBParser::QueryContext * /*ctx*/) override { }
 
+  virtual void enterStatement(HEGADBParser::StatementContext * /*ctx*/) override { }
+  virtual void exitStatement(HEGADBParser::StatementContext * /*ctx*/) override { }
+
   virtual void enterSelectStatement(HEGADBParser::SelectStatementContext * /*ctx*/) override { }
   virtual void exitSelectStatement(HEGADBParser::SelectStatementContext * /*ctx*/) override { }
 
+  virtual void enterCreateTableStatement(HEGADBParser::CreateTableStatementContext * /*ctx*/) override { }
+  virtual void exitCreateTableStatement(HEGADBParser::CreateTableStatementContext * /*ctx*/) override { }
+
+  virtual void enterColumnDefinition(HEGADBParser::ColumnDefinitionContext * /*ctx*/) override { }
+  virtual void exitColumnDefinition(HEGADBParser::ColumnDefinitionContext * /*ctx*/) override { }
+
+  virtual void enterNullability(HEGADBParser::NullabilityContext * /*ctx*/) override { }
+  virtual void exitNullability(HEGADBParser::NullabilityContext * /*ctx*/) override { }
+
+  virtual void enterDataType(HEGADBParser::DataTypeContext * /*ctx*/) override { }
+  virtual void exitDataType(HEGADBParser::DataTypeContext * /*ctx*/) override { }
+
+  virtual void enterDropTableStatement(HEGADBParser::DropTableStatementContext * /*ctx*/) override { }
+  virtual void exitDropTableStatement(HEGADBParser::DropTableStatementContext * /*ctx*/) override { }
+
   virtual void enterSelectList(HEGADBParser::SelectListContext * /*ctx*/) override { }
   virtual void exitSelectList(HEGADBParser::SelectListContext * /*ctx*/) override { }
+
+  virtual void enterSelectItem(HEGADBParser::SelectItemContext * /*ctx*/) override { }
+  virtual void exitSelectItem(HEGADBParser::SelectItemContext * /*ctx*/) override { }
+
+  virtual void enterJoinClause(HEGADBParser::JoinClauseContext * /*ctx*/) override { }
+  virtual void exitJoinClause(HEGADBParser::JoinClauseContext * /*ctx*/) override { }
+
+  virtual void enterQualifiedColumn(HEGADBParser::QualifiedColumnContext * /*ctx*/) override { }
+  virtual void exitQualifiedColumn(HEGADBParser::QualifiedColumnContext * /*ctx*/) override { }
 
   virtual void enterTableName(HEGADBParser::TableNameContext * /*ctx*/) override { }
   virtual void exitTableName(HEGADBParser::TableNameContext * /*ctx*/) override { }
