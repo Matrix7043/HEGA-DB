@@ -60,45 +60,55 @@ target_link_libraries(hegadb_grpc_stub
 
 # ============================================================
 # Catalog Client Transport
+#
+# Used by the client and the server (through hegadb_catalog_client).
 # ============================================================
 
-add_library(hegadb_catalog_client_transport
+if(HEGADB_BUILD_CLIENT OR HEGADB_BUILD_SERVER)
+
+  add_library(hegadb_catalog_client_transport
     src/grpc/GrpcCatalogClient.cpp
     src/CatalogClientTransportFactory.cpp
 )
 
-target_include_directories(hegadb_catalog_client_transport
+  target_include_directories(hegadb_catalog_client_transport
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-target_link_libraries(hegadb_catalog_client_transport
+  target_link_libraries(hegadb_catalog_client_transport
     PUBLIC
         hegadb_grpc_stub
     PRIVATE
         hegadb_warnings
 )
+
+endif()
 
 # ============================================================
 # Catalog Mutation Client Transport
 # ============================================================
 
-add_library(hegadb_catalog_mutation_client_transport
+if(HEGADB_BUILD_SERVER OR HEGADB_BUILD_CLIENT)
+
+  add_library(hegadb_catalog_mutation_client_transport
     src/grpc/GrpcCatalogMutationClient.cpp
     src/CatalogMutationClientTransportFactory.cpp
 )
 
-target_include_directories(hegadb_catalog_mutation_client_transport
+  target_include_directories(hegadb_catalog_mutation_client_transport
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-target_link_libraries(hegadb_catalog_mutation_client_transport
+  target_link_libraries(hegadb_catalog_mutation_client_transport
     PUBLIC
         hegadb_grpc_stub
     PRIVATE
         hegadb_warnings
 )
+
+endif()
 
 # ============================================================
 # Catalog Transport Types
@@ -114,25 +124,31 @@ target_include_directories(hegadb_catalog_transport_types
 
 # ============================================================
 # Catalog Server Transport
+#
+# Only needed by the catalog service.
 # ============================================================
 
-add_library(hegadb_catalog_server_transport
+if(HEGADB_BUILD_CATALOG)
+
+  add_library(hegadb_catalog_server_transport
     src/grpc/CatalogServiceImpl.cpp
     src/grpc/GrpcCatalogServer.cpp
     src/CatalogServerTransportFactory.cpp
 )
 
-target_include_directories(hegadb_catalog_server_transport
+  target_include_directories(hegadb_catalog_server_transport
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-target_link_libraries(hegadb_catalog_server_transport
+  target_link_libraries(hegadb_catalog_server_transport
     PUBLIC
         hegadb_grpc_stub
     PRIVATE
         hegadb_warnings
 )
+
+endif()
 
 # ============================================================
 # 2. Client Transport Library
