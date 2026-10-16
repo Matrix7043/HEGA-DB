@@ -4,7 +4,7 @@
 #include "HEGADBLexer.h"
 #include "HEGADBParser.h"
 #include "hegadb/client/ast/ASTBuilder.h"
-#include "hegadb/client/ast/SelectStmt.h"
+#include "hegadb/client/ast/Statement.h"
 #include <memory>
 
 namespace hegadb::client {
@@ -46,7 +46,7 @@ SQLParser::ParseResult SQLParser::parse(std::string const& sql)
     return result;
 }
 
-std::unique_ptr<ast::SelectStmt>
+std::unique_ptr<ast::Statement>
 SQLParser::parseToAST(std::string const& sql)
 {
 
@@ -78,9 +78,9 @@ SQLParser::parseToAST(std::string const& sql)
 
     auto result = builder.visitQuery(tree);
 
-    auto* stmt = std::any_cast<ast::SelectStmt*>(result);
+    auto* stmt = std::any_cast<ast::Statement*>(result);
 
-    return std::unique_ptr<ast::SelectStmt>(stmt);
+    return std::unique_ptr<ast::Statement>(stmt);
 }
 
 }

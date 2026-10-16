@@ -33,11 +33,15 @@ int main()
 
     auto result = builder.visit(tree);
 
-    auto* stmt = std::any_cast<hegadb::client::ast::SelectStmt*>(result);
+    auto* stmt = std::any_cast<hegadb::client::ast::Statement*>(result);
 
     assert(stmt != nullptr);
 
-    std::unique_ptr<hegadb::client::ast::SelectStmt> query(stmt);
+    std::unique_ptr<hegadb::client::ast::Statement> owned(stmt);
+
+    auto* query = dynamic_cast<hegadb::client::ast::SelectStmt*>(owned.get());
+
+    assert(query != nullptr);
 
     assert(
         query->kind() == hegadb::client::ast::ASTNodeKind::SelectStmt);

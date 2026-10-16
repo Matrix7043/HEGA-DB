@@ -57,7 +57,7 @@ void hegadblexerLexerInitialize() {
 #endif
   auto staticData = std::make_unique<HEGADBLexerStaticData>(
     std::vector<std::string>{
-      "SELECT", "FROM", "WHERE", "AND", "OR", "NOT", "TRUE", "FALSE", "NULL", 
+      "SELECT", "FROM", "WHERE", "AND", "OR", "NOT", "TRUE", "FALSE", "NULL_", 
       "CREATE", "DROP", "TABLE", "INTEGER", "FLOAT", "STRING", "BOOLEAN", 
       "EQ", "NEQ", "LTE", "GTE", "LT", "GT", "STAR", "COMMA", "LPAREN", 
       "RPAREN", "SEMICOLON", "INTEGER_LITERAL", "STRING_LITERAL", "IDENTIFIER", 
@@ -78,10 +78,10 @@ void hegadblexerLexerInitialize() {
     },
     std::vector<std::string>{
       "", "SELECT", "FROM", "WHERE", "AND", "OR", "NOT", "TRUE", "FALSE", 
-      "NULL", "CREATE", "DROP", "TABLE", "INTEGER", "FLOAT", "STRING", "BOOLEAN", 
-      "EQ", "NEQ", "LTE", "GTE", "LT", "GT", "STAR", "COMMA", "LPAREN", 
-      "RPAREN", "SEMICOLON", "INTEGER_LITERAL", "STRING_LITERAL", "IDENTIFIER", 
-      "WS", "LINE_COMMENT", "BLOCK_COMMENT"
+      "NULL_", "CREATE", "DROP", "TABLE", "INTEGER", "FLOAT", "STRING", 
+      "BOOLEAN", "EQ", "NEQ", "LTE", "GTE", "LT", "GT", "STAR", "COMMA", 
+      "LPAREN", "RPAREN", "SEMICOLON", "INTEGER_LITERAL", "STRING_LITERAL", 
+      "IDENTIFIER", "WS", "LINE_COMMENT", "BLOCK_COMMENT"
     }
   );
   static const int32_t serializedATNSegment[] = {

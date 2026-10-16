@@ -11,8 +11,25 @@ class ASTBuilder : public HEGADBParserBaseVisitor {
 public:
     std::any visitQuery(HEGADBParser::QueryContext* ctx) override;
 
+    // Statement visitors (SELECT / CREATE TABLE / DROP TABLE) all return
+    // a Statement* wrapped in std::any. The caller owns the result.
+    std::any visitStatement(HEGADBParser::StatementContext* ctx) override;
+
     std::any
     visitSelectStatement(HEGADBParser::SelectStatementContext* ctx) override;
+
+    std::any visitCreateTableStatement(
+        HEGADBParser::CreateTableStatementContext* ctx) override;
+
+    // Returns a ColumnDef by value.
+    std::any visitColumnDefinition(
+        HEGADBParser::ColumnDefinitionContext* ctx) override;
+
+    // Returns a types::DataType by value.
+    std::any visitDataType(HEGADBParser::DataTypeContext* ctx) override;
+
+    std::any visitDropTableStatement(
+        HEGADBParser::DropTableStatementContext* ctx) override;
 
     std::any visitTableName(HEGADBParser::TableNameContext* ctx) override;
 

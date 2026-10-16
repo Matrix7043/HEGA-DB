@@ -36,7 +36,9 @@ FALSE
     : F A L S E
     ;
 
-NULL
+// Named NULL_ because NULL is a macro in C/C++ and would break
+// the generated lexer/parser enum.
+NULL_
     : N U L L
     ;
 
@@ -210,3 +212,4 @@ fragment W : [wW];
 fragment X : [xX];
 fragment Y : [yY];
 fragment Z : [zZ];
+

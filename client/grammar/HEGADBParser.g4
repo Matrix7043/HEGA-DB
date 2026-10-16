@@ -56,7 +56,7 @@ columnDefinition
     ;
 
 nullability
-    : NOT NULL
+    : NOT NULL_
     ;
 
 dataType

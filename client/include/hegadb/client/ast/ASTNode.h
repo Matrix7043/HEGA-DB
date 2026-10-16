@@ -5,6 +5,8 @@ namespace hegadb::client::ast {
 
 enum class ASTNodeKind {
     SelectStmt,
+    CreateTableStmt,
+    DropTableStmt,
     TableRef,
     ColumnRef,
     Wildcard,

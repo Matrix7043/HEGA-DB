@@ -114,6 +114,17 @@ int Client::run()
 
         logging::debug("SQL Parsing completed successfully");
 
+        // CREATE TABLE / DROP TABLE are parsed but not executed yet.
+        auto const* select_stmt = dynamic_cast<ast::SelectStmt const*>(ast.get());
+
+        if (select_stmt == nullptr) {
+            logging::debug("Parsed a DDL statement (kind={})",
+                static_cast<int>(ast->kind()));
+            std::cout << "CREATE TABLE / DROP TABLE parsed successfully, "
+                         "but execution is not supported yet.\n";
+            continue;
+        }
+
         // ========================================================
         // Semantic validation
         // ========================================================
@@ -124,7 +135,7 @@ int Client::run()
 
             logging::debug("Catalog Refersh Check New version found: {}", refresh_status);
 
-            validator.validate(*ast);
+            validator.validate(*select_stmt);
         } catch (
             hegadb::client::semantic::SemanticError const& error) {
 
@@ -148,7 +159,7 @@ int Client::run()
         std::cout << "Query accepted.\n";
 
         hegadb::client::ast::ASTPrinter printer;
-        auto const astPath = printer.print(dynamic_cast<ast::SelectStmt const*>(ast.get()),
+        auto const astPath = printer.print(select_stmt,
             "logs/ast", queryId);
         if (!astPath.empty()) {
             logging::debug(
