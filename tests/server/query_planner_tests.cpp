@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <hegadb/catalog/InMemoryCatalog.h>
+#include <hegadb/catalog/db-client/InMemoryCatalog.h>
 #include <hegadb/catalog/TableSchema.h>
 #include <hegadb/server/planner/ExpressionPlanner.h>
 #include <hegadb/server/planner/QueryPlanner.h>
@@ -7,7 +7,6 @@
 using namespace hegadb::server::planner;
 using namespace hegadb::catalog;
 using namespace hegadb::protocol;
-using namespace hegadb::types;
 
 class QueryPlannerTest : public ::testing::Test {
 protected:
@@ -15,10 +14,10 @@ protected:
     {
         // Create catalog with test table
         std::vector<ColumnSchema> columns = {
-            { "id", DataType::Integer, false, 0 },
-            { "name", DataType::String, false, 1 },
-            { "age", DataType::Integer, false, 2 },
-            { "salary", DataType::Integer, false, 3 }
+            { "id",     hegadb::types::DataType::Integer, false, 0 },
+            { "name",   hegadb::types::DataType::String,  false, 1 },
+            { "age",    hegadb::types::DataType::Integer, false, 2 },
+            { "salary", hegadb::types::DataType::Integer, false, 3 }
         };
 
         auto table = std::make_shared<TableSchema>("employees", columns);

@@ -19,11 +19,42 @@ execution::ExecutionResult QueryExecutor::execute(
     protocol::ExecuteQuery const& request) {
 
     // Validate request
-    if (!request.has_statement() || !request.statement().has_select_statement()) {
-        throw std::runtime_error("Only SELECT statements supported");
+    if (!request.has_statement()) {
+        throw std::runtime_error("Request contains no statement");
     }
 
-    auto const& select_stmt = request.statement().select_statement();
+    auto const& stmt = request.statement();
+
+    // DDL — not yet implemented; return a descriptive error so callers can
+    // distinguish "known but unimplemented" from "unknown request".
+    if (stmt.has_create_table_statement()) {
+        throw std::runtime_error(
+            "CREATE TABLE '" + stmt.create_table_statement().table()
+            + "' is not implemented on this server");
+    }
+
+    if (stmt.has_drop_table_statement()) {
+        throw std::runtime_error(
+            "DROP TABLE '" + stmt.drop_table_statement().table()
+            + "' is not implemented on this server");
+    }
+
+    if (!stmt.has_select_statement()) {
+        throw std::runtime_error("Unsupported statement type");
+    }
+
+    auto const& select_stmt = stmt.select_statement();
+
+    // JOIN — planning is supported but execution is not yet implemented.
+    if (select_stmt.joins_size() > 0) {
+        auto const& join = select_stmt.joins(0);
+        throw std::runtime_error(
+            "INNER JOIN between '"
+            + select_stmt.from_table().table()
+            + "' and '"
+            + join.right_table().table()
+            + "' is not implemented on this server");
+    }
 
     // Determine result mode
     auto result_mode = (request.result_mode() == protocol::RESULT_MODE_UNSPECIFIED)

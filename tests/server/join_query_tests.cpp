@@ -34,7 +34,7 @@
  */
 
 #include <gtest/gtest.h>
-#include <hegadb/catalog/InMemoryCatalog.h>
+#include <hegadb/catalog/db-client/InMemoryCatalog.h>
 #include <hegadb/catalog/TableSchema.h>
 #include <hegadb/catalog/ColumnSchema.h>
 #include <hegadb/crypto/OpenFHEContext.h>
@@ -118,12 +118,12 @@ protected:
     void SetUp() override
     {
         std::vector<ColumnSchema> student_cols = {
-            { "id",    DataType::Integer, false, 0 },
-            { "grade", DataType::Integer, false, 1 },
+            { "id",    types::DataType::Integer, false, 0 },
+            { "grade", types::DataType::Integer, false, 1 },
         };
         std::vector<ColumnSchema> enrollment_cols = {
-            { "student_id", DataType::Integer, false, 0 },
-            { "score",      DataType::Integer, false, 1 },
+            { "student_id", types::DataType::Integer, false, 0 },
+            { "score",      types::DataType::Integer, false, 1 },
         };
 
         std::unordered_map<std::string, TableSchema> tables;
@@ -172,7 +172,7 @@ protected:
         for (size_t i = 0; i < data.size(); ++i) vec[i] = data[i];
         auto pt = bfvCtx()->MakePackedPlaintext(vec);
         auto ct = bfvCtx()->Encrypt(keypair_.publicKey, pt);
-        return { ct, crypto::SchemeType::BFV, DataType::Integer };
+        return { ct, crypto::SchemeType::BFV, types::DataType::Integer };
     }
 
     /// Encrypt a scalar threshold broadcast to every slot (for WHERE parameters).
@@ -183,7 +183,7 @@ protected:
         std::vector<int64_t> vec(ringDim(), threshold);
         auto pt = bfvCtx()->MakePackedPlaintext(vec);
         auto ct = bfvCtx()->Encrypt(keypair_.publicKey, pt);
-        crypto::OpenFHECiphertext wrapper(ct, crypto::SchemeType::BFV, DataType::Integer);
+        crypto::OpenFHECiphertext wrapper(ct, crypto::SchemeType::BFV, types::DataType::Integer);
         return wrapper.serialize();
     }
 
@@ -322,8 +322,7 @@ TEST_F(JoinQueryTest, PlanJoinQuerySuccessfully)
     p2->mutable_column_ref()->set_column("score");
 
     auto* join = stmt.add_joins();
-    join->set_type(JOIN_TYPE_INNER);
-    join->mutable_table()->set_table("enrollments");
+    join->mutable_right_table()->set_table("enrollments");
 
     auto* cond = join->mutable_condition()->mutable_comparison_expr();
     cond->set_operator_(COMPARISON_OP_EQ);
@@ -349,8 +348,7 @@ TEST_F(JoinQueryTest, PlanJoinWithWhereClause)
     stmt.add_projections()->mutable_wildcard();
 
     auto* join = stmt.add_joins();
-    join->set_type(JOIN_TYPE_INNER);
-    join->mutable_table()->set_table("enrollments");
+    join->mutable_right_table()->set_table("enrollments");
 
     auto* cond = join->mutable_condition()->mutable_comparison_expr();
     cond->set_operator_(COMPARISON_OP_EQ);
@@ -382,8 +380,7 @@ TEST_F(JoinQueryTest, PlanJoinThrowsOnNonExistentTable)
     stmt.add_projections()->mutable_wildcard();
 
     auto* join = stmt.add_joins();
-    join->set_type(JOIN_TYPE_INNER);
-    join->mutable_table()->set_table("ghost_table");
+    join->mutable_right_table()->set_table("ghost_table");
 
     EXPECT_THROW(planner.plan(stmt), std::runtime_error);
 }

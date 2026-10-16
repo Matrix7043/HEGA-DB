@@ -28,7 +28,7 @@ execution::ExecutionPlan QueryPlanner::plan(protocol::SelectStatement const& stm
     // 2. Handle JOIN if present
     if (stmt.joins_size() > 0) {
         auto const& join_spec = stmt.joins(0);
-        auto const& right_table_name = join_spec.table().table();
+        auto const& right_table_name = join_spec.right_table().table();
 
         auto const* right_table = catalog_->findTable(right_table_name);
         if (!right_table) {

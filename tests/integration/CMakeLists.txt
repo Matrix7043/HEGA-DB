@@ -13,7 +13,7 @@ add_executable(integrated_query_test
 target_link_libraries(integrated_query_test
     PRIVATE
         # Core libraries
-        hegadb_catalog
+        hegadb_catalog_client
         hegadb_crypto
         hegadb_types
         hegadb_logging
@@ -49,7 +49,7 @@ add_executable(test_file_storage
 target_link_libraries(test_file_storage
     PRIVATE
         # Core libraries
-        hegadb_catalog
+        hegadb_catalog_client
         hegadb_crypto
         hegadb_types
         hegadb_logging
@@ -78,7 +78,7 @@ add_executable(test_query_execution
 target_link_libraries(test_query_execution
     PRIVATE
         # Core libraries
-        hegadb_catalog
+        hegadb_catalog_client
         hegadb_crypto
         hegadb_types
         hegadb_logging
@@ -107,7 +107,7 @@ add_test(
 # Diagnostic: Column slot inspection
 # ============================================================
 add_executable(diag_columns diag_columns.cpp)
-target_link_libraries(diag_columns PRIVATE hegadb_catalog hegadb_crypto hegadb_server hegadb_warnings)
+target_link_libraries(diag_columns PRIVATE hegadb_catalog_client hegadb_crypto hegadb_server hegadb_warnings)
 target_compile_features(diag_columns PRIVATE cxx_std_20)
 
 # ============================================================
@@ -116,7 +116,7 @@ target_compile_features(diag_columns PRIVATE cxx_std_20)
 add_executable(test_query_types test_query_types.cpp)
 target_link_libraries(test_query_types
     PRIVATE
-        hegadb_catalog
+        hegadb_catalog_client
         hegadb_crypto
         hegadb_types
         hegadb_logging
@@ -142,7 +142,7 @@ add_executable(test_logical_operations
 )
 target_link_libraries(test_logical_operations
     PRIVATE
-        hegadb_catalog
+        hegadb_catalog_client
         hegadb_crypto
         hegadb_types
         hegadb_logging
@@ -171,7 +171,7 @@ target_link_libraries(test_grpc_transport
     PRIVATE
         hegadb_server_transport    # GrpcServer + HEGADBServiceImpl
         hegadb_client_transport    # GrpcClient
-        hegadb_catalog
+        hegadb_catalog_client
         hegadb_crypto
         hegadb_types
         hegadb_logging
@@ -210,7 +210,7 @@ set_tests_properties(
 add_executable(debug_wire_bytes debug_wire_bytes.cpp)
 target_link_libraries(debug_wire_bytes PRIVATE
     hegadb_server_transport hegadb_client_transport
-    hegadb_catalog hegadb_crypto hegadb_types hegadb_logging
+    hegadb_catalog_client hegadb_crypto hegadb_types hegadb_logging
     hegadb_protocol hegadb_client_core hegadb_server
     hegadb_warnings)
 target_compile_features(debug_wire_bytes PRIVATE cxx_std_20)

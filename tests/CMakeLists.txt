@@ -537,7 +537,7 @@ add_executable(query_planner_tests
 target_link_libraries(query_planner_tests
     PRIVATE
         hegadb_server
-        hegadb_catalog
+        hegadb_catalog_client
         GTest::gtest_main
 )
 
@@ -576,7 +576,7 @@ add_executable(end_to_end_execution_tests
 target_link_libraries(end_to_end_execution_tests
     PRIVATE
         hegadb_server
-        hegadb_catalog
+        hegadb_catalog_client
         hegadb_crypto
         GTest::gtest_main
 )
@@ -590,7 +590,7 @@ add_executable(join_query_tests
 target_link_libraries(join_query_tests
     PRIVATE
         hegadb_server
-        hegadb_catalog
+        hegadb_catalog_client
         hegadb_crypto
         hegadb_protocol
         GTest::gtest_main

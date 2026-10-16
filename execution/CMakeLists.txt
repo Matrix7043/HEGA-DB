@@ -36,7 +36,7 @@ target_include_directories(hegadb_execution
 target_link_libraries(hegadb_execution
     PUBLIC
         # Internal modules
-        hegadb_catalog
+        hegadb_catalog_client
         hegadb_crypto
         hegadb_types
         hegadb_logging

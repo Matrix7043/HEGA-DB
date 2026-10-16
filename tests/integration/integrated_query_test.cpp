@@ -17,7 +17,7 @@
 #include <hegadb/server/planner/QueryPlanner.h>
 
 // Catalog and crypto
-#include <hegadb/catalog/InMemoryCatalog.h>
+#include <hegadb/catalog/db-client/InMemoryCatalog.h>
 #include <hegadb/crypto/CompositeEncryption.h>
 #include <hegadb/crypto/OpenFHEContext.h>
 

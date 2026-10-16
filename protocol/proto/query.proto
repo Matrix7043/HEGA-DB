@@ -3,14 +3,33 @@ syntax = "proto3";
 package hegadb.protocol;
 
 import "common.proto";
+import "response.proto";
+
+// ---------------------------------------------------------------------------
+// Scalar types
+// ---------------------------------------------------------------------------
+
+// Mirrors hegadb::types::DataType.
+// Used in CREATE TABLE column definitions.
+enum DataType {
+  DATA_TYPE_UNSPECIFIED = 0;
+  DATA_TYPE_INTEGER     = 1;
+  DATA_TYPE_FLOAT       = 2;
+  DATA_TYPE_STRING      = 3;
+  DATA_TYPE_BOOLEAN     = 4;
+}
+
+// ---------------------------------------------------------------------------
+// Expression primitives
+// ---------------------------------------------------------------------------
 
 message EncryptedParameter {
-  uint32 index = 1;
-  bytes ciphertext = 2;
+  uint32 index      = 1;
+  bytes  ciphertext = 2;
 }
 
 message ColumnRef {
-  string table = 1;
+  string table  = 1;
   string column = 2;
 }
 
@@ -22,30 +41,30 @@ message Wildcard {}
 
 enum ComparisonOp {
   COMPARISON_OP_UNSPECIFIED = 0;
-  COMPARISON_OP_EQ = 1;
-  COMPARISON_OP_NEQ = 2;
-  COMPARISON_OP_LT = 3;
-  COMPARISON_OP_GT = 4;
-  COMPARISON_OP_LTE = 5;
-  COMPARISON_OP_GTE = 6;
+  COMPARISON_OP_EQ          = 1;
+  COMPARISON_OP_NEQ         = 2;
+  COMPARISON_OP_LT          = 3;
+  COMPARISON_OP_GT          = 4;
+  COMPARISON_OP_LTE         = 5;
+  COMPARISON_OP_GTE         = 6;
 }
 
 enum LogicalOp {
   LOGICAL_OP_UNSPECIFIED = 0;
-  LOGICAL_OP_AND = 1;
-  LOGICAL_OP_OR = 2;
+  LOGICAL_OP_AND         = 1;
+  LOGICAL_OP_OR          = 2;
 }
 
 message ComparisonExpr {
-  Expression left = 1;
-  ComparisonOp operator = 2;
-  Expression right = 3;
+  Expression   left     = 1;
+  ComparisonOp operator = 2;  // generates operator_() accessor in C++
+  Expression   right    = 3;
 }
 
 message LogicalExpr {
-  Expression left = 1;
-  LogicalOp operator = 2;
-  Expression right = 3;
+  Expression left     = 1;
+  LogicalOp  operator = 2;  // generates operator_() accessor in C++
+  Expression right    = 3;
 }
 
 message NotExpr {
@@ -54,80 +73,108 @@ message NotExpr {
 
 message Expression {
   oneof expr_type {
-    ColumnRef column_ref = 1;
-    ParameterRef parameter_ref = 2;
-    Wildcard wildcard = 3;
-    LogicalExpr logical_expr = 4;
+    ColumnRef      column_ref      = 1;
+    ParameterRef   parameter_ref   = 2;
+    Wildcard       wildcard        = 3;
+    LogicalExpr    logical_expr    = 4;
     ComparisonExpr comparison_expr = 5;
-    NotExpr not_expr = 6;
+    NotExpr        not_expr        = 6;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Table references
+// ---------------------------------------------------------------------------
 
 message TableRef {
   string table = 1;
 }
 
-enum JoinType {
-  JOIN_TYPE_UNSPECIFIED = 0;
-  JOIN_TYPE_INNER = 1;
+// ---------------------------------------------------------------------------
+// JOIN clause
+// ---------------------------------------------------------------------------
+
+// Represents one INNER JOIN in a SELECT statement.
+//
+// The client populates right_table, left_column, and right_column for a
+// simple equi-join (ON left_column = right_column).  The server's
+// ExpressionPlanner reads the condition field when it is set; for equi-joins
+// the planner reconstructs the condition from the column pair instead.
+message JoinClause {
+  TableRef   right_table  = 1;
+  ColumnRef  left_column  = 2;
+  ColumnRef  right_column = 3;
+
+  // Optional explicit join-condition expression.  When present the planner
+  // uses this directly; left_column / right_column are ignored.
+  Expression condition    = 4;
 }
 
-message JoinClause {
-  JoinType type = 1;
-  TableRef table = 2;
-  Expression condition = 3;
-}
+// ---------------------------------------------------------------------------
+// DML — SELECT
+// ---------------------------------------------------------------------------
 
 message SelectStatement {
   repeated Expression projections = 1;
-  TableRef from_table = 2;
-  Expression where = 3;
+  TableRef            from_table  = 2;
+  Expression          where       = 3;
+
+  // Zero or more JOIN clauses.  The planner currently processes only
+  // joins(0); additional entries are reserved for future multi-join support.
   repeated JoinClause joins = 4;
 }
 
+// ---------------------------------------------------------------------------
+// DDL — CREATE TABLE / DROP TABLE
+// ---------------------------------------------------------------------------
+
+// A single column definition inside a CREATE TABLE statement.
+// The column's ordinal equals its position in CreateTableStatement.columns.
+message ColumnDefinition {
+  string   name      = 1;
+  DataType data_type = 2;
+  bool     nullable  = 3;
+}
+
+message CreateTableStatement {
+  string                    table   = 1;
+  repeated ColumnDefinition columns = 2;
+}
+
+message DropTableStatement {
+  string table = 1;
+}
+
+// ---------------------------------------------------------------------------
+// Statement wrapper
+// ---------------------------------------------------------------------------
+
 message Statement {
   oneof statement {
-    SelectStatement select_statement = 1;
+    SelectStatement      select_statement       = 1;
     CreateTableStatement create_table_statement = 2;
-    DropTableStatement drop_table_statement = 3;
+    DropTableStatement   drop_table_statement   = 3;
   }
 }
 
+// ---------------------------------------------------------------------------
+// Keys and request envelope
+// ---------------------------------------------------------------------------
+
 message PublicKeys {
-  bytes bfv_key = 1;
+  bytes bfv_key  = 1;
   bytes ckks_key = 2;
 }
 
+// Top-level request message sent from client to server.
 message ExecuteQuery {
-  ProtocolVersion protocol_version = 1;
-  RequestId request_id = 2;
-  Statement statement = 3;
-  repeated EncryptedParameter parameters = 4;
-  ResultMode result_mode = 5;
-  PublicKeys keys = 6;
-}
+  ProtocolVersion             protocol_version = 1;
+  RequestId                   request_id       = 2;
+  Statement                   statement        = 3;
+  repeated EncryptedParameter parameters       = 4;
+  PublicKeys                  keys             = 5;
 
-enum ResultMode{
-  RESULT_MODE_UNSPECIFIED = 0;
-  RESULT_MODE_ROWS_AND_MASK = 1;
-  RESULT_MODE_MASKED_ROWS = 2;
-}
-
-message EncryptedColumn {
-  string column_name = 1;
-  repeated bytes ciphertexts = 2;
-}
-
-message QueryResult {
-  ResultMode mode = 1;
-  repeated EncryptedColumn columns = 2;
-  bytes encrypted_mask = 3;
-  uint32 row_count = 4;
-}
-
-message QueryResponse {
-  ProtocolVersion protocol_version = 1;
-  RequestId request_id = 2;
-  Status status = 3;
-  QueryResult result = 4;
+  // Desired result mode.  When left as RESULT_MODE_UNSPECIFIED the server
+  // defaults to RESULT_MODE_ROWS_AND_MASK.
+  ResultMode result_mode = 6;
 }

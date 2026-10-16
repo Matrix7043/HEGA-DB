@@ -44,7 +44,7 @@
 #include <hegadb/server/storage/StorageManager.h>
 
 // Catalog
-#include <hegadb/catalog/InMemoryCatalog.h>
+#include <hegadb/catalog/db-client/InMemoryCatalog.h>
 #include <hegadb/catalog/CatalogSnapshot.h>
 #include <hegadb/catalog/TableSchema.h>
 #include <hegadb/catalog/ColumnSchema.h>

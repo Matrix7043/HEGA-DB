@@ -1,6 +1,6 @@
 #include <hegadb/server/execution/QueryExecutor.h>
 #include <hegadb/server/api/ExecuteQueryReceiver.h>
-#include <hegadb/catalog/InMemoryCatalog.h>
+#include <hegadb/catalog/db-client/InMemoryCatalog.h>
 #include <hegadb/catalog/TableSchema.h>
 #include <hegadb/crypto/OpenFHEContext.h>
 #include <hegadb/server/storage/StorageManager.h>
@@ -28,8 +28,8 @@ protected:
     void SetUp() override {
         // Setup catalog
         std::vector<ColumnSchema> columns = {
-            {"id", DataType::Integer, false, 0},
-            {"salary", DataType::Integer, false, 1}
+            {"id",     hegadb::types::DataType::Integer, false, 0},
+            {"salary", hegadb::types::DataType::Integer, false, 1}
         };
 
         auto table = std::make_shared<TableSchema>("employees", columns);

@@ -2,7 +2,7 @@
 #define TEST_DATA_GENERATOR_H
 
 #include "InMemoryStorageManager.h"
-#include <hegadb/catalog/InMemoryCatalog.h>
+#include <hegadb/catalog/db-client/InMemoryCatalog.h>
 #include <hegadb/catalog/TableSchema.h>
 #include <hegadb/crypto/CompositeEncryption.h>
 #include <hegadb/types/DataType.h>

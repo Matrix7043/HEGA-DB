@@ -18,7 +18,7 @@ target_include_directories(hegadb_setup_tools
 target_link_libraries(hegadb_setup_tools
     PUBLIC
         hegadb_crypto
-        hegadb_catalog
+        hegadb_catalog_client
         hegadb_server
 )
 
@@ -34,7 +34,7 @@ target_link_libraries(hegadb_setup
     PRIVATE
         hegadb_setup_tools
         hegadb_crypto
-        hegadb_catalog
+        hegadb_catalog_client
         hegadb_server
 )
 

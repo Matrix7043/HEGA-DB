@@ -1,6 +1,6 @@
 #pragma once
 
-#include <hegadb/catalog/InMemoryCatalog.h>
+#include <hegadb/catalog/db-client/InMemoryCatalog.h>
 
 #include <memory>
 #include <string>

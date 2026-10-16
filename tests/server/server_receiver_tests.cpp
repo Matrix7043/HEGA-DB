@@ -1,6 +1,6 @@
 #include "hegadb/transport/grpc/GrpcClient.h"
 #include "hegadb/transport/grpc/GrpcServer.h"
-#include <hegadb/catalog/InMemoryCatalog.h>
+#include <hegadb/catalog/db-client/InMemoryCatalog.h>
 #include <hegadb/crypto/OpenFHEContext.h>
 #include <hegadb/server/api/ExecuteQueryReceiver.h>
 #include <hegadb/server/execution/QueryExecutor.h>

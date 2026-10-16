@@ -101,11 +101,9 @@ target_link_libraries(hegadb_server
         OPENFHEcore
 
         # Internal modules
-        hegadb_catalog
+        hegadb_catalog_client
         hegadb_logging
         hegadb_server_transport
-        # TODO: CHANGE THIS TO SERVER, this is temprorary workaround
-        hegadb_catalog_client
         hegadb_types
         hegadb_crypto
         hegadb_protocol
