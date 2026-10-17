@@ -47,6 +47,18 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitInsertStatement(HEGADBParser::InsertStatementContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitValueRow(HEGADBParser::ValueRowContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitInsertValue(HEGADBParser::InsertValueContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitSelectList(HEGADBParser::SelectListContext *ctx) override {
     return visitChildren(ctx);
   }

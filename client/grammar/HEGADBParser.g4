@@ -17,6 +17,7 @@ statement
     : selectStatement
     | createTableStatement
     | dropTableStatement
+    | insertStatement
     ;
 
 
@@ -78,6 +79,36 @@ dropTableStatement
     : DROP TABLE
       tableName
       SEMICOLON?
+    ;
+
+
+// ============================================================
+// INSERT statement
+//
+// INSERT INTO users VALUES (1, 'alice');
+// INSERT INTO users (id, name) VALUES (1, 'alice'), (2, NULL);
+//
+// The column list is optional. Without it, every row must give a
+// value for every column, in the order the table was created with.
+// NULL is only allowed here, not in WHERE comparisons.
+// ============================================================
+
+insertStatement
+    : INSERT INTO
+      tableName
+      (LPAREN columnName (COMMA columnName)* RPAREN)?
+      VALUES
+      valueRow (COMMA valueRow)*
+      SEMICOLON?
+    ;
+
+valueRow
+    : LPAREN insertValue (COMMA insertValue)* RPAREN
+    ;
+
+insertValue
+    : literal
+    | NULL_
     ;
 
 

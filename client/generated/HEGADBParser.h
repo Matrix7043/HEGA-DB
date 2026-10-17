@@ -13,21 +13,23 @@ class  HEGADBParser : public antlr4::Parser {
 public:
   enum {
     SELECT = 1, FROM = 2, WHERE = 3, AND = 4, OR = 5, NOT = 6, TRUE = 7, 
-    FALSE = 8, NULL_ = 9, CREATE = 10, DROP = 11, TABLE = 12, INNER = 13, 
-    JOIN = 14, ON = 15, INTEGER = 16, FLOAT = 17, STRING = 18, BOOLEAN = 19, 
-    EQ = 20, NEQ = 21, LTE = 22, GTE = 23, LT = 24, GT = 25, STAR = 26, 
-    COMMA = 27, DOT = 28, LPAREN = 29, RPAREN = 30, SEMICOLON = 31, INTEGER_LITERAL = 32, 
-    STRING_LITERAL = 33, IDENTIFIER = 34, WS = 35, LINE_COMMENT = 36, BLOCK_COMMENT = 37
+    FALSE = 8, NULL_ = 9, CREATE = 10, DROP = 11, TABLE = 12, INSERT = 13, 
+    INTO = 14, VALUES = 15, INNER = 16, JOIN = 17, ON = 18, INTEGER = 19, 
+    FLOAT = 20, STRING = 21, BOOLEAN = 22, EQ = 23, NEQ = 24, LTE = 25, 
+    GTE = 26, LT = 27, GT = 28, STAR = 29, COMMA = 30, DOT = 31, LPAREN = 32, 
+    RPAREN = 33, SEMICOLON = 34, INTEGER_LITERAL = 35, STRING_LITERAL = 36, 
+    IDENTIFIER = 37, WS = 38, LINE_COMMENT = 39, BLOCK_COMMENT = 40
   };
 
   enum {
     RuleQuery = 0, RuleStatement = 1, RuleSelectStatement = 2, RuleCreateTableStatement = 3, 
     RuleColumnDefinition = 4, RuleNullability = 5, RuleDataType = 6, RuleDropTableStatement = 7, 
-    RuleSelectList = 8, RuleSelectItem = 9, RuleJoinClause = 10, RuleQualifiedColumn = 11, 
-    RuleTableName = 12, RuleWhereClause = 13, RuleBooleanExpression = 14, 
-    RuleOrExpression = 15, RuleAndExpression = 16, RuleNotExpression = 17, 
-    RuleComparisonExpression = 18, RuleComparisonOperator = 19, RuleOperand = 20, 
-    RuleColumnName = 21, RuleLiteral = 22
+    RuleInsertStatement = 8, RuleValueRow = 9, RuleInsertValue = 10, RuleSelectList = 11, 
+    RuleSelectItem = 12, RuleJoinClause = 13, RuleQualifiedColumn = 14, 
+    RuleTableName = 15, RuleWhereClause = 16, RuleBooleanExpression = 17, 
+    RuleOrExpression = 18, RuleAndExpression = 19, RuleNotExpression = 20, 
+    RuleComparisonExpression = 21, RuleComparisonOperator = 22, RuleOperand = 23, 
+    RuleColumnName = 24, RuleLiteral = 25
   };
 
   explicit HEGADBParser(antlr4::TokenStream *input);
@@ -55,6 +57,9 @@ public:
   class NullabilityContext;
   class DataTypeContext;
   class DropTableStatementContext;
+  class InsertStatementContext;
+  class ValueRowContext;
+  class InsertValueContext;
   class SelectListContext;
   class SelectItemContext;
   class JoinClauseContext;
@@ -94,6 +99,7 @@ public:
     SelectStatementContext *selectStatement();
     CreateTableStatementContext *createTableStatement();
     DropTableStatementContext *dropTableStatement();
+    InsertStatementContext *insertStatement();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -217,6 +223,69 @@ public:
   };
 
   DropTableStatementContext* dropTableStatement();
+
+  class  InsertStatementContext : public antlr4::ParserRuleContext {
+  public:
+    InsertStatementContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *INSERT();
+    antlr4::tree::TerminalNode *INTO();
+    TableNameContext *tableName();
+    antlr4::tree::TerminalNode *VALUES();
+    std::vector<ValueRowContext *> valueRow();
+    ValueRowContext* valueRow(size_t i);
+    antlr4::tree::TerminalNode *LPAREN();
+    std::vector<ColumnNameContext *> columnName();
+    ColumnNameContext* columnName(size_t i);
+    antlr4::tree::TerminalNode *RPAREN();
+    std::vector<antlr4::tree::TerminalNode *> COMMA();
+    antlr4::tree::TerminalNode* COMMA(size_t i);
+    antlr4::tree::TerminalNode *SEMICOLON();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  InsertStatementContext* insertStatement();
+
+  class  ValueRowContext : public antlr4::ParserRuleContext {
+  public:
+    ValueRowContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *LPAREN();
+    std::vector<InsertValueContext *> insertValue();
+    InsertValueContext* insertValue(size_t i);
+    antlr4::tree::TerminalNode *RPAREN();
+    std::vector<antlr4::tree::TerminalNode *> COMMA();
+    antlr4::tree::TerminalNode* COMMA(size_t i);
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  ValueRowContext* valueRow();
+
+  class  InsertValueContext : public antlr4::ParserRuleContext {
+  public:
+    InsertValueContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    LiteralContext *literal();
+    antlr4::tree::TerminalNode *NULL_();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  InsertValueContext* insertValue();
 
   class  SelectListContext : public antlr4::ParserRuleContext {
   public:

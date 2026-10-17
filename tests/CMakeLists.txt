@@ -16,6 +16,20 @@ add_test(
     COMMAND parser_tests
 )
 
+add_executable(parser_insert_tests
+    client/parser_insert_tests.cpp
+)
+
+target_link_libraries(parser_insert_tests
+    PRIVATE
+        hegadb_client_core
+)
+
+add_test(
+    NAME parser_insert_tests
+    COMMAND parser_insert_tests
+)
+
 
 add_executable(ast_tests
     client/ast_tests.cpp
