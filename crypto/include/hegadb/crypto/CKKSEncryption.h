@@ -3,8 +3,8 @@
 
 #include "EncryptionWrapper.h"
 #include "KeyManager.h"
-#include "OpenFHEContext.h"
 #include "OpenFHECiphertext.h"
+#include "OpenFHEContext.h"
 
 namespace hegadb::crypto {
 
@@ -20,15 +20,14 @@ namespace hegadb::crypto {
 
 class CKKSEncryption final : public EncryptionWrapper {
 public:
-
     CKKSEncryption(OpenFHEContext const& context, KeyManager const& keyManager);
-
 
     std::unique_ptr<Ciphertext> encrypt(Plaintext const& value) override;
 
-
     Plaintext decrypt(Ciphertext const& value) override;
-    
+
+    std::unique_ptr<Ciphertext> encryptInsert(Plaintext const& value) override;
+
     /**
      * @brief Get the KeyManager (not supported for internal encryption engines)
      * @throws std::runtime_error Always throws - CKKSEncryption is an internal implementation detail

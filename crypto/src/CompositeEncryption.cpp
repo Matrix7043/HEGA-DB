@@ -1,9 +1,9 @@
 #include "hegadb/crypto/CompositeEncryption.h"
 #include "hegadb/crypto/OpenFHECiphertext.h"
 
-#include <stdexcept>
 #include <filesystem>
 #include <iostream>
+#include <stdexcept>
 
 namespace hegadb::crypto {
 
@@ -27,7 +27,7 @@ CompositeEncryption::CompositeEncryption(std::string const& key_directory)
 void CompositeEncryption::initializeKeys(std::string const& key_directory)
 {
     std::cout << "Initializing keys in directory: " << key_directory << "\n";
-    
+
     try {
         if (keyManager_.keyFilesExist(key_directory)) {
             std::cout << "Found existing keys, loading...\n";
@@ -37,7 +37,7 @@ void CompositeEncryption::initializeKeys(std::string const& key_directory)
             std::cout << "No existing keys found, generating new keys...\n";
             keyManager_.generateKeys();
             keyManager_.generateEvaluationKeys();
-            
+
             try {
                 keyManager_.saveKeys(key_directory);
                 std::cout << "Generated and saved new keys to: " << key_directory << "\n";
@@ -51,6 +51,20 @@ void CompositeEncryption::initializeKeys(std::string const& key_directory)
         std::cerr << "Falling back to temporary key generation...\n";
         keyManager_.generateKeys();
         keyManager_.generateEvaluationKeys();
+    }
+}
+
+std::unique_ptr<Ciphertext> CompositeEncryption::encryptInsert(Plaintext const& value)
+{
+    switch (value.type()) {
+    case types::DataType::Integer:
+    case types::DataType::String:
+    case types::DataType::Boolean:
+        return bfvEngine_->encryptInsert(value);
+    case types::DataType::Float:
+        return ckksEngine_->encryptInsert(value);
+    default:
+        throw std::runtime_error("Unknown data type in CompositeEncryption::encryptSingleSlot");
     }
 }
 

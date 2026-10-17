@@ -342,6 +342,22 @@ add_test(
     COMMAND key_persistence_integration_test
 )
 
+add_executable(insert_slot_encryption_test
+    crypto/insert_slot_encryption_test.cpp
+)
+
+target_link_libraries(insert_slot_encryption_test
+    PRIVATE
+        hegadb_crypto
+        OPENFHEpke
+        OPENFHEcore
+)
+
+add_test(
+    NAME insert_slot_encryption_test
+    COMMAND insert_slot_encryption_test
+)
+
 
 # ============================================================
 # gRPC Tests

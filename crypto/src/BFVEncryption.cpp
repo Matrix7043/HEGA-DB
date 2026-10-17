@@ -1,6 +1,6 @@
 #include "hegadb/crypto/BFVEncryption.h"
-#include "hegadb/crypto/OpenFHECiphertext.h"
 #include "hegadb/crypto/KeyManager.h"
+#include "hegadb/crypto/OpenFHECiphertext.h"
 
 #include <stdexcept>
 #include <vector>
@@ -39,7 +39,7 @@ std::unique_ptr<Ciphertext> BFVEncryption::encrypt(Plaintext const& value)
 std::unique_ptr<Ciphertext> BFVEncryption::encryptInteger(long long value)
 {
     // Create plaintext from integer
-    lbcrypto::Plaintext plaintext = context_->MakePackedPlaintext(std::vector<int64_t>{value});
+    lbcrypto::Plaintext plaintext = context_->MakePackedPlaintext(std::vector<int64_t> { value });
 
     // Encrypt using public key
     auto ciphertext = context_->Encrypt(publicKey_, plaintext);
@@ -55,7 +55,7 @@ std::unique_ptr<Ciphertext> BFVEncryption::encryptString(std::string const& valu
 {
     // Convert string to vector of integers (ASCII values)
     std::vector<int64_t> charValues;
-    if(value.empty()){
+    if (value.empty()) {
         charValues.push_back(0);
     } else {
         charValues.reserve(value.length());
@@ -83,7 +83,7 @@ std::unique_ptr<Ciphertext> BFVEncryption::encryptBoolean(bool value)
     // Encode boolean as 0 (false) or 1 (true)
     int64_t intValue = value ? 1 : 0;
 
-    lbcrypto::Plaintext plaintext = context_->MakePackedPlaintext(std::vector<int64_t>{intValue});
+    lbcrypto::Plaintext plaintext = context_->MakePackedPlaintext(std::vector<int64_t> { intValue });
 
     auto ciphertext = context_->Encrypt(publicKey_, plaintext);
 
@@ -146,7 +146,7 @@ Plaintext BFVEncryption::decryptString(OpenFHECiphertext const& ciphertext)
     auto values = plaintext->GetPackedValue();
     size_t length = ciphertext.getStringLength();
 
-    if(length == 0){
+    if (length == 0) {
         return Plaintext(std::string(""));
     }
 
@@ -177,6 +177,77 @@ Plaintext BFVEncryption::decryptBoolean(OpenFHECiphertext const& ciphertext)
 
     bool value = (values[0] != 0);
     return Plaintext(value);
+}
+
+std::unique_ptr<Ciphertext> BFVEncryption::encryptInsert(Plaintext const& value)
+{
+    switch (value.type()) {
+    case types::DataType::Integer:
+        return encryptIntegerSlotZero(std::get<long long>(value.value()));
+    case types::DataType::Boolean:
+        return encryptBooleanSlotZero(std::get<bool>(value.value()));
+    case types::DataType::String:
+        return encryptStringSlotZero(std::get<std::string>(value.value()));
+    default:
+        throw std::runtime_error("Unsupported type in BFV encryptSingleSlot");
+    }
+}
+
+std::unique_ptr<Ciphertext> BFVEncryption::encryptIntegerSlotZero(long long value)
+{
+    if (value < -128 || value > 127) {
+        throw std::out_of_range(
+            "BFVEncryption: Integer value " + std::to_string(value) + " is out of permitted range [-128, 127].");
+    }
+
+    uint32_t ring_dim = context_->GetRingDimension();
+    std::vector<int64_t> slots(ring_dim, 0);
+    slots[0] = value;
+
+    lbcrypto::Plaintext plaintext = context_->MakePackedPlaintext(slots);
+    auto ciphertext = context_->Encrypt(publicKey_, plaintext);
+
+    return std::make_unique<OpenFHECiphertext>(
+        ciphertext,
+        SchemeType::BFV,
+        types::DataType::Integer,
+        0);
+}
+
+std::unique_ptr<Ciphertext> BFVEncryption::encryptBooleanSlotZero(bool value)
+{
+    uint32_t ring_dim = context_->GetRingDimension();
+    std::vector<int64_t> slots(ring_dim, 0);
+    slots[0] = value ? 1 : 0;
+
+    lbcrypto::Plaintext plaintext = context_->MakePackedPlaintext(slots);
+    auto ciphertext = context_->Encrypt(publicKey_, plaintext);
+
+    return std::make_unique<OpenFHECiphertext>(
+        ciphertext,
+        SchemeType::BFV,
+        types::DataType::Boolean,
+        0);
+}
+
+std::unique_ptr<Ciphertext> BFVEncryption::encryptStringSlotZero(std::string const& value)
+{
+    uint32_t ring_dim = context_->GetRingDimension();
+    std::vector<int64_t> slots(ring_dim, 0);
+
+    size_t chars = std::min(value.size(), static_cast<size_t>(ring_dim));
+    for (size_t i = 0; i < chars; ++i) {
+        slots[i] = static_cast<int64_t>(static_cast<unsigned char>(value[i]));
+    }
+
+    lbcrypto::Plaintext plaintext = context_->MakePackedPlaintext(slots);
+    auto ciphertext = context_->Encrypt(publicKey_, plaintext);
+
+    return std::make_unique<OpenFHECiphertext>(
+        ciphertext,
+        SchemeType::BFV,
+        types::DataType::String,
+        value.size());
 }
 
 KeyManager const& BFVEncryption::getKeyManager() const

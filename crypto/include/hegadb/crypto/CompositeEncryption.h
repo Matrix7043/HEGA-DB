@@ -11,16 +11,16 @@
 
 namespace hegadb::crypto {
 
-
 class CompositeEncryption final : public EncryptionWrapper {
 public:
-    
     CompositeEncryption();
-    
+
     // Constructor with custom key directory
     explicit CompositeEncryption(std::string const& key_directory);
 
     std::unique_ptr<Ciphertext> encrypt(Plaintext const& value) override;
+
+    std::unique_ptr<Ciphertext> encryptInsert(Plaintext const& value) override;
 
     Plaintext decrypt(Ciphertext const& value) override;
 
@@ -28,12 +28,12 @@ public:
 
     /**
      * @brief Get the KeyManager for accessing cryptographic keys
-     * 
+     *
      * This allows clients to serialize public keys for transmission to the server
      * @return Reference to the KeyManager
      */
     KeyManager const& getKeyManager() const override;
-    
+
     // Get default key directory
     static std::string getDefaultKeyDirectory();
 
@@ -42,7 +42,7 @@ private:
     KeyManager keyManager_;
     std::unique_ptr<BFVEncryption> bfvEngine_;
     std::unique_ptr<CKKSEncryption> ckksEngine_;
-    
+
     // Initialize keys (load existing or generate new)
     void initializeKeys(std::string const& key_directory);
 };

@@ -3,8 +3,8 @@
 
 #include "EncryptionWrapper.h"
 #include "KeyManager.h"
-#include "OpenFHEContext.h"
 #include "OpenFHECiphertext.h"
+#include "OpenFHEContext.h"
 
 namespace hegadb::crypto {
 
@@ -29,10 +29,7 @@ public:
      */
     BFVEncryption(OpenFHEContext const& context, KeyManager const& keyManager);
 
-
-
-
-
+    std::unique_ptr<Ciphertext> encryptInsert(Plaintext const& value) override;
 
     /**
      * @brief Encrypt a plaintext value using BFV
@@ -41,16 +38,11 @@ public:
      */
     std::unique_ptr<Ciphertext> encrypt(Plaintext const& value) override;
 
-
-
-
-
-
     /**
      * @brief Decrypt a ciphertext back to plaintext
      */
     Plaintext decrypt(Ciphertext const& value) override;
-    
+
     /**
      * @brief Get the KeyManager (not supported for internal encryption engines)
      * @throws std::runtime_error Always throws - BFVEncryption is an internal implementation detail
@@ -65,6 +57,10 @@ private:
     Plaintext decryptInteger(OpenFHECiphertext const& ciphertext);
     Plaintext decryptString(OpenFHECiphertext const& ciphertext);
     Plaintext decryptBoolean(OpenFHECiphertext const& ciphertext);
+
+    std::unique_ptr<Ciphertext> encryptIntegerSlotZero(long long value);
+    std::unique_ptr<Ciphertext> encryptBooleanSlotZero(bool value);
+    std::unique_ptr<Ciphertext> encryptStringSlotZero(std::string const& value);
 
     lbcrypto::CryptoContext<lbcrypto::DCRTPoly> context_;
     lbcrypto::PublicKey<lbcrypto::DCRTPoly> publicKey_;
