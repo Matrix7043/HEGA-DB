@@ -3,8 +3,8 @@
 
 #include "EncryptionWrapper.h"
 #include "KeyManager.h"
-#include "OpenFHEContext.h"
 #include "OpenFHECiphertext.h"
+#include "OpenFHEContext.h"
 
 namespace hegadb::crypto {
 
@@ -29,10 +29,7 @@ public:
      */
     BFVEncryption(OpenFHEContext const& context, KeyManager const& keyManager);
 
-
-
-
-
+    std::unique_ptr<Ciphertext> encryptInsert(Plaintext const& value) override;
 
     /**
      * @brief Encrypt a plaintext value using BFV
@@ -40,6 +37,26 @@ public:
      * Supports Integer, String, and Boolean types
      */
     std::unique_ptr<Ciphertext> encrypt(Plaintext const& value) override;
+
+    /**
+     * @brief Pack and encrypt a vector of integers into a single BFV ciphertext.
+     *
+     * Uses BFV slot packing so that the i-th slot holds values[i].
+     * This is the correct way to store a whole database column.
+     */
+    std::unique_ptr<Ciphertext> encryptIntegerVector(std::vector<int64_t> const& values);
+
+    /**
+     * @brief Pack and encrypt a vector of strings into a single BFV ciphertext.
+     *
+     * Encodes each string as its first character's ASCII value in slot i.
+     * For short columns (<=50 chars) the full string is stored in consecutive slots
+     * with a stride of max_string_len.
+     * Returns the ciphertext and stores row_count + max_string_len in metadata.
+     */
+    std::unique_ptr<Ciphertext> encryptStringVector(
+        std::vector<std::string> const& values,
+        size_t max_string_len = 32);
 
 
 
@@ -50,7 +67,7 @@ public:
      * @brief Decrypt a ciphertext back to plaintext
      */
     Plaintext decrypt(Ciphertext const& value) override;
-    
+
     /**
      * @brief Get the KeyManager (not supported for internal encryption engines)
      * @throws std::runtime_error Always throws - BFVEncryption is an internal implementation detail
@@ -65,6 +82,10 @@ private:
     Plaintext decryptInteger(OpenFHECiphertext const& ciphertext);
     Plaintext decryptString(OpenFHECiphertext const& ciphertext);
     Plaintext decryptBoolean(OpenFHECiphertext const& ciphertext);
+
+    std::unique_ptr<Ciphertext> encryptIntegerSlotZero(long long value);
+    std::unique_ptr<Ciphertext> encryptBooleanSlotZero(bool value);
+    std::unique_ptr<Ciphertext> encryptStringSlotZero(std::string const& value);
 
     lbcrypto::CryptoContext<lbcrypto::DCRTPoly> context_;
     lbcrypto::PublicKey<lbcrypto::DCRTPoly> publicKey_;

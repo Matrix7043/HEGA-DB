@@ -2,6 +2,7 @@
 #include "cryptocontext-ser.h"
 #include "scheme/bfvrns/bfvrns-ser.h"
 #include "scheme/ckksrns/ckksrns-ser.h"
+#include "key/key-ser.h"   // Registers EvalKeyRelinImpl<DCRTPoly> with Cereal — required for SerializeEvalMultKey
 #include <sstream>
 #include <fstream>
 #include <filesystem>
@@ -9,7 +10,7 @@
 
 namespace hegadb::crypto {
 
-KeyManager::KeyManager(OpenFHEContext const& context)
+KeyManager::KeyManager(OpenFHEContext& context)
     : context_(context)
     , keysGenerated_(false)
     , bfvPublicKeyAvailable_(false)
@@ -183,7 +184,39 @@ void KeyManager::saveKeys(std::string const& directory_path) const
         }
         lbcrypto::Serial::Serialize(ckksPublicKey_, ckks_public_file, lbcrypto::SerType::BINARY);
     }
-    
+
+    // Save evaluation (relinearization) keys — required for EvalMult (AND / OR)
+    {
+        auto bfv_ctx  = context_.getBFVContext();
+        auto ckks_ctx = context_.getCKKSContext();
+
+        std::string bfv_eval_file_path = directory_path + "/bfv_eval_mult_key.bin";
+        std::ofstream bfv_eval_file(bfv_eval_file_path, std::ios::binary);
+        if (!bfv_eval_file.is_open()) {
+            throw std::runtime_error("Cannot create BFV eval mult key file");
+        }
+        bool bfv_ok = bfv_ctx->SerializeEvalMultKey(bfv_eval_file, lbcrypto::SerType::BINARY, bfv_ctx);
+        bfv_eval_file.close();
+        if (!bfv_ok) {
+            std::filesystem::remove(bfv_eval_file_path);
+        }
+
+        // CKKS eval mult keys are optional — only present if CKKS was used with EvalMult
+        try {
+            std::string ckks_eval_file_path = directory_path + "/ckks_eval_mult_key.bin";
+            std::ofstream ckks_eval_file(ckks_eval_file_path, std::ios::binary);
+            if (ckks_eval_file.is_open()) {
+                bool ckks_ok = ckks_ctx->SerializeEvalMultKey(ckks_eval_file, lbcrypto::SerType::BINARY, ckks_ctx);
+                ckks_eval_file.close();
+                if (!ckks_ok) {
+                    std::filesystem::remove(ckks_eval_file_path);
+                }
+            }
+        } catch (...) {
+            // CKKS eval mult keys not available — skip silently
+        }
+    }
+
     std::cout << "Keys saved successfully\n";
 }
 
@@ -230,6 +263,37 @@ void KeyManager::loadKeys(std::string const& directory_path)
         }
         lbcrypto::Serial::Deserialize(ckksPublicKey_, ckks_public_file, lbcrypto::SerType::BINARY);
         std::cout << "  CKKS public key loaded\n";
+    }
+
+    // Load evaluation (relinearization) keys if they were saved
+    {
+        auto bfv_eval_path  = directory_path + "/bfv_eval_mult_key.bin";
+        auto ckks_eval_path = directory_path + "/ckks_eval_mult_key.bin";
+
+        // Clear existing eval mult keys cache first so we don't conflict with stale keys
+        context_.getBFVContext()->ClearEvalMultKeys();
+
+        if (std::filesystem::exists(bfv_eval_path) && std::filesystem::file_size(bfv_eval_path) > 0) {
+            try {
+                std::ifstream bfv_eval_file(bfv_eval_path, std::ios::binary);
+                context_.getBFVContext()->DeserializeEvalMultKey(bfv_eval_file,
+                                                                 lbcrypto::SerType::BINARY);
+                std::cout << "  BFV eval mult key loaded\n";
+            } catch (std::exception const& e) {
+                std::cerr << "  Warning: could not load BFV eval mult key: " << e.what() << "\n";
+            }
+        }
+
+        if (std::filesystem::exists(ckks_eval_path) && std::filesystem::file_size(ckks_eval_path) > 0) {
+            try {
+                std::ifstream ckks_eval_file(ckks_eval_path, std::ios::binary);
+                context_.getCKKSContext()->DeserializeEvalMultKey(ckks_eval_file,
+                                                                  lbcrypto::SerType::BINARY);
+                std::cout << "  CKKS eval mult key loaded\n";
+            } catch (std::exception const& e) {
+                std::cerr << "  Warning: could not load CKKS eval mult key: " << e.what() << "\n";
+            }
+        }
     }
     
     // Mark keys as available
@@ -298,6 +362,16 @@ void KeyManager::loadContext(std::string const& directory_path)
         if (!loaded_bfv_context) {
             throw std::runtime_error("Failed to deserialize BFV context");
         }
+
+        if (context_.getBFVContext() && context_.getBFVContext()->GetCryptoParameters()) {
+            auto loaded_modulus = loaded_bfv_context->GetCryptoParameters()->GetPlaintextModulus();
+            auto expected_modulus = context_.getBFVContext()->GetCryptoParameters()->GetPlaintextModulus();
+            if (loaded_modulus != expected_modulus) {
+                throw std::runtime_error("Stored BFV context has plaintext modulus " + std::to_string(loaded_modulus) +
+                                         " but current configuration requires " + std::to_string(expected_modulus) +
+                                         ". Stored keys are incompatible.");
+            }
+        }
         
         // Enable features on the loaded context (serialization doesn't preserve enabled features)
         loaded_bfv_context->Enable(lbcrypto::PKE);
@@ -306,7 +380,7 @@ void KeyManager::loadContext(std::string const& directory_path)
         loaded_bfv_context->Enable(lbcrypto::ADVANCEDSHE);
         
         // Replace the context's BFV context with the loaded one
-        const_cast<crypto::OpenFHEContext&>(context_).setBFVContext(loaded_bfv_context);
+        context_.setBFVContext(loaded_bfv_context);
         std::cout << "  BFV context loaded and replaced\n";
     }
     
@@ -331,7 +405,7 @@ void KeyManager::loadContext(std::string const& directory_path)
         loaded_ckks_context->Enable(lbcrypto::ADVANCEDSHE);
         
         // Replace the context's CKKS context with the loaded one
-        const_cast<crypto::OpenFHEContext&>(context_).setCKKSContext(loaded_ckks_context);
+        context_.setCKKSContext(loaded_ckks_context);
         std::cout << "  CKKS context loaded and replaced\n";
     }
     

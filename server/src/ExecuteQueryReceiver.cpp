@@ -1,4 +1,4 @@
-#include <hegadb/server/ExecuteQueryReceiver.h>
+#include <hegadb/server/api/ExecuteQueryReceiver.h>
 
 namespace hegadb::server {
 

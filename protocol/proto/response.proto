@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package hegadb.protocol;
+
+import "common.proto";
+
+// ---------------------------------------------------------------------------
+// Result mode
+// ---------------------------------------------------------------------------
+
+/**
+ * Specifies what the server includes in the QueryResult payload.
+ *
+ * RESULT_MODE_ROWS_AND_MASK  (default) — the server returns all encrypted
+ *   column data together with a combined encrypted boolean mask indicating
+ *   which rows satisfied the WHERE predicate.
+ *
+ * RESULT_MODE_MASKED_ROWS — the server applies the mask server-side and
+ *   returns only the passing rows; no separate mask is transmitted.
+ */
+enum ResultMode {
+  RESULT_MODE_UNSPECIFIED   = 0;
+  RESULT_MODE_ROWS_AND_MASK = 1;
+  RESULT_MODE_MASKED_ROWS   = 2;
+}
+
+// ---------------------------------------------------------------------------
+// Column-oriented encrypted result payload
+// ---------------------------------------------------------------------------
+
+/**
+ * One column's worth of encrypted ciphertexts from the result set.
+ * Each entry in `ciphertexts` corresponds to one row batch for that column.
+ */
+message EncryptedColumn {
+  string          column_name = 1;
+  repeated bytes  ciphertexts = 2;
+}
+
+/**
+ * The full result payload embedded in a QueryResponse.
+ */
+message QueryResult {
+  // The result mode the server used when building this result.
+  ResultMode mode = 1;
+
+  // Total number of rows matched (before any mask is applied).
+  uint64 row_count = 2;
+
+  // Combined encrypted boolean mask, one value per row, indicating which
+  // rows satisfied the WHERE predicate.
+  // Present only in RESULT_MODE_ROWS_AND_MASK.
+  bytes encrypted_mask = 3;
+
+  // Encrypted column data, one entry per projected column.
+  repeated EncryptedColumn columns = 4;
+}
+
+// ---------------------------------------------------------------------------
+// Query response envelope
+// ---------------------------------------------------------------------------
+
+/**
+ * Top-level response message returned by the server for an ExecuteQuery RPC.
+ *
+ * On success, status.code == STATUS_OK and `result` is populated.
+ * On failure, status.code is non-zero, status.message carries a description,
+ * and `result` is left empty.
+ */
+message QueryResponse {
+  ProtocolVersion protocol_version = 1;
+  RequestId       request_id       = 2;
+  Status          status           = 3;
+
+  // The query result payload.  Present on success; absent on error.
+  QueryResult result = 4;
+}

@@ -11,36 +11,44 @@ OpenFHEContext::OpenFHEContext()
 
 void OpenFHEContext::initializeBFVContext()
 {
-    // BFV parameters for 128-bit security - EXPLICITLY SET ALL PARAMETERS FOR CONTEXT DETERMINISM
+    // BFV parameters configured for 8-bit signed integer columns [-128, 127].
+    //
+    // Design rationale:
+    //   * PlaintextModulus p = 65537 = 2^16 + 1 (Fermat/NTT prime).
+    //     All signed 8-bit values fit in Z_65537.  Negative values are stored
+    //     as their p-complement: e.g. -1 → 65536, -128 → 65409.
+    //
+    //   * The Fermat-residue equality indicator computes diff^(p-1) = diff^65536.
+    //     65536 = 2^16 → exactly 16 squarings → MultiplicativeDepth = 16.
+    //
+    //   * For LT/GT/LE/GE the evaluator sums EQ-indicators over the negative
+    //     residue interval [(p+1)/2, p-1] = [32769, 65536].  With 8-bit signed
+    //     arithmetic the maximum |diff| is 255, so only 255 of those candidates
+    //     (the range [65282, 65536]) are ever non-zero, keeping the loop bounded.
+    //
+    //   * RingDim is left to OpenFHE to choose automatically based on
+    //     HEStd_128_classic + depth 16 (typically selects 32768 for 128-bit
+    //     security).  Do NOT pin it here to avoid silently weakening security.
     lbcrypto::CCParams<lbcrypto::CryptoContextBFVRNS> parameters;
 
-    // DETERMINISM: Set security level first (affects all other parameters)
+    // Security level drives automatic RingDim selection
     parameters.SetSecurityLevel(lbcrypto::HEStd_128_classic);
 
-    // DETERMINISM: Ring dimension (power of 2, affects all calculations)
-    parameters.SetRingDim(16384);
+    // Plaintext modulus: 65537 = 2^16 + 1 (NTT-friendly Fermat prime)
+    parameters.SetPlaintextModulus(65537);
 
-    // DETERMINISM: Plaintext modulus (specific prime)
-    parameters.SetPlaintextModulus(2013265921);
+    // Multiplicative depth: 16 squarings needed for diff^(p-1) = diff^65536
+    parameters.SetMultiplicativeDepth(16);
 
-    // DETERMINISM: Multiplicative depth (affects modulus chain)
-    parameters.SetMultiplicativeDepth(3);
-
-    // DETERMINISM: Noise parameters (must be consistent)
+    // Noise parameters
     parameters.SetStandardDeviation(3.2);
-    
-    // DETERMINISM: Batch size (must be consistent)
-    parameters.SetBatchSize(8192);
-    
-    // DETERMINISM: Key distribution (affects key generation algorithm)
+
+    // Key generation settings
     parameters.SetSecretKeyDist(lbcrypto::UNIFORM_TERNARY);
-    
-    // DETERMINISM: Key switching technique (affects context structure)
     parameters.SetKeySwitchTechnique(lbcrypto::HYBRID);
-    
-    // Create context with fully specified parameters
+
     bfvContext_ = lbcrypto::GenCryptoContext(parameters);
-    
+
     if (!bfvContext_) {
         throw std::runtime_error("Failed to create BFV context");
     }

@@ -1,7 +1,8 @@
 #include <hegadb/crypto/CompositeEncryption.h>
 #include <hegadb/crypto/Plaintext.h>
-#include <iostream>
+#include <cstdint>
 #include <filesystem>
+#include <iostream>
 #include <vector>
 
 /**
@@ -26,6 +27,7 @@ int main() {
         }
         
         std::vector<std::string> serialized_data;
+        const std::vector<int64_t> dataset = {-128, -1, 0, 1, 42, 127};
         
         // ====================================================================
         // SIMULATION: First Client Session (like data ingestion)
@@ -36,9 +38,8 @@ int main() {
         {
             hegadb::crypto::CompositeEncryption encryption(key_dir);
             
-            // Simulate encrypting a dataset
-            std::vector<int64_t> dataset = {100, 250, 75, 300, 180};
-            
+            // BFV integer encryption currently supports signed 8-bit values.
+            // Include both boundaries, zero, positive, and negative values.
             std::cout << "Encrypting dataset: ";
             for (size_t i = 0; i < dataset.size(); ++i) {
                 std::cout << dataset[i];
@@ -71,17 +72,29 @@ int main() {
             for (size_t i = 0; i < serialized_data.size(); ++i) {
                 auto restored_ciphertext = hegadb::crypto::OpenFHECiphertext::deserialize(serialized_data[i]);
                 auto decrypted_plaintext = encryption.decrypt(restored_ciphertext);
-                
+
                 if (decrypted_plaintext.type() == hegadb::types::DataType::Integer) {
                     auto value = std::get<long long>(decrypted_plaintext.value());
                     decrypted_values.push_back(value);
-                    std::cout << "  Value " << (i + 1) << ": " << value << " ✅\n";
+                    if (value != dataset[i]) {
+                        std::cout << "  Value " << (i + 1)
+                                  << ": expected " << dataset[i]
+                                  << ", got " << value << " ❌\n";
+                        return 1;
+                    }
+                    std::cout << "  Value " << (i + 1) << ": " << value << " OK\n";
                 } else {
-                    std::cout << "  Value " << (i + 1) << ": ERROR - wrong type ❌\n";
+                    std::cout << "  Value " << (i + 1)
+                              << ": ERROR - wrong type\n";
                     return 1;
                 }
             }
-            
+
+            if (decrypted_values != dataset) {
+                std::cout << "\nERROR: decrypted dataset does not match input\n";
+                return 1;
+            }
+
             std::cout << "\nSuccessfully decrypted all values with persistent keys!\n";
         }
         

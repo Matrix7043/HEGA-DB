@@ -3,11 +3,11 @@ syntax = "proto3";
 package hegadb.transport.grpc;
 
 import "query.proto";
+import "response.proto";
 
 service HEGADBService {
   rpc Execute(
-      hegadb.protocol.ExecuteQuery) 
+      hegadb.protocol.ExecuteQuery)
     returns (
-        hegadb.protocol.QueryResponse
-        );
+        hegadb.protocol.QueryResponse);
 }

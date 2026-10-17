@@ -229,7 +229,7 @@ proto::ExecuteQuery ExecuteQueryEncoder::encode(
 
     if (select_ast->join()) {
         auto const* join = select_ast->join();
-        auto* proto_join = select->mutable_join();
+        auto* proto_join = select->add_joins();
 
         proto_join->mutable_right_table()->set_table(
             join->table()->name());

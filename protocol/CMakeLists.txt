@@ -9,6 +9,7 @@ endif()
 
 set(HEGADB_PROTOCOL_PROTO_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/proto/common.proto
+    ${CMAKE_CURRENT_SOURCE_DIR}/proto/response.proto
     ${CMAKE_CURRENT_SOURCE_DIR}/proto/query.proto
     ${CMAKE_CURRENT_SOURCE_DIR}/proto/catalog.proto
 )

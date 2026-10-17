@@ -3,7 +3,13 @@
 #include <hegadb/client/ast/DropTableStmt.h>
 #include <hegadb/client/ast/SelectStmt.h>
 #include <hegadb/client/protocol/ExecuteQueryEncoder.h>
-#include <hegadb/server/ExecuteQueryReceiver.h>
+#include <hegadb/catalog/CatalogSnapshot.h>
+#include <hegadb/catalog/TableSchema.h>
+#include <hegadb/catalog/db-client/InMemoryCatalog.h>
+#include <hegadb/crypto/OpenFHEContext.h>
+#include <hegadb/server/api/ExecuteQueryReceiver.h>
+#include <hegadb/server/execution/QueryExecutor.h>
+#include <hegadb/server/storage/StorageManager.h>
 #include <hegadb/transport/grpc/GrpcClient.h>
 #include <hegadb/transport/grpc/GrpcServer.h>
 
@@ -25,6 +31,59 @@ using hegadb::client::ast::CreateTableStmt;
 using hegadb::client::ast::DropTableStmt;
 using hegadb::client::protocol::ExecuteQueryEncoder;
 namespace proto = hegadb::protocol;
+
+// Creates a minimal ExecuteQueryReceiver wired to an in-memory catalog
+// that contains the tables referenced by the gRPC tests.
+std::shared_ptr<hegadb::server::ExecuteQueryReceiver> createTestReceiver()
+{
+    using hegadb::catalog::ColumnSchema;
+    using hegadb::catalog::TableSchema;
+    using hegadb::types::DataType;
+
+    std::unordered_map<std::string, TableSchema> tables;
+
+    // STUDENTS — used by DdlGrpcTest.SelectStillSucceeds
+    tables.emplace("STUDENTS", TableSchema("STUDENTS", std::vector<ColumnSchema>{
+        { "ID",    DataType::Integer, false, 0 },
+        { "NAME",  DataType::String,  false, 1 },
+        { "GRADE", DataType::Integer, false, 2 },
+    }));
+    auto snapshot = std::make_shared<hegadb::catalog::CatalogSnapshot const>(
+        1, std::move(tables));
+    auto catalog = std::make_shared<hegadb::catalog::InMemoryCatalog>(snapshot);
+
+    auto crypto_context = std::make_shared<hegadb::crypto::OpenFHEContext>();
+    crypto_context->enableFeatures();
+
+    class MockStorageManager : public hegadb::server::storage::StorageManager {
+
+        class EmptyEncryptedTable : public hegadb::server::storage::EncryptedTable {
+            std::string name_;
+        public:
+            explicit EmptyEncryptedTable(std::string name) : name_(std::move(name)) {}
+            std::string const& getName() const override { return name_; }
+            std::vector<std::string> getColumnNames() const override { return {}; }
+            void open() override {}
+            std::optional<hegadb::server::storage::EncryptedBatch> nextBatch() override { return std::nullopt; }
+            void close() override {}
+            size_t getRowCount() const override { return 0; }
+        };
+
+    public:
+        std::unique_ptr<hegadb::server::storage::EncryptedTable> openTable(
+            std::string const& table_name) override
+        {
+            return std::make_unique<EmptyEncryptedTable>(table_name);
+        }
+    };
+    auto storage = std::make_shared<MockStorageManager>();
+
+    auto executor = std::make_shared<hegadb::server::QueryExecutor>(
+        catalog, storage, crypto_context);
+
+    return std::make_shared<hegadb::server::ExecuteQueryReceiver>(
+        catalog, executor);
+}
 
 // ============================================================================
 // Encoder
@@ -125,7 +184,7 @@ protected:
         server_ = std::make_unique<hegadb::transport::grpc::GrpcServer>(
             "127.0.0.1:0");
 
-        receiver_ = std::make_shared<hegadb::server::ExecuteQueryReceiver>();
+        receiver_ = createTestReceiver();
 
         server_->setRequestHandler(
             [this](proto::ExecuteQuery const& request) {

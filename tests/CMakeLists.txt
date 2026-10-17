@@ -297,19 +297,6 @@ add_test(
     COMMAND crypto_context_tests
 )
 
-add_executable(crypto_edge_cases_tests
-    crypto/crypto_edge_cases_tests.cpp
-)
-
-target_link_libraries(crypto_edge_cases_tests
-    PRIVATE
-        hegadb_crypto
-)
-
-add_test(
-    NAME crypto_edge_cases_tests
-    COMMAND crypto_edge_cases_tests
-)
 
 add_executable(crypto_serialization_tests
     crypto/crypto_serialization_tests.cpp
@@ -368,6 +355,22 @@ target_link_libraries(key_persistence_integration_test
 add_test(
     NAME key_persistence_integration_test
     COMMAND key_persistence_integration_test
+)
+
+add_executable(insert_slot_encryption_test
+    crypto/insert_slot_encryption_test.cpp
+)
+
+target_link_libraries(insert_slot_encryption_test
+    PRIVATE
+        hegadb_crypto
+        OPENFHEpke
+        OPENFHEcore
+)
+
+add_test(
+    NAME insert_slot_encryption_test
+    COMMAND insert_slot_encryption_test
 )
 
 
@@ -513,5 +516,106 @@ target_link_libraries(storage_tests
 
 gtest_discover_tests(storage_tests)
 
+# ============================================================
+# Server Execution Engine Tests
+# ============================================================
 
+add_executable(execution_batch_tests
+    server/execution_batch_tests.cpp
+)
 
+target_link_libraries(execution_batch_tests
+    PRIVATE
+        hegadb_server
+        hegadb_crypto
+        GTest::gtest_main
+)
+
+gtest_discover_tests(execution_batch_tests)
+
+add_executable(execution_parameters_tests
+    server/execution_parameters_tests.cpp
+)
+
+target_link_libraries(execution_parameters_tests
+    PRIVATE
+        hegadb_server
+        hegadb_crypto
+        GTest::gtest_main
+)
+
+gtest_discover_tests(execution_parameters_tests)
+
+add_executable(query_planner_tests
+    server/query_planner_tests.cpp
+)
+
+target_link_libraries(query_planner_tests
+    PRIVATE
+        hegadb_server
+        hegadb_catalog_client
+        GTest::gtest_main
+)
+
+gtest_discover_tests(query_planner_tests)
+
+add_executable(expression_planner_tests
+    server/expression_planner_tests.cpp
+)
+
+target_link_libraries(expression_planner_tests
+    PRIVATE
+        hegadb_server
+        hegadb_protocol
+        GTest::gtest_main
+)
+
+gtest_discover_tests(expression_planner_tests)
+
+add_executable(comparison_evaluator_tests
+    server/comparison_evaluator_tests.cpp
+)
+
+target_link_libraries(comparison_evaluator_tests
+    PRIVATE
+        hegadb_server
+        hegadb_crypto
+        GTest::gtest_main
+)
+
+gtest_discover_tests(comparison_evaluator_tests)
+
+add_executable(end_to_end_execution_tests
+    server/end_to_end_execution_tests.cpp
+)
+
+target_link_libraries(end_to_end_execution_tests
+    PRIVATE
+        hegadb_server
+        hegadb_catalog_client
+        hegadb_crypto
+        GTest::gtest_main
+)
+
+gtest_discover_tests(end_to_end_execution_tests)
+
+add_executable(join_query_tests
+    server/join_query_tests.cpp
+)
+
+target_link_libraries(join_query_tests
+    PRIVATE
+        hegadb_server
+        hegadb_catalog_client
+        hegadb_crypto
+        hegadb_protocol
+        GTest::gtest_main
+)
+
+gtest_discover_tests(join_query_tests)
+
+# ============================================================
+# Integration Tests
+# ============================================================
+
+add_subdirectory(integration)

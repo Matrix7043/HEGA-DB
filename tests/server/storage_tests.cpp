@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
-#include "hegadb/server/storage/storage_format.h"
+#include "hegadb/server/storage/StorageFormat.h"
 #include "dictionary_encoder.h"
-#include "hegadb/server/storage/pinned_memory_pool.h"
+#include "hegadb/server/storage/PinnedMemoryPool.h"
 #include "mock_student_ingestion.h"
-#include "hegadb/server/storage/segment_writer.h"
-#include "hegadb/server/storage/segment_reader.h"
+#include "hegadb/server/storage/SegmentWriter.h"
+#include "hegadb/server/storage/SegmentReader.h"
 #include <hegadb/crypto/MockEncryption.h>
 #include <hegadb/crypto/MockCiphertext.h>
 #include <hegadb/crypto/Plaintext.h>
