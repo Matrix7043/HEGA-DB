@@ -130,6 +130,7 @@ add_executable(hegadb_server_app
 target_link_libraries(hegadb_server_app
     PRIVATE
         hegadb_server
+        hegadb_execution
         hegadb_server_transport
         hegadb_warnings
 )
