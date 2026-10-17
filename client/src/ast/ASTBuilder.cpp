@@ -4,9 +4,11 @@
 #include "hegadb/client/ast/ComparisonExpr.h"
 #include "hegadb/client/ast/CreateTableStmt.h"
 #include "hegadb/client/ast/DropTableStmt.h"
+#include "hegadb/client/ast/InsertStmt.h"
 #include "hegadb/client/ast/JoinClause.h"
 #include "hegadb/client/ast/Literal.h"
 #include "hegadb/client/ast/LogicalExpr.h"
+#include "hegadb/client/ast/NullLiteral.h"
 #include "hegadb/client/ast/NotExpr.h"
 #include "hegadb/client/ast/SelectStmt.h"
 #include "hegadb/client/ast/Statement.h"
@@ -39,6 +41,10 @@ std::any ASTBuilder::visitStatement(HEGADBParser::StatementContext* ctx)
 
     if (ctx->dropTableStatement() != nullptr) {
         return visit(ctx->dropTableStatement());
+    }
+
+    if (ctx->insertStatement() != nullptr) {
+        return visit(ctx->insertStatement());
     }
 
     throw std::runtime_error("Unknown statement type");
@@ -146,6 +152,43 @@ std::any ASTBuilder::visitDropTableStatement(
 
     Statement* result = stmt.release();
     return result;
+}
+
+std::any ASTBuilder::visitInsertStatement(
+    HEGADBParser::InsertStatementContext* ctx)
+{
+    auto stmt = std::make_unique<InsertStmt>(
+        ctx->tableName()->IDENTIFIER()->getText());
+
+    // The column list is optional; columnName() is empty without it.
+    for (auto* column : ctx->columnName()) {
+        stmt->addColumn(column->IDENTIFIER()->getText());
+    }
+
+    // std::any cannot hold a move-only row, so the rows are built here.
+    for (auto* row_ctx : ctx->valueRow()) {
+        InsertStmt::Row row;
+
+        for (auto* value : row_ctx->insertValue()) {
+            auto result = visit(value);
+            row.emplace_back(std::any_cast<Expr*>(result));
+        }
+
+        stmt->addRow(std::move(row));
+    }
+
+    Statement* result = stmt.release();
+    return result;
+}
+
+std::any ASTBuilder::visitInsertValue(HEGADBParser::InsertValueContext* ctx)
+{
+    if (ctx->NULL_() != nullptr) {
+        Expr* expr = new NullLiteral();
+        return expr;
+    }
+
+    return visit(ctx->literal());
 }
 
 std::any ASTBuilder::visitTableName(HEGADBParser::TableNameContext* ctx)

@@ -80,6 +80,20 @@ add_test(
     COMMAND ast_builder_ddl_tests
 )
 
+add_executable(ast_builder_insert_tests
+    client/ast_builder_insert_tests.cpp
+)
+
+target_link_libraries(ast_builder_insert_tests
+    PRIVATE
+        hegadb_client_core
+)
+
+add_test(
+    NAME ast_builder_insert_tests
+    COMMAND ast_builder_insert_tests
+)
+
 add_executable(ast_parameterizer_tests
     client/ast_parameterizer_tests.cpp
 )
