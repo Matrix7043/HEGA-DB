@@ -1,6 +1,6 @@
 #include "hegadb/crypto/CKKSEncryption.h"
-#include "hegadb/crypto/OpenFHECiphertext.h"
 #include "hegadb/crypto/KeyManager.h"
+#include "hegadb/crypto/OpenFHECiphertext.h"
 
 #include <stdexcept>
 #include <vector>
@@ -38,10 +38,15 @@ std::unique_ptr<Ciphertext> CKKSEncryption::encrypt(Plaintext const& value)
     // return encryptFloat(floatValue);
 }
 
+std::unique_ptr<Ciphertext> CKKSEncryption::encryptInsert(Plaintext const& value)
+{
+    throw std::runtime_error("Float type not yet supported in Variant");
+}
+
 std::unique_ptr<Ciphertext> CKKSEncryption::encryptFloat(double value)
 {
     // Create plaintext from double value
-    std::vector<double> values = {value};
+    std::vector<double> values = { value };
     lbcrypto::Plaintext plaintext = context_->MakeCKKSPackedPlaintext(values);
 
     // Encrypt using public key
