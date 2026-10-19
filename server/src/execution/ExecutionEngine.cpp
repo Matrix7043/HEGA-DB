@@ -90,4 +90,60 @@ ExecutionResult ExecutionEngine::execute(
     return result;
 }
 
+void ExecutionEngine::executeStreaming(
+    ExecutionPlan& plan,
+    ExecutionContext& context,
+    BatchConsumer consumer)
+{
+    if (!plan.isValid()) {
+        throw std::runtime_error("Invalid execution plan");
+    }
+
+    auto& root = plan.getRoot();
+
+    operators::FilterOperator* filter_op = nullptr;
+    operators::JoinOperator* join_op = nullptr;
+
+    operators::Operator* current = &root;
+    if (auto* proj_op = dynamic_cast<operators::ProjectionOperator*>(current)) {
+        current = proj_op->getChild();
+    }
+    if (auto* f_op = dynamic_cast<operators::FilterOperator*>(current)) {
+        filter_op = f_op;
+        current = f_op->getChild();
+    }
+    if (auto* j_op = dynamic_cast<operators::JoinOperator*>(current)) {
+        join_op = j_op;
+    }
+
+    root.open(context);
+
+    while (auto batch = root.next()) {
+        std::optional<EncryptedMask> mask;
+        if (join_op != nullptr) {
+            try {
+                mask = join_op->getAccumulatedMask();
+            } catch (...) {}
+        }
+        if (filter_op != nullptr) {
+            try {
+                auto f_mask = filter_op->getAccumulatedMask();
+                if (mask.has_value()) {
+                    evaluator::LogicalEvaluator logical_eval(context.getCryptoContext());
+                    mask = logical_eval.evaluateAND(*mask, f_mask);
+                } else {
+                    mask = std::move(f_mask);
+                }
+            } catch (...) {}
+        }
+
+        EncryptedMask const* mask_ptr = mask.has_value() ? &(*mask) : nullptr;
+        if (!consumer(*batch, mask_ptr)) {
+            break;
+        }
+    }
+
+    root.close();
+}
+
 } // namespace hegadb::server::execution

@@ -132,3 +132,57 @@ TEST(GrpcClientTest, ExecuteFailsWhenServerUnavailable)
         client.execute(request),
         std::runtime_error);
 }
+
+TEST(GrpcStreamingTest, MultiBatchServerStreaming)
+{
+    using namespace hegadb::transport::grpc;
+    using namespace hegadb::protocol;
+
+    auto server = std::make_unique<GrpcServer>("127.0.0.1:0");
+
+    server->setStreamingRequestHandler(
+        [](ExecuteQuery const& req, hegadb::transport::ServerTransport::BatchWriter writer) {
+            for (int i = 0; i < 3; ++i) {
+                QueryResponse resp;
+                *resp.mutable_protocol_version() = req.protocol_version();
+                *resp.mutable_request_id() = req.request_id();
+                resp.mutable_status()->set_code(STATUS_OK);
+                resp.mutable_result()->set_row_count(10);
+                auto* col = resp.mutable_result()->add_columns();
+                col->set_column_name("col1");
+                col->add_ciphertexts("batch_" + std::to_string(i));
+                writer(resp);
+            }
+        });
+
+    server->start();
+    std::this_thread::sleep_for(std::chrono::milliseconds(400));
+
+    GrpcClient client(server->address());
+
+    ExecuteQuery request;
+    request.mutable_protocol_version()->set_major(1);
+    request.mutable_protocol_version()->set_minor(0);
+    request.mutable_request_id()->set_value("stream-test-01");
+
+    // Test executeStream receives 3 batches
+    int batch_count = 0;
+    auto status = client.executeStream(request, [&](QueryResponse const& batch) {
+        EXPECT_EQ(batch.status().code(), STATUS_OK);
+        EXPECT_EQ(batch.result().row_count(), 10);
+        EXPECT_EQ(batch.result().columns(0).column_name(), "col1");
+        batch_count++;
+        return true;
+    });
+    EXPECT_EQ(status.code(), STATUS_OK);
+    EXPECT_EQ(batch_count, 3);
+
+    // Test aggregated execute combines them
+    auto aggregated = client.execute(request);
+    EXPECT_EQ(aggregated.status().code(), STATUS_OK);
+    EXPECT_EQ(aggregated.result().row_count(), 30);
+    ASSERT_EQ(aggregated.result().columns_size(), 1);
+    EXPECT_EQ(aggregated.result().columns(0).ciphertexts_size(), 3);
+
+    server->shutdown();
+}

@@ -49,6 +49,57 @@ protocol::QueryResponse ExecuteQueryReceiver::executeQuery(
     }
 }
 
+void ExecuteQueryReceiver::executeQueryStream(
+    protocol::ExecuteQuery const& request,
+    BatchWriter writer)
+{
+    std::string error_message;
+    if (!validateProtocolVersion(request.protocol_version(), error_message)) {
+        auto err_response = createResponse(
+            request.protocol_version(),
+            request.request_id(),
+            protocol::STATUS_ERROR,
+            error_message);
+        writer(err_response);
+        return;
+    }
+
+    try {
+        size_t batch_count = 0;
+        executor_->executeStreaming(
+            request,
+            [&](execution::ExecutionBatch const& batch,
+                execution::EncryptedMask const* mask,
+                protocol::ResultMode mode) -> bool {
+                ++batch_count;
+                auto batch_response = createResponse(
+                    request.protocol_version(),
+                    request.request_id(),
+                    protocol::STATUS_OK,
+                    "");
+                result::ResultEncoder::encodeBatch(batch, mask, mode, batch_response);
+                return writer(batch_response);
+            });
+
+        if (batch_count == 0) {
+            auto empty_response = createResponse(
+                request.protocol_version(),
+                request.request_id(),
+                protocol::STATUS_OK,
+                "");
+            empty_response.mutable_result()->set_row_count(0);
+            writer(empty_response);
+        }
+    } catch (std::exception const& e) {
+        auto err_response = createResponse(
+            request.protocol_version(),
+            request.request_id(),
+            protocol::STATUS_ERROR,
+            std::string("Execution error: ") + e.what());
+        writer(err_response);
+    }
+}
+
 bool ExecuteQueryReceiver::validateProtocolVersion(
     protocol::ProtocolVersion const& version,
     std::string& error_message) const

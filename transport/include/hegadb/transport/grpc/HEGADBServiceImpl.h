@@ -1,7 +1,9 @@
 #ifndef HEGADB_SERVICE_IMPL_H
 #define HEGADB_SERVICE_IMPL_H
 
+#include "hegadb/transport/ServerTransport.h"
 #include "query.pb.h"
+#include "response.pb.h"
 #include "service.grpc.pb.h"
 
 #include <functional>
@@ -11,17 +13,21 @@ namespace hegadb::transport::grpc {
 
 class HEGADBServiceImpl final : public HEGADBService::Service {
 public:
-    using RequestHandler = std::function<protocol::QueryResponse(protocol::ExecuteQuery const&)>;
+    using BatchWriter = ServerTransport::BatchWriter;
+    using StreamingRequestHandler = ServerTransport::StreamingRequestHandler;
+    using UnaryRequestHandler = ServerTransport::UnaryRequestHandler;
+    using RequestHandler = UnaryRequestHandler;
 
+    void setStreamingRequestHandler(StreamingRequestHandler handler);
     void setRequestHandler(RequestHandler handler);
 
     ::grpc::Status Execute(
         ::grpc::ServerContext* context,
         protocol::ExecuteQuery const* request,
-        protocol::QueryResponse* response) override;
+        ::grpc::ServerWriter<protocol::QueryResponse>* writer) override;
 
 private:
-    RequestHandler request_handler_;
+    StreamingRequestHandler streaming_handler_;
 };
 
 }

@@ -29,6 +29,12 @@ public:
      */
     execution::ExecutionResult execute(protocol::ExecuteQuery const& request);
 
+    using StreamingBatchConsumer = std::function<bool(execution::ExecutionBatch const&, execution::EncryptedMask const*, protocol::ResultMode)>;
+
+    void executeStreaming(
+        protocol::ExecuteQuery const& request,
+        StreamingBatchConsumer consumer);
+
 private:
     std::shared_ptr<catalog::Catalog const> catalog_;
     std::shared_ptr<storage::StorageManager> storage_;

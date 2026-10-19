@@ -25,6 +25,11 @@ GrpcServer::GrpcServer(std::string address)
 {
 }
 
+void GrpcServer::setStreamingRequestHandler(StreamingRequestHandler handler)
+{
+    service_.setStreamingRequestHandler(std::move(handler));
+}
+
 void GrpcServer::setRequestHandler(RequestHandler handler)
 {
     service_.setRequestHandler(std::move(handler));

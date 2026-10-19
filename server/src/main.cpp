@@ -112,12 +112,13 @@ int main(int argc, char** argv)
     // ----------------------------------------------------------------
     auto server = hegadb::transport::ServerTransportFactory::createGrpc(server_address);
 
-    server->setRequestHandler(
-        [receiver](hegadb::protocol::ExecuteQuery const& request) {
+    server->setStreamingRequestHandler(
+        [receiver](hegadb::protocol::ExecuteQuery const& request,
+                   hegadb::transport::ServerTransport::BatchWriter writer) {
             if (request.has_request_id())
                 hegadb::logging::debug(
                     "Request ID: {}", request.request_id().value());
-            return receiver->executeQuery(request);
+            receiver->executeQueryStream(request, std::move(writer));
         });
 
     server->start();

@@ -23,6 +23,13 @@ public:
         protocol::ExecuteQuery const& request
     );
 
+    using BatchWriter = std::function<bool(protocol::QueryResponse const&)>;
+
+    void executeQueryStream(
+        protocol::ExecuteQuery const& request,
+        BatchWriter writer
+    );
+
 private:
     bool validateProtocolVersion(
         protocol::ProtocolVersion const& version,

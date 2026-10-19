@@ -12,6 +12,7 @@ class GrpcServer final : public transport::ServerTransport {
 public:
     explicit GrpcServer(std::string address);
 
+    void setStreamingRequestHandler(StreamingRequestHandler handler) override;
     void setRequestHandler(RequestHandler handler) override;
 
     void start() override;

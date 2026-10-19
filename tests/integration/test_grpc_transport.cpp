@@ -167,9 +167,10 @@ static std::optional<GrpcTransportTestContext> startTestServer()
 
     // gRPC server on OS-assigned port (0 = let the OS pick)
     ctx.server = std::make_unique<transport::grpc::GrpcServer>("127.0.0.1:0");
-    ctx.server->setRequestHandler(
-        [receiver](protocol::ExecuteQuery const& request) {
-            return receiver->executeQuery(request);
+    ctx.server->setStreamingRequestHandler(
+        [receiver](protocol::ExecuteQuery const& request,
+                   transport::ServerTransport::BatchWriter writer) {
+            receiver->executeQueryStream(request, std::move(writer));
         });
     ctx.server->start();
     std::this_thread::sleep_for(std::chrono::milliseconds(400));
