@@ -45,17 +45,6 @@ execution::ExecutionResult QueryExecutor::execute(
 
     auto const& select_stmt = stmt.select_statement();
 
-    // JOIN — planning is supported but execution is not yet implemented.
-    if (select_stmt.joins_size() > 0) {
-        auto const& join = select_stmt.joins(0);
-        throw std::runtime_error(
-            "INNER JOIN between '"
-            + select_stmt.from_table().table()
-            + "' and '"
-            + join.right_table().table()
-            + "' is not implemented on this server");
-    }
-
     // Determine result mode
     auto result_mode = (request.result_mode() == protocol::RESULT_MODE_UNSPECIFIED)
         ? protocol::RESULT_MODE_ROWS_AND_MASK
@@ -116,16 +105,6 @@ void QueryExecutor::executeStreaming(
     }
 
     auto const& select_stmt = stmt.select_statement();
-
-    if (select_stmt.joins_size() > 0) {
-        auto const& join = select_stmt.joins(0);
-        throw std::runtime_error(
-            "INNER JOIN between '"
-            + select_stmt.from_table().table()
-            + "' and '"
-            + join.right_table().table()
-            + "' is not implemented on this server");
-    }
 
     auto result_mode = (request.result_mode() == protocol::RESULT_MODE_UNSPECIFIED)
         ? protocol::RESULT_MODE_ROWS_AND_MASK

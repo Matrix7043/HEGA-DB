@@ -197,7 +197,7 @@ private:
     std::optional<proto::ExecuteQuery> last_request_;
 };
 
-TEST_F(JoinGrpcTest, JoinReachesServerIntactAndIsNotImplemented)
+TEST_F(JoinGrpcTest, JoinReachesServerIntactAndExecutesSuccessfully)
 {
     hegadb::transport::grpc::GrpcClient client(address_);
 
@@ -218,14 +218,10 @@ TEST_F(JoinGrpcTest, JoinReachesServerIntactAndIsNotImplemented)
     EXPECT_EQ(join.right_column().table(), "orders");
     EXPECT_EQ(join.right_column().column(), "user_id");
 
-    // What the server answered: recognized, but not implemented yet.
+    // What the server answered: query successfully executes on the server
     EXPECT_EQ(response.request_id().value(), "join-001");
     ASSERT_TRUE(response.has_status());
-    EXPECT_EQ(response.status().code(), proto::STATUS_ERROR);
-    EXPECT_NE(response.status().message().find("INNER JOIN"), std::string::npos);
-    EXPECT_NE(response.status().message().find("not implemented"), std::string::npos);
-    EXPECT_NE(response.status().message().find("users"), std::string::npos);
-    EXPECT_NE(response.status().message().find("orders"), std::string::npos);
+    EXPECT_EQ(response.status().code(), proto::STATUS_OK);
 }
 
 TEST_F(JoinGrpcTest, PlainSelectStillSucceeds)

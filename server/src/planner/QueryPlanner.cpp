@@ -1,3 +1,4 @@
+#include <hegadb/operations/ComparisonOp.h>
 #include <hegadb/server/operators/FilterOperator.h>
 #include <hegadb/server/operators/JoinOperator.h>
 #include <hegadb/server/operators/ProjectionOperator.h>
@@ -36,7 +37,27 @@ execution::ExecutionPlan QueryPlanner::plan(protocol::SelectStatement const& stm
         }
 
         auto right_scan = std::make_unique<operators::TableScanOperator>(right_table_name);
-        auto join_condition = ExpressionPlanner::plan(join_spec.condition());
+
+        planner::ExprPtr join_condition;
+        if (join_spec.has_condition()) {
+            join_condition = ExpressionPlanner::plan(join_spec.condition());
+        } else if (join_spec.has_left_column() && join_spec.has_right_column()) {
+            auto left_ref = std::make_shared<planner::Expr>(planner::ColumnRefExpr{
+                join_spec.left_column().table(),
+                join_spec.left_column().column()
+            });
+            auto right_ref = std::make_shared<planner::Expr>(planner::ColumnRefExpr{
+                join_spec.right_column().table(),
+                join_spec.right_column().column()
+            });
+            join_condition = std::make_shared<planner::Expr>(planner::ComparisonExpr{
+                std::move(left_ref),
+                operations::ComparisonOp::EQ,
+                std::move(right_ref)
+            });
+        } else {
+            throw std::runtime_error("JOIN clause missing condition or key columns");
+        }
 
         current = std::make_unique<operators::JoinOperator>(
             std::move(current),
