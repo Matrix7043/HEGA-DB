@@ -24,6 +24,13 @@ public:
         ExecutionPlan& plan,
         ExecutionContext& context);
 
+    using BatchConsumer = std::function<bool(ExecutionBatch const&, EncryptedMask const*)>;
+
+    void executeStreaming(
+        ExecutionPlan& plan,
+        ExecutionContext& context,
+        BatchConsumer consumer);
+
 private:
     /**
      * @brief Extract encrypted mask from plan

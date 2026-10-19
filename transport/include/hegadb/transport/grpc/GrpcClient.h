@@ -17,6 +17,10 @@ public:
     protocol::QueryResponse execute(
         protocol::ExecuteQuery const& request) override;
 
+    protocol::Status executeStream(
+        protocol::ExecuteQuery const& request,
+        BatchCallback callback) override;
+
 private:
     std::unique_ptr<HEGADBService::Stub> stub_;
 };

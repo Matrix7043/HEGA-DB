@@ -9,5 +9,6 @@ service HEGADBService {
   rpc Execute(
       hegadb.protocol.ExecuteQuery)
     returns (
-        hegadb.protocol.QueryResponse);
+        stream hegadb.protocol.QueryResponse);
 }
+

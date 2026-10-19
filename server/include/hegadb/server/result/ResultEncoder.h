@@ -13,6 +13,13 @@ public:
         execution::ExecutionResult const& exec_result,
         protocol::QueryResponse& response
     );
+
+    static void encodeBatch(
+        execution::ExecutionBatch const& batch,
+        execution::EncryptedMask const* mask,
+        protocol::ResultMode mode,
+        protocol::QueryResponse& response
+    );
 };
 
 } // namespace hegadb::server::result

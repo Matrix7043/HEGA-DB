@@ -37,4 +37,25 @@ void ResultEncoder::encode(
     }
 }
 
+void ResultEncoder::encodeBatch(
+    execution::ExecutionBatch const& batch,
+    execution::EncryptedMask const* mask,
+    protocol::ResultMode mode,
+    protocol::QueryResponse& response) {
+
+    auto* result = response.mutable_result();
+    result->set_mode(mode);
+    result->set_row_count(batch.getRowCount());
+
+    if (mask != nullptr) {
+        result->set_encrypted_mask(mask->serialize());
+    }
+
+    for (auto const& col_name : batch.getColumnNames()) {
+        auto* col = result->add_columns();
+        col->set_column_name(col_name);
+        col->add_ciphertexts(batch.getColumn(col_name).serialize());
+    }
+}
+
 } // namespace hegadb::server::result

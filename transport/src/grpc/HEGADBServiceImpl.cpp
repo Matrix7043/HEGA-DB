@@ -4,31 +4,46 @@
 
 namespace hegadb::transport::grpc {
 
+void HEGADBServiceImpl::setStreamingRequestHandler(
+    StreamingRequestHandler handler)
+{
+    streaming_handler_ = std::move(handler);
+}
+
 void HEGADBServiceImpl::setRequestHandler(
     RequestHandler handler)
 {
-    request_handler_ = std::move(handler);
+    streaming_handler_ = [h = std::move(handler)](
+                             protocol::ExecuteQuery const& req,
+                             BatchWriter writer) {
+        auto resp = h(req);
+        writer(resp);
+    };
 }
 
 ::grpc::Status HEGADBServiceImpl::Execute(
     [[maybe_unused]] ::grpc::ServerContext* context,
     ::hegadb::protocol::ExecuteQuery const* request,
-    ::hegadb::protocol::QueryResponse* response)
+    ::grpc::ServerWriter<::hegadb::protocol::QueryResponse>* writer)
 {
-    if (request == nullptr || response == nullptr) {
+    if (request == nullptr || writer == nullptr) {
         return ::grpc::Status(
             ::grpc::StatusCode::INVALID_ARGUMENT,
-            "Invalid request or response");
+            "Invalid request or writer");
     }
 
-    if (!request_handler_) {
+    if (!streaming_handler_) {
         return ::grpc::Status(
             ::grpc::StatusCode::FAILED_PRECONDITION,
             "No request handler configured");
     }
 
     try {
-        *response = request_handler_(*request);
+        BatchWriter batch_writer = [writer](protocol::QueryResponse const& response) -> bool {
+            return writer->Write(response);
+        };
+
+        streaming_handler_(*request, batch_writer);
 
         return ::grpc::Status::OK;
     } catch (std::exception const& ex) {
