@@ -137,6 +137,20 @@ add_test(
     COMMAND semantic_validator_ddl_tests
 )
 
+add_executable(semantic_validator_insert_tests
+    client/semantic_validator_insert_tests.cpp
+)
+
+target_link_libraries(semantic_validator_insert_tests
+    PRIVATE
+        hegadb_client_core
+)
+
+add_test(
+    NAME semantic_validator_insert_tests
+    COMMAND semantic_validator_insert_tests
+)
+
 
 add_executable(literal_extractor_tests
     client/literal_extractor_tests.cpp

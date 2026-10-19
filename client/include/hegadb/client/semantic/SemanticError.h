@@ -14,7 +14,9 @@ enum class SemanticErrorKind {
     DuplicateColumn,
     TableAlreadyExists,
     InvalidTableDefinition,
-    InvalidJoin
+    InvalidJoin,
+    ValueCountMismatch,
+    NullConstraintViolation
 };
 
 class SemanticError : public std::runtime_error {

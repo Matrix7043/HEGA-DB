@@ -6,12 +6,16 @@
 #include "hegadb/client/ast/ColumnRef.h"
 #include "hegadb/client/ast/ComparisonExpr.h"
 #include "hegadb/client/ast/Literal.h"
+#include "hegadb/client/ast/NullLiteral.h"
 #include "hegadb/client/ast/LogicalExpr.h"
 #include "hegadb/client/ast/NotExpr.h"
 
+#include <algorithm>
 #include <stdexcept>
 #include <string>
 #include <unordered_set>
+#include <variant>
+#include <vector>
 
 namespace hegadb::client::semantic {
 
@@ -58,6 +62,53 @@ ResolvedColumn resolveQualified(ast::ColumnRef const& column,
     return { table, found };
 }
 
+const char* typeName(types::DataType type)
+{
+    switch (type) {
+    case types::DataType::Integer:
+        return "INTEGER";
+    case types::DataType::Float:
+        return "FLOAT";
+    case types::DataType::String:
+        return "STRING";
+    case types::DataType::Boolean:
+        return "BOOLEAN";
+    }
+
+    return "UNKNOWN";
+}
+
+const char* literalTypeName(ast::Literal::Value const& value)
+{
+    if (std::holds_alternative<long long>(value)) {
+        return "INTEGER";
+    }
+
+    if (std::holds_alternative<std::string>(value)) {
+        return "STRING";
+    }
+
+    return "BOOLEAN";
+}
+
+bool literalMatches(ast::Literal::Value const& value, types::DataType type)
+{
+    switch (type) {
+    case types::DataType::Integer:
+        return std::holds_alternative<long long>(value);
+    case types::DataType::String:
+        return std::holds_alternative<std::string>(value);
+    case types::DataType::Boolean:
+        return std::holds_alternative<bool>(value);
+    case types::DataType::Float:
+        // The language has no float literal, and an integer must not be
+        // widened: it would be encrypted with the integer scheme.
+        return false;
+    }
+
+    return false;
+}
+
 } // namespace
 
 SemanticValidator::SemanticValidator(catalog::Catalog const& catalog)
@@ -79,6 +130,10 @@ void SemanticValidator::validate(ast::Statement const& stmt) const
 
     case ast::ASTNodeKind::DropTableStmt:
         validate(static_cast<ast::DropTableStmt const&>(stmt));
+        return;
+
+    case ast::ASTNodeKind::InsertStmt:
+        validate(static_cast<ast::InsertStmt const&>(stmt));
         return;
 
     default:
@@ -139,6 +194,114 @@ void SemanticValidator::validate(ast::DropTableStmt const& stmt) const
     if (catalog_.findTable(stmt.tableName()) == nullptr) {
         throw SemanticError(SemanticErrorKind::TableNotFound,
             "table '" + stmt.tableName() + "' does not exist");
+    }
+}
+
+void SemanticValidator::validate(ast::InsertStmt const& stmt) const
+{
+    catalog::TableSchema const* table = catalog_.findTable(stmt.tableName());
+
+    if (table == nullptr) {
+        throw SemanticError(SemanticErrorKind::TableNotFound,
+            "table '" + stmt.tableName() + "' does not exist");
+    }
+
+    // ---- Target columns, in the order the values are given ----
+
+    std::vector<catalog::ColumnSchema const*> targets;
+
+    if (stmt.hasColumnList()) {
+        std::unordered_set<std::string> listed;
+
+        for (auto const& name : stmt.columns()) {
+            catalog::ColumnSchema const* column = table->findColumn(name);
+
+            if (column == nullptr) {
+                throw SemanticError(SemanticErrorKind::ColumnNotFound,
+                    "column '" + name + "' does not exist in table '" + table->name() + "'");
+            }
+
+            if (!listed.insert(name).second) {
+                throw SemanticError(SemanticErrorKind::DuplicateColumn,
+                    "column '" + name + "' is listed more than once");
+            }
+
+            targets.push_back(column);
+        }
+
+        // A column left out of the list gets NULL.
+        for (auto const& column : table->columns()) {
+            if (listed.count(column.name) == 0 && !column.nullable) {
+                throw SemanticError(SemanticErrorKind::NullConstraintViolation,
+                    "column '" + column.name + "' is NOT NULL and has no value");
+            }
+        }
+    } else {
+        for (auto const& column : table->columns()) {
+            targets.push_back(&column);
+        }
+
+        std::sort(targets.begin(), targets.end(),
+            [](catalog::ColumnSchema const* a, catalog::ColumnSchema const* b) {
+                return a->ordinal < b->ordinal;
+            });
+    }
+
+    // ---- Rows ----
+
+    if (stmt.rows().empty()) {
+        throw SemanticError(SemanticErrorKind::ValueCountMismatch,
+            "INSERT has no rows");
+    }
+
+    std::size_t row_number = 0;
+
+    for (auto const& row : stmt.rows()) {
+        ++row_number;
+
+        if (row.size() != targets.size()) {
+            throw SemanticError(SemanticErrorKind::ValueCountMismatch,
+                "row " + std::to_string(row_number) + " has " + std::to_string(row.size())
+                    + " value(s) but " + std::to_string(targets.size()) + " were expected");
+        }
+
+        for (std::size_t i = 0; i < row.size(); ++i) {
+            catalog::ColumnSchema const& column = *targets[i];
+            ast::Expr const* cell = row[i].get();
+
+            if (cell == nullptr) {
+                throw SemanticError(SemanticErrorKind::TypeMismatch,
+                    "row " + std::to_string(row_number) + " has a missing value");
+            }
+
+            if (cell->kind() == ast::ASTNodeKind::NullLiteral) {
+                if (!column.nullable) {
+                    throw SemanticError(SemanticErrorKind::NullConstraintViolation,
+                        "column '" + column.name + "' is NOT NULL but row "
+                            + std::to_string(row_number) + " gives NULL");
+                }
+                continue;
+            }
+
+            if (cell->kind() != ast::ASTNodeKind::Literal) {
+                throw SemanticError(SemanticErrorKind::TypeMismatch,
+                    "INSERT values must be literals or NULL");
+            }
+
+            auto const& value = static_cast<ast::Literal const&>(*cell).value();
+
+            if (!literalMatches(value, column.type)) {
+                std::string message = "column '" + column.name + "' is "
+                    + typeName(column.type) + " but row " + std::to_string(row_number)
+                    + " gives a " + literalTypeName(value);
+
+                if (column.type == types::DataType::Float) {
+                    message += " (FLOAT columns accept only NULL: there are no float literals yet)";
+                }
+
+                throw SemanticError(SemanticErrorKind::TypeMismatch, message);
+            }
+        }
     }
 }
 

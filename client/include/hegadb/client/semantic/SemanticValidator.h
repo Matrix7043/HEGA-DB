@@ -7,6 +7,7 @@
 #include "hegadb/client/ast/CreateTableStmt.h"
 #include "hegadb/client/ast/DropTableStmt.h"
 #include "hegadb/client/ast/Expr.h"
+#include "hegadb/client/ast/InsertStmt.h"
 #include "hegadb/client/ast/SelectStmt.h"
 #include "hegadb/client/ast/Statement.h"
 #include "hegadb/types/DataType.h"
@@ -30,6 +31,13 @@ public:
 
     // The table must exist.
     void validate(ast::DropTableStmt const& stmt) const;
+
+    // The table must exist. Listed columns must exist and be unique, and
+    // columns left out of the list must be nullable. Every row must have one
+    // value per target column, each value must match its column's type, and
+    // NULL is only allowed in nullable columns. FLOAT columns accept only
+    // NULL for now, because the language has no float literals.
+    void validate(ast::InsertStmt const& stmt) const;
 
 private:
     catalog::Catalog const& catalog_;
