@@ -509,6 +509,26 @@ gtest_discover_tests(insert_protocol_tests)
 
 
 # ============================================================
+# INSERT server tests (receiver + client -> gRPC -> server)
+# ============================================================
+
+add_executable(insert_server_tests
+    client/insert_server_tests.cpp
+)
+
+target_link_libraries(insert_server_tests
+    PRIVATE
+        hegadb_client_core
+        hegadb_server
+        hegadb_server_transport
+        hegadb_client_transport
+        GTest::gtest_main
+)
+
+gtest_discover_tests(insert_server_tests)
+
+
+# ============================================================
 # JOIN tests (AST, semantic validation, protocol + gRPC)
 # ============================================================
 

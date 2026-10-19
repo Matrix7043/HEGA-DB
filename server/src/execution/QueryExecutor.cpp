@@ -39,6 +39,13 @@ execution::ExecutionResult QueryExecutor::execute(
             + "' is not implemented on this server");
     }
 
+    // INSERT — not yet implemented.
+    if (stmt.has_insert_statement()) {
+        throw std::runtime_error(
+            "INSERT INTO '" + stmt.insert_statement().table()
+            + "' is not implemented on this server");
+    }
+
     if (!stmt.has_select_statement()) {
         throw std::runtime_error("Unsupported statement type");
     }
