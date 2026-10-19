@@ -146,6 +146,39 @@ message DropTableStatement {
 }
 
 // ---------------------------------------------------------------------------
+// DML — INSERT
+// ---------------------------------------------------------------------------
+
+// NULL carries no data, so it is not encrypted.
+message NullValue {}
+
+// One cell of an INSERT row: an encrypted value, or NULL.
+message InsertValue {
+  oneof value {
+    ParameterRef parameter_ref = 1;
+    NullValue    null_value    = 2;
+  }
+}
+
+message InsertRow {
+  repeated InsertValue values = 1;
+}
+
+// INSERT INTO table [(columns)] VALUES rows
+//
+// Every non-NULL value is encrypted on the client and sent in
+// ExecuteQuery.parameters; the cell holds a ParameterRef to it. Parameters
+// are numbered in the order the values appear: row 0 left to right, then
+// row 1, and so on.
+//
+// With no columns, each row has one value per table column, in column order.
+message InsertStatement {
+  string             table   = 1;
+  repeated string    columns = 2;
+  repeated InsertRow rows    = 3;
+}
+
+// ---------------------------------------------------------------------------
 // Statement wrapper
 // ---------------------------------------------------------------------------
 
@@ -154,6 +187,7 @@ message Statement {
     SelectStatement      select_statement       = 1;
     CreateTableStatement create_table_statement = 2;
     DropTableStatement   drop_table_statement   = 3;
+    InsertStatement      insert_statement       = 4;
   }
 }
 

@@ -14,6 +14,10 @@ namespace hegadb::client::protocol {
 class ExecuteQueryEncoder {
 
 public:
+    // Encodes a prepared SELECT or INSERT. An INSERT carries its values as
+    // encrypted parameters, like the literals of a WHERE clause, so it must go
+    // through query preparation first. Throws std::invalid_argument for any
+    // other statement kind.
     static hegadb::protocol::ExecuteQuery encode(
         preparation::PreparedQuery const& prepared,
         std::string request_id);

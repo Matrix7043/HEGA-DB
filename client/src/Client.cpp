@@ -1,4 +1,5 @@
 #include "hegadb/catalog/db-client/CatalogCache.h"
+#include "hegadb/client/ast/ASTNode.h"
 #include "hegadb/client/ast/SelectStmt.h"
 #include "hegadb/client/protocol/ExecuteQueryEncoder.h"
 #include "hegadb/crypto/CompositeEncryption.h"
@@ -145,10 +146,14 @@ int Client::run()
         logging::debug(
             "Semantic validation completed successfully");
 
-        // SELECT continues below; CREATE TABLE / DROP TABLE take the DDL path.
+        // SELECT and INSERT continue below, through query preparation (their
+        // literals are encrypted). CREATE TABLE / DROP TABLE take the DDL path.
         auto const* select_stmt = dynamic_cast<ast::SelectStmt const*>(ast.get());
 
-        if (select_stmt == nullptr) {
+        bool const is_ddl = ast->kind() == ast::ASTNodeKind::CreateTableStmt
+            || ast->kind() == ast::ASTNodeKind::DropTableStmt;
+
+        if (is_ddl) {
             // CREATE TABLE / DROP TABLE: no encryption or query preparation,
             // the validated statement is sent to the server as it is.
             try {
@@ -197,17 +202,20 @@ int Client::run()
 
         std::cout << "Query accepted.\n";
 
+        // The AST printer only knows SELECT.
         hegadb::client::ast::ASTPrinter printer;
-        auto const astPath = printer.print(select_stmt,
-            "logs/ast", queryId);
-        if (!astPath.empty()) {
-            logging::debug(
-                "AST written to: {}",
-                astPath.string());
-        } else {
-            logging::warn(
-                "Failed to write AST: query_id={}",
-                queryId);
+        if (select_stmt != nullptr) {
+            auto const astPath = printer.print(select_stmt,
+                "logs/ast", queryId);
+            if (!astPath.empty()) {
+                logging::debug(
+                    "AST written to: {}",
+                    astPath.string());
+            } else {
+                logging::warn(
+                    "Failed to write AST: query_id={}",
+                    queryId);
+            }
         }
 
         // ========================================================

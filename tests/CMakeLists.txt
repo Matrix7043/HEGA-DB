@@ -492,6 +492,23 @@ gtest_discover_tests(ddl_protocol_tests)
 
 
 # ============================================================
+# INSERT protocol tests (extraction, parameterization, preparation, encoder)
+# ============================================================
+
+add_executable(insert_protocol_tests
+    client/insert_protocol_tests.cpp
+)
+
+target_link_libraries(insert_protocol_tests
+    PRIVATE
+        hegadb_client_core
+        GTest::gtest_main
+)
+
+gtest_discover_tests(insert_protocol_tests)
+
+
+# ============================================================
 # JOIN tests (AST, semantic validation, protocol + gRPC)
 # ============================================================
 

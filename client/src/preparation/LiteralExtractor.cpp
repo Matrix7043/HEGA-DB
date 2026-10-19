@@ -1,6 +1,7 @@
 #include "hegadb/client/preparation/LiteralExtractor.h"
 #include "hegadb/client/ast/ASTNode.h"
 #include "hegadb/client/ast/ComparisonExpr.h"
+#include "hegadb/client/ast/InsertStmt.h"
 #include "hegadb/client/ast/LogicalExpr.h"
 #include "hegadb/client/ast/NotExpr.h"
 #include "hegadb/client/ast/SelectStmt.h"
@@ -15,6 +16,19 @@ void LiteralExtractor::visit(
     if (auto const* selectStmt = dynamic_cast<ast::SelectStmt const*>(&node)) {
         if (selectStmt->where()) {
             visit(*selectStmt->where(), literals);
+        }
+        return;
+    }
+
+    // Values are collected row by row, left to right. A NullLiteral is not a
+    // Literal, so NULL is never extracted or encrypted.
+    if (auto const* insertStmt = dynamic_cast<ast::InsertStmt const*>(&node)) {
+        for (auto const& row : insertStmt->rows()) {
+            for (auto const& cell : row) {
+                if (cell) {
+                    visit(*cell, literals);
+                }
+            }
         }
         return;
     }
