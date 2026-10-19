@@ -1,6 +1,7 @@
 #include <hegadb/catalog/CatalogSnapshot.h>
 #include <hegadb/catalog/TableSchema.h>
 #include <hegadb/catalog/db-client/InMemoryCatalog.h>
+#include <hegadb/crypto/CompositeEncryption.h>
 #include <hegadb/crypto/OpenFHEContext.h>
 #include <hegadb/execution/CatalogLoader.h>
 #include <hegadb/logging/Logger.h>
@@ -12,6 +13,7 @@
 #include <hegadb/transport/ServerTransportFactory.h>
 #include <hegadb/transport/grpc/GrpcServer.h>
 
+#include <filesystem>
 #include <iostream>
 #include <memory>
 #include <sys/stat.h>
@@ -53,10 +55,24 @@ int main(int argc, char** argv)
     }
 
     // ----------------------------------------------------------------
-    // Crypto context
+    // Crypto context & evaluation keys
     // ----------------------------------------------------------------
+    std::string keys_dir = home_dir + "/.hegadb/keys";
     auto crypto_context = std::make_shared<hegadb::crypto::OpenFHEContext>();
-    crypto_context->enableFeatures();
+    try {
+        if (std::filesystem::exists(keys_dir)) {
+            auto server_encryption = std::make_shared<hegadb::crypto::CompositeEncryption>(keys_dir);
+            crypto_context->setBFVContext(server_encryption->getContext().getBFVContext());
+            crypto_context->setCKKSContext(server_encryption->getContext().getCKKSContext());
+            hegadb::logging::info("Crypto context and evaluation keys loaded from: {}", keys_dir);
+        } else {
+            crypto_context->enableFeatures();
+            hegadb::logging::warn("Keys directory '{}' not found, running with fresh context", keys_dir);
+        }
+    } catch (std::exception const& e) {
+        hegadb::logging::warn("Could not load keys from '{}': {} — fallback to fresh context", keys_dir, e.what());
+        crypto_context->enableFeatures();
+    }
 
     // ----------------------------------------------------------------
     // Storage manager — file-based, reading encrypted segment files

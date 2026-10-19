@@ -12,10 +12,17 @@
 #include <hegadb/catalog/db-client/InMemoryCatalog.h>
 #include <hegadb/client/SQLParser.h>
 #include <hegadb/client/ast/ASTPrinter.h>
+#include <hegadb/client/ast/ComparisonExpr.h>
 #include <hegadb/client/preparation/QueryPreparer.h>
 #include <hegadb/client/semantic/SemanticError.h>
 #include <hegadb/client/semantic/SemanticValidator.h>
 #include <hegadb/crypto/MockEncryption.h>
+#include <hegadb/crypto/OpenFHECiphertext.h>
+#include <hegadb/execution/ResultDecryptor.h>
+#include <hegadb/execution/ResultFormatter.h>
+#include <hegadb/server/execution/EncryptedMask.h>
+#include <hegadb/server/execution/ExecutionBatch.h>
+#include <hegadb/server/execution/ExecutionResult.h>
 #include <hegadb/transport/ClientTransportFactory.h>
 #include <hegadb/types/DataType.h>
 
@@ -39,10 +46,10 @@ int Client::run()
     std::cout << "HEGADB Client v0.7\n";
     std::cout << "Type SQL queries. Type \\q to exit.\n\n";
 
-    hegadb::crypto::CompositeEncryption encryption;
+    auto encryption = std::make_shared<hegadb::crypto::CompositeEncryption>();
 
     hegadb::client::preparation::QueryPreparer preparer(
-        encryption);
+        *encryption);
 
     // ==========================================================
     // Catalog Client Transport
@@ -108,7 +115,14 @@ int Client::run()
 
         if (!ast) {
             logging::debug("SQL Parsing failed");
-            std::cout << "Query rejected.\n";
+            auto parseResult = sqlParser.parse(input);
+            std::cout << "Query rejected (syntax error):\n";
+            for (auto const& err : parseResult.errors) {
+                std::cout << "  " << err << '\n';
+            }
+            if (parseResult.errors.empty()) {
+                std::cout << "  Unable to parse SQL statement.\n";
+            }
             continue;
         }
 
@@ -214,6 +228,30 @@ int Client::run()
         // Query preparation
         // ========================================================
 
+        // Save table names and mask kind before AST is moved
+        std::string from_table = (select_stmt->from() != nullptr) ? select_stmt->from()->name() : "";
+        std::string join_table = (select_stmt->join() != nullptr && select_stmt->join()->table() != nullptr)
+            ? select_stmt->join()->table()->name()
+            : "";
+
+        hegadb::server::execution::MaskKind mask_kind = hegadb::server::execution::MaskKind::DIFF_NONZERO;
+        if (select_stmt->where()) {
+            if (auto const* comp = dynamic_cast<ast::ComparisonExpr const*>(select_stmt->where())) {
+                switch (comp->op()) {
+                    case operations::ComparisonOp::EQ:
+                    case operations::ComparisonOp::NEQ:
+                    case operations::ComparisonOp::LT:
+                    case operations::ComparisonOp::GT:
+                    case operations::ComparisonOp::LTE:
+                    case operations::ComparisonOp::GTE:
+                        mask_kind = hegadb::server::execution::MaskKind::DIFF_NONZERO;
+                        break;
+                }
+            } else {
+                mask_kind = hegadb::server::execution::MaskKind::COMPOSED;
+            }
+        }
+
         try {
             logging::debug(
                 "Preparing query for encrypted execution");
@@ -302,6 +340,80 @@ int Client::run()
                 << "  Message: "
                 << response.status().message()
                 << "\n\n";
+
+            if (response.status().code() == hegadb::protocol::STATUS_OK && response.has_result()) {
+                auto const& rp = response.result();
+                if (rp.columns_size() > 0 && rp.row_count() > 0) {
+                    hegadb::server::execution::ExecutionResult exec_result;
+                    exec_result.setResultMode(rp.mode());
+
+                    if (!rp.encrypted_mask().empty()) {
+                        auto mask_ct = crypto::OpenFHECiphertext::deserialize(rp.encrypted_mask());
+                        hegadb::server::execution::EncryptedMask mask(
+                            std::move(mask_ct),
+                            rp.row_count(),
+                            mask_kind
+                        );
+                        exec_result.setEncryptedMask(std::move(mask));
+                    }
+
+                    hegadb::server::execution::ExecutionBatch batch;
+                    for (auto const& col_proto : rp.columns()) {
+                        for (auto const& serialised_ct : col_proto.ciphertexts()) {
+                            auto ct = crypto::OpenFHECiphertext::deserialize(serialised_ct);
+                            batch.addColumn(col_proto.column_name(), std::move(ct));
+                        }
+                    }
+                    batch.setRowCount(rp.row_count());
+                    exec_result.addBatch(std::move(batch));
+
+                    auto findColumnType = [&](std::string const& col_name) -> types::DataType {
+                        auto dot = col_name.find('.');
+                        if (dot != std::string::npos) {
+                            auto tbl = col_name.substr(0, dot);
+                            auto col = col_name.substr(dot + 1);
+                            auto const* tschema = catalog_cache.catalog().findTable(tbl);
+                            if (tschema) {
+                                auto const* cs = tschema->findColumn(col);
+                                if (cs) return cs->type;
+                            }
+                        }
+                        if (!from_table.empty()) {
+                            auto const* tschema = catalog_cache.catalog().findTable(from_table);
+                            if (tschema) {
+                                auto const* cs = tschema->findColumn(col_name);
+                                if (cs) return cs->type;
+                            }
+                        }
+                        if (!join_table.empty()) {
+                            auto const* tschema = catalog_cache.catalog().findTable(join_table);
+                            if (tschema) {
+                                auto const* cs = tschema->findColumn(col_name);
+                                if (cs) return cs->type;
+                            }
+                        }
+                        return types::DataType::Integer;
+                    };
+
+                    std::vector<std::string> col_names;
+                    std::vector<types::DataType> col_types;
+                    for (auto const& col_proto : rp.columns()) {
+                        col_names.push_back(col_proto.column_name());
+                        col_types.push_back(findColumnType(col_proto.column_name()));
+                    }
+
+                    hegadb::execution::ResultDecryptor decryptor(encryption);
+                    auto decrypted = decryptor.decrypt(exec_result, col_names, col_types);
+
+                    hegadb::execution::FormatConfig fmt;
+                    fmt.format = hegadb::execution::DisplayFormat::Table;
+                    hegadb::execution::ResultFormatter formatter(fmt);
+                    formatter.format(decrypted, std::cout);
+                    std::cout << '\n';
+                } else {
+                    std::cout << "(0 rows)\n\n";
+                }
+            }
 
         } catch (std::exception const& error) {
 

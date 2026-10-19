@@ -48,10 +48,53 @@ std::shared_ptr<CatalogSnapshot const> createInitialCatalog()
                 .nullable = false,
                 .ordinal = 2 } });
 
+    TableSchema employees(
+        "EMPLOYEES",
+        { ColumnSchema {
+              .name = "id",
+              .type = DataType::Integer,
+              .nullable = false,
+              .ordinal = 0 },
+            ColumnSchema {
+                .name = "age",
+                .type = DataType::Integer,
+                .nullable = false,
+                .ordinal = 1 },
+            ColumnSchema {
+                .name = "salary",
+                .type = DataType::Integer,
+                .nullable = false,
+                .ordinal = 2 },
+            ColumnSchema {
+                .name = "dept",
+                .type = DataType::String,
+                .nullable = false,
+                .ordinal = 3 } });
+
+    TableSchema projects(
+        "PROJECTS",
+        { ColumnSchema {
+              .name = "emp_id",
+              .type = DataType::Integer,
+              .nullable = false,
+              .ordinal = 0 },
+            ColumnSchema {
+                .name = "project_id",
+                .type = DataType::Integer,
+                .nullable = false,
+                .ordinal = 1 },
+            ColumnSchema {
+                .name = "rating",
+                .type = DataType::Integer,
+                .nullable = false,
+                .ordinal = 2 } });
+
     std::unordered_map<std::string, TableSchema> tables;
 
     tables.emplace(users.name(), std::move(users));
     tables.emplace(orders.name(), std::move(orders));
+    tables.emplace(employees.name(), std::move(employees));
+    tables.emplace(projects.name(), std::move(projects));
 
     return std::make_shared<CatalogSnapshot>(
         1,

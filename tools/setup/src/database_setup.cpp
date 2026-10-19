@@ -133,7 +133,53 @@ int initializeDatabase(std::string const& data_dir, std::string const& catalog_d
 
         std::cout << "\n[CATALOG] Writing schema metadata...\n";
         FileStorageWriter::writeManifest(schema, catalog_path, employees.size());
-        std::cout << "[CATALOG] ✓ Manifest written to: " << catalog_path << "\n";
+        std::cout << "[CATALOG] ✓ Manifest written to: " << catalog_path << "\n\n";
+
+        // =================================================================
+        // Generate PROJECTS table (joins with EMPLOYEES on emp_id = id)
+        // =================================================================
+        std::cout << "[DATA]    Generating PROJECTS table...\n";
+        catalog::TableSchema proj_schema("PROJECTS", {
+            { "emp_id",     types::DataType::Integer, false, 0 },
+            { "project_id", types::DataType::Integer, false, 1 },
+            { "rating",     types::DataType::Integer, false, 2 }
+        });
+
+        std::vector<std::vector<std::string>> proj_data(3);
+        // emp_id
+        proj_data[0] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
+        // project_id
+        proj_data[1] = {"101", "102", "101", "103", "102", "101", "104", "103", "104", "102"};
+        // rating
+        proj_data[2] = {"5", "4", "5", "3", "4", "5", "4", "3", "4", "5"};
+
+        std::vector<crypto::OpenFHECiphertext> proj_encrypted;
+        std::vector<std::string> proj_col_names = {"emp_id", "project_id", "rating"};
+        std::vector<types::DataType> proj_col_types = {
+            types::DataType::Integer, types::DataType::Integer, types::DataType::Integer
+        };
+
+        std::cout << "[ENCRYPT] Encrypting PROJECTS columns...\n";
+        for (size_t i = 0; i < proj_schema.columns().size(); ++i) {
+            std::cout << "[ENCRYPT]   Column: " << proj_col_names[i] << " ... ";
+            std::cout.flush();
+            auto enc_col = generator.encryptColumn(proj_data[i], proj_col_types[i]);
+            proj_encrypted.push_back(std::move(enc_col));
+            std::cout << "✓\n";
+        }
+        std::cout << "[ENCRYPT] ✓ All PROJECTS columns encrypted\n\n";
+
+        std::cout << "[STORAGE] Writing encrypted PROJECTS data to disk...\n";
+        writer.writeTable(
+            proj_schema.name(),
+            proj_col_names,
+            proj_col_types,
+            proj_encrypted,
+            proj_data[0].size()
+        );
+
+        FileStorageWriter::writeManifest(proj_schema, catalog_path, proj_data[0].size());
+        std::cout << "[CATALOG] ✓ Manifest written for PROJECTS to: " << catalog_path << "\n";
 
         std::cout << "\n";
         std::cout << "╔════════════════════════════════════════════════════╗\n";
@@ -141,8 +187,7 @@ int initializeDatabase(std::string const& data_dir, std::string const& catalog_d
         std::cout << "╠════════════════════════════════════════════════════╣\n";
         std::cout << "║  Database initialized successfully!               ║\n";
         std::cout << "║                                                    ║\n";
-        std::cout << "║  Table: EMPLOYEES                                 ║\n";
-        std::cout << "║  Rows:  " << employees.size() << "                                          ║\n";
+        std::cout << "║  Tables: EMPLOYEES (10 rows), PROJECTS (10 rows)   ║\n";
         std::cout << "║                                                    ║\n";
         std::cout << "║  Data:    " << data_path << " ║\n";
         std::cout << "║  Catalog: " << catalog_path << " ║\n";

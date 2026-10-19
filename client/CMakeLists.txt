@@ -120,6 +120,7 @@ target_link_libraries(
         hegadb_client_transport
         hegadb_catalog_client_transport
         hegadb_logging
+        hegadb_execution
         ${READLINE_LIBRARY}
     PRIVATE
         # hegadb_warnings
