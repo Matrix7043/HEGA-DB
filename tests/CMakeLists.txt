@@ -16,6 +16,20 @@ add_test(
     COMMAND parser_tests
 )
 
+add_executable(parser_insert_tests
+    client/parser_insert_tests.cpp
+)
+
+target_link_libraries(parser_insert_tests
+    PRIVATE
+        hegadb_client_core
+)
+
+add_test(
+    NAME parser_insert_tests
+    COMMAND parser_insert_tests
+)
+
 
 add_executable(ast_tests
     client/ast_tests.cpp
@@ -66,6 +80,20 @@ add_test(
     COMMAND ast_builder_ddl_tests
 )
 
+add_executable(ast_builder_insert_tests
+    client/ast_builder_insert_tests.cpp
+)
+
+target_link_libraries(ast_builder_insert_tests
+    PRIVATE
+        hegadb_client_core
+)
+
+add_test(
+    NAME ast_builder_insert_tests
+    COMMAND ast_builder_insert_tests
+)
+
 add_executable(ast_parameterizer_tests
     client/ast_parameterizer_tests.cpp
 )
@@ -107,6 +135,20 @@ target_link_libraries(semantic_validator_ddl_tests
 add_test(
     NAME semantic_validator_ddl_tests
     COMMAND semantic_validator_ddl_tests
+)
+
+add_executable(semantic_validator_insert_tests
+    client/semantic_validator_insert_tests.cpp
+)
+
+target_link_libraries(semantic_validator_insert_tests
+    PRIVATE
+        hegadb_client_core
+)
+
+add_test(
+    NAME semantic_validator_insert_tests
+    COMMAND semantic_validator_insert_tests
 )
 
 
@@ -447,6 +489,43 @@ target_link_libraries(ddl_protocol_tests
 )
 
 gtest_discover_tests(ddl_protocol_tests)
+
+
+# ============================================================
+# INSERT protocol tests (extraction, parameterization, preparation, encoder)
+# ============================================================
+
+add_executable(insert_protocol_tests
+    client/insert_protocol_tests.cpp
+)
+
+target_link_libraries(insert_protocol_tests
+    PRIVATE
+        hegadb_client_core
+        GTest::gtest_main
+)
+
+gtest_discover_tests(insert_protocol_tests)
+
+
+# ============================================================
+# INSERT server tests (receiver + client -> gRPC -> server)
+# ============================================================
+
+add_executable(insert_server_tests
+    client/insert_server_tests.cpp
+)
+
+target_link_libraries(insert_server_tests
+    PRIVATE
+        hegadb_client_core
+        hegadb_server
+        hegadb_server_transport
+        hegadb_client_transport
+        GTest::gtest_main
+)
+
+gtest_discover_tests(insert_server_tests)
 
 
 # ============================================================

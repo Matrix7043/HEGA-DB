@@ -40,6 +40,15 @@ public:
   virtual void enterDropTableStatement(HEGADBParser::DropTableStatementContext * /*ctx*/) override { }
   virtual void exitDropTableStatement(HEGADBParser::DropTableStatementContext * /*ctx*/) override { }
 
+  virtual void enterInsertStatement(HEGADBParser::InsertStatementContext * /*ctx*/) override { }
+  virtual void exitInsertStatement(HEGADBParser::InsertStatementContext * /*ctx*/) override { }
+
+  virtual void enterValueRow(HEGADBParser::ValueRowContext * /*ctx*/) override { }
+  virtual void exitValueRow(HEGADBParser::ValueRowContext * /*ctx*/) override { }
+
+  virtual void enterInsertValue(HEGADBParser::InsertValueContext * /*ctx*/) override { }
+  virtual void exitInsertValue(HEGADBParser::InsertValueContext * /*ctx*/) override { }
+
   virtual void enterSelectList(HEGADBParser::SelectListContext * /*ctx*/) override { }
   virtual void exitSelectList(HEGADBParser::SelectListContext * /*ctx*/) override { }
 

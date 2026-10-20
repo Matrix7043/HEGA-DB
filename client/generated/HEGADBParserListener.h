@@ -38,6 +38,15 @@ public:
   virtual void enterDropTableStatement(HEGADBParser::DropTableStatementContext *ctx) = 0;
   virtual void exitDropTableStatement(HEGADBParser::DropTableStatementContext *ctx) = 0;
 
+  virtual void enterInsertStatement(HEGADBParser::InsertStatementContext *ctx) = 0;
+  virtual void exitInsertStatement(HEGADBParser::InsertStatementContext *ctx) = 0;
+
+  virtual void enterValueRow(HEGADBParser::ValueRowContext *ctx) = 0;
+  virtual void exitValueRow(HEGADBParser::ValueRowContext *ctx) = 0;
+
+  virtual void enterInsertValue(HEGADBParser::InsertValueContext *ctx) = 0;
+  virtual void exitInsertValue(HEGADBParser::InsertValueContext *ctx) = 0;
+
   virtual void enterSelectList(HEGADBParser::SelectListContext *ctx) = 0;
   virtual void exitSelectList(HEGADBParser::SelectListContext *ctx) = 0;
 

@@ -35,6 +35,12 @@ public:
 
     virtual std::any visitDropTableStatement(HEGADBParser::DropTableStatementContext *context) = 0;
 
+    virtual std::any visitInsertStatement(HEGADBParser::InsertStatementContext *context) = 0;
+
+    virtual std::any visitValueRow(HEGADBParser::ValueRowContext *context) = 0;
+
+    virtual std::any visitInsertValue(HEGADBParser::InsertValueContext *context) = 0;
+
     virtual std::any visitSelectList(HEGADBParser::SelectListContext *context) = 0;
 
     virtual std::any visitSelectItem(HEGADBParser::SelectItemContext *context) = 0;

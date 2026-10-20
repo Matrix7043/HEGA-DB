@@ -1,10 +1,12 @@
 #include "hegadb/client/ast/ASTParameterizer.h"
 #include "hegadb/client/ast/ColumnRef.h"
 #include "hegadb/client/ast/ComparisonExpr.h"
+#include "hegadb/client/ast/InsertStmt.h"
 #include "hegadb/client/ast/JoinClause.h"
 #include "hegadb/client/ast/Literal.h"
 #include "hegadb/client/ast/LogicalExpr.h"
 #include "hegadb/client/ast/NotExpr.h"
+#include "hegadb/client/ast/NullLiteral.h"
 #include "hegadb/client/ast/ParameterRef.h"
 #include "hegadb/client/ast/SelectStmt.h"
 #include "hegadb/client/ast/TableRef.h"
@@ -45,6 +47,11 @@ ASTParameterizer::transform(
 
     if (dynamic_cast<Wildcard const*>(&node)) {
         return std::make_unique<Wildcard>();
+    }
+
+    // NULL is not encrypted, so it stays as it is.
+    if (dynamic_cast<NullLiteral const*>(&node)) {
+        return std::make_unique<NullLiteral>();
     }
 
     if (auto const* comparison = dynamic_cast<ComparisonExpr const*>(&node)) {
@@ -97,11 +104,36 @@ std::unique_ptr<ASTNode>
 ASTParameterizer::parameterize(
     ASTNode const& root) const
 {
+    if (auto const* insert = dynamic_cast<InsertStmt const*>(&root)) {
+        auto result = std::make_unique<InsertStmt>(insert->tableName());
+
+        for (auto const& column : insert->columns()) {
+            result->addColumn(column);
+        }
+
+        // Parameters are numbered in the same order LiteralExtractor
+        // extracts them: row by row, left to right.
+        std::size_t next_parameter_index = 0;
+
+        for (auto const& row : insert->rows()) {
+            InsertStmt::Row parameterized;
+
+            for (auto const& cell : row) {
+                parameterized.push_back(
+                    transform(*cell, next_parameter_index));
+            }
+
+            result->addRow(std::move(parameterized));
+        }
+
+        return result;
+    }
+
     auto const* select = dynamic_cast<SelectStmt const*>(&root);
 
     if (!select) {
         throw std::runtime_error(
-            "ASTParameterizer expects a SelectStmt");
+            "ASTParameterizer expects a SelectStmt or an InsertStmt");
     }
 
     auto result = std::make_unique<SelectStmt>();

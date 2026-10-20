@@ -35,7 +35,9 @@ protocol::QueryResponse ExecuteQueryReceiver::executeQuery(
             if (request.statement().has_create_table_statement()) {
                 success_msg = "Table '" + request.statement().create_table_statement().table() + "' created successfully";
             } else if (request.statement().has_insert_statement()) {
-                success_msg = "1 row inserted successfully into '" + request.statement().insert_statement().table() + "'";
+                auto const& insert_stmt = request.statement().insert_statement();
+                int const count = insert_stmt.rows_size() > 0 ? insert_stmt.rows_size() : 1;
+                success_msg = std::to_string(count) + " row" + (count == 1 ? "" : "s") + " inserted successfully into '" + insert_stmt.table() + "'";
             }
         }
 

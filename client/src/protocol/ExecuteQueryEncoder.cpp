@@ -4,9 +4,11 @@
 #include <hegadb/client/ast/ComparisonExpr.h>
 #include <hegadb/client/ast/CreateTableStmt.h>
 #include <hegadb/client/ast/DropTableStmt.h>
+#include <hegadb/client/ast/InsertStmt.h>
 #include <hegadb/client/ast/JoinClause.h>
 #include <hegadb/client/ast/LogicalExpr.h>
 #include <hegadb/client/ast/NotExpr.h>
+#include <hegadb/client/ast/NullLiteral.h>
 #include <hegadb/client/ast/ParameterRef.h>
 #include <hegadb/client/ast/SelectStmt.h>
 #include <hegadb/client/ast/Wildcard.h>
@@ -181,6 +183,77 @@ void convertExpression(
     }
 }
 
+// Encodes an INSERT whose literals have already been replaced by parameter
+// references. A NULL cell is sent as NULL.
+void encodeInsert(
+    ast::InsertStmt const& stmt,
+    proto::InsertStatement* proto_insert)
+{
+    proto_insert->set_table(stmt.tableName());
+
+    for (auto const& column : stmt.columns()) {
+        proto_insert->add_columns(column);
+    }
+
+    for (auto const& row : stmt.rows()) {
+        auto* proto_row = proto_insert->add_rows();
+
+        for (auto const& cell : row) {
+            auto* proto_value = proto_row->add_values();
+
+            if (cell != nullptr && cell->kind() == ast::ASTNodeKind::NullLiteral) {
+                proto_value->mutable_null_value();
+            } else if (auto const* parameter = dynamic_cast<ast::ParameterRef const*>(cell.get())) {
+                proto_value->mutable_parameter_ref()->set_parameter_index(
+                    parameter->parameterIndex());
+            } else {
+                // A plaintext Literal must never reach the wire.
+                throw std::invalid_argument(
+                    "INSERT values must be parameterized before encoding");
+            }
+        }
+    }
+}
+
+// Adds the encrypted parameters and, when there are any, the public keys.
+void attachParameters(
+    preparation::PreparedQuery const& prepared,
+    proto::ExecuteQuery& request)
+{
+    /*
+     * -----------------------------------------------------
+     * Encrypted parameters
+     * -----------------------------------------------------
+     *
+     * The current crypto layer does not expose serialized
+     * ciphertext bytes. Therefore the v0.7 mock transport
+     * representation is retained for now.
+     */
+
+    for (auto const& parameter :
+        prepared.parameters()) {
+
+        auto* proto_parameter = request.add_parameters();
+
+        proto_parameter->set_index(
+            parameter.index());
+
+        proto_parameter->set_ciphertext(
+            parameter.ciphertext().serialize());
+    }
+
+    /*
+     * -----------------------------------------------------
+     * Public Key
+     * -----------------------------------------------------
+     */
+
+    if (!prepared.parameters().empty()) {
+        request.mutable_keys()->set_bfv_key(prepared.bfvPublicKey());
+        request.mutable_keys()->set_ckks_key(prepared.ckksPublicKey());
+    }
+}
+
 } // namespace
 
 proto::ExecuteQuery ExecuteQueryEncoder::encode(
@@ -197,15 +270,35 @@ proto::ExecuteQuery ExecuteQueryEncoder::encode(
 
     /*
      * -----------------------------------------------------
-     * Prepared query
+     * Prepared INSERT
+     * -----------------------------------------------------
+     */
+
+    if (auto const* insert_ast = dynamic_cast<ast::InsertStmt const*>(
+            &prepared.query())) {
+
+        encodeInsert(
+            *insert_ast,
+            request.mutable_statement()->mutable_insert_statement());
+
+        attachParameters(prepared, request);
+
+        return request;
+    }
+
+    /*
+     * -----------------------------------------------------
+     * Prepared SELECT
      * -----------------------------------------------------
      */
 
     auto const* select_ast = dynamic_cast<ast::SelectStmt const*>(
         &prepared.query());
 
-    assert(
-        select_ast != nullptr && "Prepared query must be a SelectStmt");
+    if (select_ast == nullptr) {
+        throw std::invalid_argument(
+            "ExecuteQueryEncoder::encode expects a prepared SELECT or INSERT");
+    }
 
     auto* select = request.mutable_statement()
                        ->mutable_select_statement();
@@ -265,38 +358,7 @@ proto::ExecuteQuery ExecuteQueryEncoder::encode(
             select->mutable_where());
     }
 
-    /*
-     * -----------------------------------------------------
-     * Encrypted parameters
-     * -----------------------------------------------------
-     *
-     * The current crypto layer does not expose serialized
-     * ciphertext bytes. Therefore the v0.7 mock transport
-     * representation is retained for now.
-     */
-
-    for (auto const& parameter :
-        prepared.parameters()) {
-
-        auto* proto_parameter = request.add_parameters();
-
-        proto_parameter->set_index(
-            parameter.index());
-
-        proto_parameter->set_ciphertext(
-            parameter.ciphertext().serialize());
-    }
-
-    /*
-     * -----------------------------------------------------
-     * Public Key
-     * -----------------------------------------------------
-     */
-
-    if (!prepared.parameters().empty()) {
-        request.mutable_keys()->set_bfv_key(prepared.bfvPublicKey());
-        request.mutable_keys()->set_ckks_key(prepared.ckksPublicKey());
-    }
+    attachParameters(prepared, request);
 
     return request;
 }

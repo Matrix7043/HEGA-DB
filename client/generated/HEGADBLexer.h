@@ -13,11 +13,12 @@ class  HEGADBLexer : public antlr4::Lexer {
 public:
   enum {
     SELECT = 1, FROM = 2, WHERE = 3, AND = 4, OR = 5, NOT = 6, TRUE = 7, 
-    FALSE = 8, NULL_ = 9, CREATE = 10, DROP = 11, TABLE = 12, INNER = 13, 
-    JOIN = 14, ON = 15, INTEGER = 16, FLOAT = 17, STRING = 18, BOOLEAN = 19, 
-    EQ = 20, NEQ = 21, LTE = 22, GTE = 23, LT = 24, GT = 25, STAR = 26, 
-    COMMA = 27, DOT = 28, LPAREN = 29, RPAREN = 30, SEMICOLON = 31, INTEGER_LITERAL = 32, 
-    STRING_LITERAL = 33, IDENTIFIER = 34, WS = 35, LINE_COMMENT = 36, BLOCK_COMMENT = 37
+    FALSE = 8, NULL_ = 9, CREATE = 10, DROP = 11, TABLE = 12, INSERT = 13, 
+    INTO = 14, VALUES = 15, INNER = 16, JOIN = 17, ON = 18, INTEGER = 19, 
+    FLOAT = 20, STRING = 21, BOOLEAN = 22, EQ = 23, NEQ = 24, LTE = 25, 
+    GTE = 26, LT = 27, GT = 28, STAR = 29, COMMA = 30, DOT = 31, LPAREN = 32, 
+    RPAREN = 33, SEMICOLON = 34, INTEGER_LITERAL = 35, STRING_LITERAL = 36, 
+    IDENTIFIER = 37, WS = 38, LINE_COMMENT = 39, BLOCK_COMMENT = 40
   };
 
   explicit HEGADBLexer(antlr4::CharStream *input);

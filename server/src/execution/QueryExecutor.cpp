@@ -1,8 +1,8 @@
-#include <hegadb/server/execution/QueryExecutor.h>
 #include <hegadb/crypto/OpenFHECiphertext.h>
 #include <hegadb/logging/Logger.h>
 #include <hegadb/server/execution/ExecutionContext.h>
 #include <hegadb/server/execution/ExecutionEngine.h>
+#include <hegadb/server/execution/QueryExecutor.h>
 #include <hegadb/server/planner/QueryPlanner.h>
 #include <hegadb/transport/types/CatalogTypes.h>
 #include <stdexcept>
@@ -15,13 +15,17 @@ namespace {
 class DelegatingCatalog : public catalog::Catalog {
 public:
     explicit DelegatingCatalog(std::shared_ptr<catalog::Catalog const> base)
-        : base_(std::move(base)) {}
+        : base_(std::move(base))
+    {
+    }
 
-    catalog::SchemaVersion version() const override {
+    catalog::SchemaVersion version() const override
+    {
         return base_ ? base_->version() : 1;
     }
 
-    catalog::TableSchema const* findTable(std::string const& name) const override {
+    catalog::TableSchema const* findTable(std::string const& name) const override
+    {
         auto it = dynamic_tables_.find(name);
         if (it != dynamic_tables_.end()) {
             return &it->second;
@@ -29,7 +33,8 @@ public:
         return base_ ? base_->findTable(name) : nullptr;
     }
 
-    void addTable(catalog::TableSchema table) {
+    void addTable(catalog::TableSchema table)
+    {
         dynamic_tables_.insert_or_assign(table.name(), std::move(table));
     }
 
@@ -48,7 +53,8 @@ QueryExecutor::QueryExecutor(
     : catalog_(std::make_shared<DelegatingCatalog>(std::move(catalog)))
     , storage_(std::move(storage))
     , crypto_context_(std::move(crypto_context))
-    , catalog_mutation_(std::move(catalog_mutation)) {
+    , catalog_mutation_(std::move(catalog_mutation))
+{
 }
 
 execution::ExecutionResult QueryExecutor::executeCreateTable(
@@ -62,23 +68,31 @@ execution::ExecutionResult QueryExecutor::executeCreateTable(
         auto const& c = stmt.columns(i);
         types::DataType dt = types::DataType::Integer;
         switch (c.data_type()) {
-        case protocol::DATA_TYPE_INTEGER: dt = types::DataType::Integer; break;
-        case protocol::DATA_TYPE_FLOAT:   dt = types::DataType::Float; break;
-        case protocol::DATA_TYPE_STRING:  dt = types::DataType::String; break;
-        case protocol::DATA_TYPE_BOOLEAN: dt = types::DataType::Boolean; break;
-        default: break;
+        case protocol::DATA_TYPE_INTEGER:
+            dt = types::DataType::Integer;
+            break;
+        case protocol::DATA_TYPE_FLOAT:
+            dt = types::DataType::Float;
+            break;
+        case protocol::DATA_TYPE_STRING:
+            dt = types::DataType::String;
+            break;
+        case protocol::DATA_TYPE_BOOLEAN:
+            dt = types::DataType::Boolean;
+            break;
+        default:
+            break;
         }
-        columns.push_back(catalog::ColumnSchema{
+        columns.push_back(catalog::ColumnSchema {
             .name = c.name(),
             .type = dt,
             .nullable = c.nullable(),
-            .ordinal = static_cast<std::size_t>(i)
-        });
+            .ordinal = static_cast<std::size_t>(i) });
     }
 
     catalog::TableSchema schema(stmt.table(), std::move(columns));
 
-    if (!storage_->createTable(schema)) {
+    if (!storage_ || !storage_->createTable(schema)) {
         hegadb::logging::warn("[EXECUTOR] StorageManager does not support createTable for '{}'", stmt.table());
         throw std::runtime_error(
             "CREATE TABLE '" + stmt.table()
@@ -92,18 +106,26 @@ execution::ExecutionResult QueryExecutor::executeCreateTable(
             auto const& c = stmt.columns(i);
             std::string dt_str = "INTEGER";
             switch (c.data_type()) {
-            case protocol::DATA_TYPE_INTEGER: dt_str = "INTEGER"; break;
-            case protocol::DATA_TYPE_FLOAT:   dt_str = "FLOAT"; break;
-            case protocol::DATA_TYPE_STRING:  dt_str = "STRING"; break;
-            case protocol::DATA_TYPE_BOOLEAN: dt_str = "BOOLEAN"; break;
-            default: break;
+            case protocol::DATA_TYPE_INTEGER:
+                dt_str = "INTEGER";
+                break;
+            case protocol::DATA_TYPE_FLOAT:
+                dt_str = "FLOAT";
+                break;
+            case protocol::DATA_TYPE_STRING:
+                dt_str = "STRING";
+                break;
+            case protocol::DATA_TYPE_BOOLEAN:
+                dt_str = "BOOLEAN";
+                break;
+            default:
+                break;
             }
-            cat_table.columns.push_back(transport::CatalogColumn{
+            cat_table.columns.push_back(transport::CatalogColumn {
                 .name = c.name(),
                 .data_type = dt_str,
                 .nullable = c.nullable(),
-                .ordinal = static_cast<uint64_t>(i)
-            });
+                .ordinal = static_cast<uint64_t>(i) });
         }
         try {
             catalog_mutation_->createTable(std::move(cat_table));
@@ -126,6 +148,11 @@ execution::ExecutionResult QueryExecutor::executeInsert(
     protocol::ExecuteQuery const& request)
 {
     hegadb::logging::info("[EXECUTOR] Executing INSERT into table '{}'", stmt.table());
+
+    if (!storage_ || !catalog_) {
+        hegadb::logging::warn("[EXECUTOR] StorageManager does not support insert for '{}'", stmt.table());
+        throw std::runtime_error("INSERT INTO '" + stmt.table() + "' is not implemented on this server");
+    }
 
     auto const* table_schema = catalog_->findTable(stmt.table());
     if (!table_schema) {
@@ -151,38 +178,83 @@ execution::ExecutionResult QueryExecutor::executeInsert(
         param_ciphertexts[p.index()] = p.ciphertext();
     }
 
-    std::unordered_map<std::string, crypto::OpenFHECiphertext> column_values;
+    int const num_rows = stmt.rows_size();
+    if (num_rows == 0) {
+        // Fallback for single-row insert without explicit rows message
+        std::unordered_map<std::string, crypto::OpenFHECiphertext> column_values;
 
-    for (size_t i = 0; i < target_columns.size(); ++i) {
-        auto const& col_name = target_columns[i];
-        auto const* col_def = table_schema->findColumn(col_name);
-        if (!col_def) {
-            hegadb::logging::error("[EXECUTOR] Column '{}' not found in table '{}'", col_name, stmt.table());
-            throw std::runtime_error("Column not found in table '" + stmt.table() + "': " + col_name);
+        for (size_t i = 0; i < target_columns.size(); ++i) {
+            auto const& col_name = target_columns[i];
+            auto const* col_def = table_schema->findColumn(col_name);
+            if (!col_def) {
+                hegadb::logging::error("[EXECUTOR] Column '{}' not found in table '{}'", col_name, stmt.table());
+                throw std::runtime_error("Column not found in table '" + stmt.table() + "': " + col_name);
+            }
+
+            uint32_t param_idx = static_cast<uint32_t>(i);
+            auto it = param_ciphertexts.find(param_idx);
+            if (it == param_ciphertexts.end()) {
+                hegadb::logging::error("[EXECUTOR] Missing parameter at index {} for column '{}'", param_idx, col_name);
+                throw std::runtime_error("Missing parameter at index " + std::to_string(param_idx));
+            }
+
+            auto ct = crypto::OpenFHECiphertext::deserialize(it->second);
+            column_values.emplace(col_name, std::move(ct));
         }
 
-        uint32_t param_idx = static_cast<uint32_t>(i);
-        if (stmt.values_size() > static_cast<int>(i)) {
-            param_idx = stmt.values(i).parameter_index();
+        bool success = storage_->appendRow(stmt.table(), column_values, crypto_context_);
+        if (!success) {
+            hegadb::logging::error("[EXECUTOR] Failed to append row into table '{}'", stmt.table());
+            throw std::runtime_error("INSERT INTO '" + stmt.table() + "' is not implemented on this server");
         }
+    } else {
+        // Multi-row or single-row with explicit rows()
+        for (int r = 0; r < num_rows; ++r) {
+            auto const& row = stmt.rows(r);
+            std::unordered_map<std::string, crypto::OpenFHECiphertext> column_values;
 
-        auto it = param_ciphertexts.find(param_idx);
-        if (it == param_ciphertexts.end()) {
-            hegadb::logging::error("[EXECUTOR] Missing parameter at index {} for column '{}'", param_idx, col_name);
-            throw std::runtime_error("Missing parameter at index " + std::to_string(param_idx));
+            for (size_t i = 0; i < target_columns.size(); ++i) {
+                auto const& col_name = target_columns[i];
+                auto const* col_def = table_schema->findColumn(col_name);
+                if (!col_def) {
+                    hegadb::logging::error("[EXECUTOR] Column '{}' not found in table '{}'", col_name, stmt.table());
+                    throw std::runtime_error("Column not found in table '" + stmt.table() + "': " + col_name);
+                }
+
+                if (static_cast<int>(i) >= row.values_size()) {
+                    hegadb::logging::error("[EXECUTOR] Row {} has fewer values than columns", r);
+                    throw std::runtime_error("Row has fewer values than columns");
+                }
+
+                auto const& cell = row.values(static_cast<int>(i));
+                if (cell.has_parameter_ref()) {
+                    uint32_t param_idx = cell.parameter_ref().parameter_index();
+                    auto it = param_ciphertexts.find(param_idx);
+                    if (it == param_ciphertexts.end()) {
+                        hegadb::logging::error("[EXECUTOR] Missing parameter at index {} for column '{}'", param_idx, col_name);
+                        throw std::runtime_error("Missing parameter at index " + std::to_string(param_idx));
+                    }
+
+                    auto ct = crypto::OpenFHECiphertext::deserialize(it->second);
+                    column_values.emplace(col_name, std::move(ct));
+                } else if (cell.has_null_value()) {
+                    if (!col_def->nullable) {
+                        hegadb::logging::error("[EXECUTOR] Column '{}' is not nullable", col_name);
+                        throw std::runtime_error("Cannot insert NULL into non-nullable column: " + col_name);
+                    }
+                }
+            }
+
+            bool success = storage_->appendRow(stmt.table(), column_values, crypto_context_);
+            if (!success) {
+                hegadb::logging::error("[EXECUTOR] Failed to append row into table '{}'", stmt.table());
+                throw std::runtime_error("INSERT INTO '" + stmt.table() + "' is not implemented on this server");
+            }
         }
-
-        auto ct = crypto::OpenFHECiphertext::deserialize(it->second);
-        column_values.emplace(col_name, std::move(ct));
     }
 
-    bool success = storage_->appendRow(stmt.table(), column_values, crypto_context_);
-    if (!success) {
-        hegadb::logging::error("[EXECUTOR] Failed to append row into table '{}'", stmt.table());
-        throw std::runtime_error("Failed to append row into table: " + stmt.table());
-    }
-
-    hegadb::logging::info("[EXECUTOR] INSERT into table '{}' completed successfully (1 row appended)", stmt.table());
+    hegadb::logging::info("[EXECUTOR] INSERT into table '{}' completed successfully ({} row(s) appended)",
+        stmt.table(), num_rows > 0 ? num_rows : 1);
 
     execution::ExecutionResult result;
     result.setResultMode(protocol::RESULT_MODE_ROWS_AND_MASK);
@@ -199,7 +271,8 @@ void QueryExecutor::updateLocalCatalog(catalog::TableSchema const& schema)
 }
 
 execution::ExecutionResult QueryExecutor::execute(
-    protocol::ExecuteQuery const& request) {
+    protocol::ExecuteQuery const& request)
+{
 
     // Validate request
     if (!request.has_statement()) {
@@ -249,8 +322,7 @@ execution::ExecutionResult QueryExecutor::execute(
         catalog_,
         storage_,
         crypto_context_,
-        result_mode
-    );
+        result_mode);
 
     context.setRequestId(request.request_id().value());
 
@@ -258,8 +330,7 @@ execution::ExecutionResult QueryExecutor::execute(
     for (auto const& param : request.parameters()) {
         context.getParameters().addParameter(
             param.index(),
-            param.ciphertext()
-        );
+            param.ciphertext());
     }
 
     // Plan query
