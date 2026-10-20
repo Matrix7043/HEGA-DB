@@ -8,11 +8,11 @@
 #include <hegadb/server/api/ExecuteQueryReceiver.h>
 #include <hegadb/server/execution/QueryExecutor.h>
 #include <hegadb/server/storage/StorageManager.h>
+#include <hegadb/transport/CatalogMutationClientTransportFactory.h>
 #include <hegadb/transport/ServerTransport.h>
 #include <hegadb/transport/ServerTransportFactory.h>
 #include <hegadb/transport/grpc/GrpcServer.h>
 
-#include <iostream>
 #include <memory>
 #include <sys/stat.h>
 #include <unordered_map>
@@ -29,8 +29,21 @@ int main(int argc, char** argv)
     hegadb::logging::info("Starting HEGA-DB Server on {}...", server_address);
 
     std::string home_dir = std::getenv("HOME") ? std::getenv("HOME") : ".";
-    std::string data_dir    = (argc > 1) ? argv[1] : (home_dir + "/.hegadb/data");
+    std::string data_dir = (argc > 1) ? argv[1] : (home_dir + "/.hegadb/data");
     std::string catalog_dir = (argc > 2) ? argv[2] : (home_dir + "/.hegadb/catalog");
+    std::string catalog_service_address = (argc > 3) ? argv[3] : "0.0.0.0:50052";
+
+    // ----------------------------------------------------------------
+    // Catalog Mutation Client — for registering DDL changes with
+    // the standalone Catalog Microservice.
+    // ----------------------------------------------------------------
+    std::shared_ptr<hegadb::transport::CatalogMutationClientTransport> catalog_mutation;
+    try {
+        catalog_mutation = hegadb::transport::CatalogMutationClientTransportFactory::createGrpc(catalog_service_address);
+        hegadb::logging::info("Catalog mutation client initialized for {}", catalog_service_address);
+    } catch (std::exception const& e) {
+        hegadb::logging::warn("Could not initialize catalog mutation client for '{}': {}", catalog_service_address, e.what());
+    }
 
     // ----------------------------------------------------------------
     // Catalog — load schema from on-disk manifests written by
@@ -77,20 +90,25 @@ int main(int argc, char** argv)
 
             class EmptyTable : public hegadb::server::storage::EncryptedTable {
                 std::string name_;
+
             public:
-                explicit EmptyTable(std::string n) : name_(std::move(n)) {}
+                explicit EmptyTable(std::string n)
+                    : name_(std::move(n))
+                {
+                }
                 std::string const& getName() const override { return name_; }
                 std::vector<std::string> getColumnNames() const override { return {}; }
-                void open() override {}
+                void open() override { }
                 std::optional<hegadb::server::storage::EncryptedBatch>
                 nextBatch() override { return std::nullopt; }
-                void close() override {}
+                void close() override { }
                 size_t getRowCount() const override { return 0; }
             };
 
         public:
             std::unique_ptr<hegadb::server::storage::EncryptedTable>
-            openTable(std::string const& table_name) override {
+            openTable(std::string const& table_name) override
+            {
                 return std::make_unique<EmptyTable>(table_name);
             }
         };
@@ -102,7 +120,7 @@ int main(int argc, char** argv)
     // Query executor and receiver
     // ----------------------------------------------------------------
     auto executor = std::make_shared<hegadb::server::QueryExecutor>(
-        catalog, storage, crypto_context);
+        catalog, storage, crypto_context, catalog_mutation);
 
     auto receiver = std::make_shared<hegadb::server::ExecuteQueryReceiver>(
         catalog, executor);

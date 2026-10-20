@@ -30,11 +30,20 @@ protocol::QueryResponse ExecuteQueryReceiver::executeQuery(
         auto exec_result = executor_->execute(request);
 
         // Create response
+        std::string success_msg;
+        if (request.has_statement()) {
+            if (request.statement().has_create_table_statement()) {
+                success_msg = "Table '" + request.statement().create_table_statement().table() + "' created successfully";
+            } else if (request.statement().has_insert_statement()) {
+                success_msg = "1 row inserted successfully into '" + request.statement().insert_statement().table() + "'";
+            }
+        }
+
         auto response = createResponse(
             request.protocol_version(),
             request.request_id(),
             protocol::STATUS_OK,
-            "");
+            success_msg);
 
         // Encode result
         result::ResultEncoder::encode(exec_result, response);

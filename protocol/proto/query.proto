@@ -146,6 +146,16 @@ message DropTableStatement {
 }
 
 // ---------------------------------------------------------------------------
+// DML — INSERT
+// ---------------------------------------------------------------------------
+
+message InsertStatement {
+  string                table   = 1;
+  repeated string       columns = 2;
+  repeated ParameterRef values  = 3;
+}
+
+// ---------------------------------------------------------------------------
 // Statement wrapper
 // ---------------------------------------------------------------------------
 
@@ -154,6 +164,7 @@ message Statement {
     SelectStatement      select_statement       = 1;
     CreateTableStatement create_table_statement = 2;
     DropTableStatement   drop_table_statement   = 3;
+    InsertStatement      insert_statement       = 4;
   }
 }
 

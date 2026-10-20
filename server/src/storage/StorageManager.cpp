@@ -2,11 +2,16 @@
 #include <hegadb/logging/Logger.h>
 #include <hegadb/server/storage/EncryptedTable.h>
 #include <hegadb/server/storage/SegmentReader.h>
+#include <hegadb/server/storage/SegmentWriter.h>
+#include <hegadb/server/storage/StorageFormat.h>
 #include <hegadb/server/storage/StorageManager.h>
 #include <hegadb/server/storage/TableManifest.h>
 
+#include <openfhe.h>
+#include <cstring>
 #include <filesystem>
 #include <memory>
+#include <sstream>
 #include <stdexcept>
 
 namespace hegadb::server::storage {
@@ -317,6 +322,219 @@ public:
         return std::make_unique<SegmentBasedTable>(
             std::move(manifest),
             table_dir);
+    }
+
+    bool createTable(catalog::TableSchema const& schema) override
+    {
+        hegadb::logging::info("[STORAGE] createTable requested for '{}'", schema.name());
+
+        auto table_dir = data_directory_ / schema.name();
+        if (std::filesystem::exists(table_dir)) {
+            hegadb::logging::error("[STORAGE] Table directory already exists: '{}'", table_dir.string());
+            throw std::runtime_error("Table already exists: " + schema.name());
+        }
+
+        std::filesystem::create_directories(table_dir);
+
+        // Build manifest
+        TableManifest manifest;
+        manifest.table_name = schema.name();
+        manifest.total_records = 0;
+
+        for (auto const& col : schema.columns()) {
+            ColumnMetadata col_meta;
+            col_meta.name = col.name;
+            switch (col.type) {
+            case types::DataType::Integer: col_meta.type = "INTEGER"; break;
+            case types::DataType::String:  col_meta.type = "STRING"; break;
+            case types::DataType::Boolean: col_meta.type = "BOOLEAN"; break;
+            case types::DataType::Float:   col_meta.type = "FLOAT"; break;
+            default: col_meta.type = "UNKNOWN"; break;
+            }
+
+            bool is_bfv = (col.type != types::DataType::Float);
+            col_meta.scheme = is_bfv ? "BFV" : "CKKS";
+            col_meta.slot_index = static_cast<uint32_t>(col.ordinal);
+            manifest.columns.push_back(col_meta);
+
+            SegmentMetadata seg_meta;
+            seg_meta.file = col.name + ".seg";
+            seg_meta.poly_N = 16384;
+            seg_meta.param_scale_or_p = is_bfv ? 65537 : (1ULL << 40);
+            seg_meta.rows_per_block = 0;
+            seg_meta.total_blocks = 0;
+            manifest.segments[col.name] = seg_meta;
+
+            // Write initial segment header
+            SegmentFileHeader seg_header{};
+            if (is_bfv) {
+                std::memcpy(seg_header.magic_bytes, BFV_MAGIC, 8);
+            } else {
+                std::memcpy(seg_header.magic_bytes, CKKS_MAGIC, 8);
+            }
+            seg_header.version = 1;
+            seg_header.column_count = 1;
+            seg_header.poly_degree_N = 16384;
+            seg_header.modulus_count_L = 1;
+            seg_header.rows_per_block = 0;
+            seg_header.param_scale_or_p = is_bfv ? 65537 : (1ULL << 40);
+            seg_header.total_blocks = 0;
+            seg_header.total_row_count = 0;
+
+            auto seg_path = table_dir / (col.name + ".seg");
+            SegmentWriter writer(seg_path.string(), seg_header);
+            writer.close();
+        }
+
+        auto manifest_path = catalog_directory_ / (schema.name() + ".manifest.json");
+        auto ser_result = manifest.serialize(manifest_path.string());
+        if (!ser_result) {
+            hegadb::logging::error("[STORAGE] Failed to write manifest for '{}'", schema.name());
+            throw std::runtime_error("Failed to write manifest: " + manifest_path.string());
+        }
+
+        hegadb::logging::info("[STORAGE] Successfully created table '{}' with {} columns",
+                             schema.name(), schema.columns().size());
+        return true;
+    }
+
+    bool appendRow(
+        std::string const& table_name,
+        std::unordered_map<std::string, crypto::OpenFHECiphertext> const& column_values,
+        std::shared_ptr<crypto::OpenFHEContext> /*crypto_context*/) override
+    {
+        hegadb::logging::info("[STORAGE] appendRow requested for table '{}'", table_name);
+
+        auto table_dir = data_directory_ / table_name;
+        if (!std::filesystem::exists(table_dir)) {
+            hegadb::logging::error("[STORAGE] Table directory does not exist: '{}'", table_dir.string());
+            throw std::runtime_error("Table directory does not exist: " + table_dir.string());
+        }
+
+        auto manifest_path = catalog_directory_ / (table_name + ".manifest.json");
+        auto manifest_res = TableManifest::deserialize(manifest_path.string());
+        if (!manifest_res.has_value()) {
+            hegadb::logging::error("[STORAGE] Could not load manifest for '{}'", table_name);
+            throw std::runtime_error("Could not load manifest for: " + table_name);
+        }
+
+        auto manifest = std::move(*manifest_res);
+        uint64_t current_rows = manifest.total_records;
+        hegadb::logging::info("[STORAGE] Current rows for '{}': {}", table_name, current_rows);
+
+        // Process each column
+        for (auto const& col : manifest.columns) {
+            auto it = column_values.find(col.name);
+            if (it == column_values.end()) {
+                hegadb::logging::error("[STORAGE] Missing value for column '{}' during insert into '{}'",
+                                       col.name, table_name);
+                throw std::runtime_error("Missing value for column: " + col.name);
+            }
+
+            auto const& incoming_wrapper = it->second;
+            auto incoming_ct = incoming_wrapper.getCiphertext();
+            auto seg_path = table_dir / (col.name + ".seg");
+
+            lbcrypto::Ciphertext<lbcrypto::DCRTPoly> final_ct;
+
+            if (current_rows == 0) {
+                // Table has 0 rows: the slot-0 ciphertext becomes the column ciphertext
+                final_ct = incoming_ct;
+                hegadb::logging::debug("[STORAGE] Setting first row (slot 0) for column '{}'", col.name);
+            } else {
+                // Table has existing rows: read existing Block 0
+                SegmentReader reader(seg_path.string());
+                auto header_res = reader.read_header();
+                if (!header_res.has_value()) {
+                    throw std::runtime_error("Failed to read header from " + seg_path.string());
+                }
+
+                std::vector<std::byte> payload;
+                auto block_res = reader.read_next_block(payload);
+                if (!block_res.has_value()) {
+                    throw std::runtime_error("Failed to read block 0 from " + seg_path.string());
+                }
+
+                std::string payload_str(reinterpret_cast<char const*>(payload.data()), payload.size());
+                std::istringstream stream(payload_str, std::ios::in | std::ios::binary);
+                lbcrypto::Ciphertext<lbcrypto::DCRTPoly> existing_ct;
+                lbcrypto::Serial::Deserialize(existing_ct, stream, lbcrypto::SerType::BINARY);
+
+                // Rotate incoming single-slot ciphertext by -current_rows
+                auto cc = incoming_ct->GetCryptoContext();
+                hegadb::logging::debug("[STORAGE] Rotating slot 0 to slot {} for column '{}'", current_rows, col.name);
+                auto rotated_ct = cc->EvalRotate(incoming_ct, -static_cast<int32_t>(current_rows));
+
+                // Add to existing column ciphertext
+                hegadb::logging::debug("[STORAGE] Homomorphically adding rotated ciphertext to column '{}'", col.name);
+                final_ct = cc->EvalAdd(existing_ct, rotated_ct);
+            }
+
+            // Serialize final_ct
+            std::stringstream ss;
+            lbcrypto::Serial::Serialize(final_ct, ss, lbcrypto::SerType::BINARY);
+            std::string serialized = ss.str();
+
+            // Prepare header
+            auto cc = final_ct->GetCryptoContext();
+            auto elem_params = cc->GetElementParams();
+            uint32_t poly_N = elem_params->GetRingDimension();
+            uint32_t modulus_count = elem_params->GetParams().size();
+            bool is_bfv = (incoming_wrapper.getSchemeType() == crypto::SchemeType::BFV);
+            uint64_t param_scale_or_p = is_bfv ?
+                cc->GetCryptoParameters()->GetPlaintextModulus() :
+                static_cast<uint64_t>(final_ct->GetScalingFactor());
+
+            SegmentFileHeader seg_header{};
+            if (is_bfv) {
+                std::memcpy(seg_header.magic_bytes, BFV_MAGIC, 8);
+            } else {
+                std::memcpy(seg_header.magic_bytes, CKKS_MAGIC, 8);
+            }
+            seg_header.version = 1;
+            seg_header.column_count = 1;
+            seg_header.poly_degree_N = poly_N;
+            seg_header.modulus_count_L = modulus_count;
+            seg_header.rows_per_block = static_cast<uint32_t>(current_rows + 1);
+            seg_header.param_scale_or_p = param_scale_or_p;
+            seg_header.total_blocks = 1;
+            seg_header.total_row_count = current_rows + 1;
+
+            SegmentWriter writer(seg_path.string(), seg_header);
+            BlockHeader bh{};
+            bh.block_id = 0;
+            bh.active_rows = static_cast<uint32_t>(current_rows + 1);
+            bh.payload_byte_size = serialized.size();
+
+            auto write_res = writer.write_block(
+                bh,
+                std::span<const std::byte>(
+                    reinterpret_cast<const std::byte*>(serialized.data()),
+                    serialized.size()));
+            if (!write_res) {
+                throw std::runtime_error("Failed to write block to " + seg_path.string());
+            }
+            writer.close();
+
+            // Update manifest segment metadata
+            auto& seg_meta = manifest.segments[col.name];
+            seg_meta.rows_per_block = static_cast<uint32_t>(current_rows + 1);
+            seg_meta.total_blocks = 1;
+            seg_meta.poly_N = poly_N;
+            seg_meta.param_scale_or_p = param_scale_or_p;
+        }
+
+        // Commit updated manifest
+        manifest.total_records = current_rows + 1;
+        auto ser_res = manifest.serialize(manifest_path.string());
+        if (!ser_res) {
+            hegadb::logging::error("[STORAGE] Failed to serialize updated manifest for '{}'", table_name);
+            throw std::runtime_error("Failed to serialize manifest: " + manifest_path.string());
+        }
+
+        hegadb::logging::info("[STORAGE] Successfully appended row to table '{}' (total records now {})",
+                             table_name, current_rows + 1);
+        return true;
     }
 };
 

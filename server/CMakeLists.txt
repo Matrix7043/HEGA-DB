@@ -102,12 +102,12 @@ target_link_libraries(hegadb_server
 
         # Internal modules
         hegadb_catalog_client
+        hegadb_catalog_mutation_client_transport
         hegadb_logging
         hegadb_server_transport
         hegadb_types
         hegadb_crypto
         hegadb_protocol
-        hegadb_types
         hegadb_operations
 
     PRIVATE

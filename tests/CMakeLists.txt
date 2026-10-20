@@ -615,6 +615,27 @@ target_link_libraries(join_query_tests
 gtest_discover_tests(join_query_tests)
 
 # ============================================================
+# Server Create & Insert Tests
+# ============================================================
+
+add_executable(create_and_insert_tests
+    server/create_and_insert_tests.cpp
+)
+
+target_link_libraries(create_and_insert_tests
+    PRIVATE
+        hegadb_server
+        hegadb_catalog_client
+        hegadb_client_transport
+        hegadb_server_transport
+        hegadb_crypto
+        hegadb_protocol
+        GTest::gtest_main
+)
+
+gtest_discover_tests(create_and_insert_tests)
+
+# ============================================================
 # Integration Tests
 # ============================================================
 
